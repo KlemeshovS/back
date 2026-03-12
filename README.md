@@ -103,3 +103,7 @@ api.example.com {
 - вынести rate limiting в Redis или PostgreSQL для multi-instance окружения
 - вынести миграции в Alembic
 - добавить тесты
+
+## Development
+
+- workflow: `DEVELOPMENT_WORKFLOW.md`
