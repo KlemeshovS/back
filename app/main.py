@@ -1,9 +1,11 @@
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, HTTPException, Query, status
+from fastapi import FastAPI, HTTPException, Query, Request, status
 from psycopg.errors import UniqueViolation
 
+from app.config import settings
 from app.database import get_connection, init_db
+from app.rate_limit import rate_limiter
 from app.schemas import (
     LeaderboardResponse,
     RegisterUserRequest,
@@ -22,6 +24,29 @@ async def lifespan(_: FastAPI):
 app = FastAPI(title="Rating Service", lifespan=lifespan)
 
 
+def get_client_ip(request: Request) -> str:
+    forwarded_for = request.headers.get("x-forwarded-for")
+    if forwarded_for:
+        return forwarded_for.split(",")[0].strip()
+
+    if request.client and request.client.host:
+        return request.client.host
+
+    return "unknown"
+
+
+def enforce_rate_limit(key: str, limit: int, window_seconds: int, detail: str) -> None:
+    allowed, retry_after = rate_limiter.check(key, limit, window_seconds)
+    if allowed:
+        return
+
+    raise HTTPException(
+        status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+        detail=detail,
+        headers={"Retry-After": str(retry_after)},
+    )
+
+
 @app.get("/health")
 def healthcheck() -> dict[str, str]:
     return {"status": "ok"}
@@ -32,7 +57,15 @@ def healthcheck() -> dict[str, str]:
     response_model=StatusResponse,
     status_code=status.HTTP_201_CREATED,
 )
-def register_user(payload: RegisterUserRequest) -> StatusResponse:
+def register_user(payload: RegisterUserRequest, request: Request) -> StatusResponse:
+    client_ip = get_client_ip(request)
+    enforce_rate_limit(
+        key=f"register:ip:{client_ip}",
+        limit=settings.register_rate_limit,
+        window_seconds=settings.register_window_seconds,
+        detail="Too many registration attempts. Please try again later.",
+    )
+
     try:
         with get_connection() as conn:
             with conn.cursor() as cur:
@@ -56,7 +89,21 @@ def register_user(payload: RegisterUserRequest) -> StatusResponse:
 
 
 @app.post("/users/score", response_model=UserScoreResponse)
-def update_score(payload: UpdateScoreRequest) -> UserScoreResponse:
+def update_score(payload: UpdateScoreRequest, request: Request) -> UserScoreResponse:
+    client_ip = get_client_ip(request)
+    enforce_rate_limit(
+        key=f"score:ip:{client_ip}",
+        limit=settings.score_ip_rate_limit,
+        window_seconds=settings.score_ip_window_seconds,
+        detail="Too many score updates from this IP. Please try again later.",
+    )
+    enforce_rate_limit(
+        key=f"score:username:{payload.username.lower()}",
+        limit=settings.score_username_rate_limit,
+        window_seconds=settings.score_username_window_seconds,
+        detail="Too many score updates for this user. Please try again later.",
+    )
+
     with get_connection() as conn:
         with conn.cursor() as cur:
             cur.execute(
