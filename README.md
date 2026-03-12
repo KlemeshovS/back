@@ -28,9 +28,28 @@ Responses:
 - `409` пользователь уже существует
 - `429` слишком много попыток регистрации
 
+Response:
+
+```json
+{
+  "status": "created",
+  "id": 1,
+  "username": "player_1"
+}
+```
+
 ### `POST /users/score`
 
 Request:
+
+```json
+{
+  "user_id": 1,
+  "score": 42
+}
+```
+
+Также временно поддерживается старый формат:
 
 ```json
 {
