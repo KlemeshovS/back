@@ -107,3 +107,4 @@ api.example.com {
 ## Development
 
 - workflow: `DEVELOPMENT_WORKFLOW.md`
+- conventions: trunk-based development + Conventional Commits
