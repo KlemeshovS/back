@@ -1,15 +1,15 @@
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 from fastapi import Depends, FastAPI, Header, HTTPException, Query, Request, status
 from fastapi.openapi.docs import get_swagger_ui_html
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse
+from fastapi.staticfiles import StaticFiles
 from psycopg.errors import UniqueViolation
 
 from app.auth import generate_access_token, hash_access_token
 from app.config import settings
 from app.database import get_connection, init_db
-from app.docs_page import DOCS_HTML
-from app.landing_page import render_landing_page
 from app.rate_limit import rate_limiter
 from app.schemas import (
     AnonymousAuthResponse,
@@ -37,6 +37,9 @@ app = FastAPI(
     redoc_url=None,
     openapi_url="/api/openapi.json",
 )
+
+STATIC_DIR = Path(__file__).resolve().parent / "static"
+app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
 
 def get_client_ip(request: Request) -> str:
@@ -107,19 +110,11 @@ def get_current_user(authorization: str | None = Header(default=None)) -> dict:
     return user
 
 
-def get_preferred_locale(request: Request) -> str:
-    accept_language = request.headers.get("accept-language", "").lower()
-    if "ru" in accept_language:
-        return "ru"
-
-    return "en"
-
-
 @app.get("/", include_in_schema=False)
-def landing_page(request: Request) -> HTMLResponse:
+def landing_page(request: Request):
     host = request.headers.get("host", "")
     if host.startswith("wobbly.site"):
-        return HTMLResponse(content=render_landing_page(get_preferred_locale(request)))
+        return FileResponse(STATIC_DIR / "pages" / "landing.html")
 
     return HTMLResponse(content="<h1>Wobbly API</h1>", status_code=status.HTTP_200_OK)
 
@@ -143,8 +138,8 @@ def legacy_swagger_redirect() -> RedirectResponse:
 
 
 @app.get("/api/docs", include_in_schema=False)
-def docs_page() -> HTMLResponse:
-    return HTMLResponse(content=DOCS_HTML)
+def docs_page() -> FileResponse:
+    return FileResponse(STATIC_DIR / "pages" / "api-docs.html")
 
 
 @app.post(
