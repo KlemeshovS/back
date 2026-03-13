@@ -3,10 +3,12 @@
 ## Current State
 
 Сейчас backend уже умеет:
+- создавать anonymous user и выдавать bearer token
 - регистрировать уникальный `username`
 - возвращать `id` пользователя при регистрации
 - обновлять `score` по `username`
 - обновлять `score` по `user_id`
+- обновлять `score` от авторизованного пользователя через `/me/score`
 - отдавать `top 100` и `bottom 100`
 - работать на `https://api.wobbly.site`
 - ограничивать частоту регистрации и обновления рейтинга через rate limiting
@@ -15,14 +17,20 @@
 
 ## Priority 1: Security
 
-### 1. Add client authentication
+### 1. ~~Add client authentication~~
+
+Status:
+- done
+- добавлен `POST /auth/anonymous`
+- backend выдает bearer token
+- появились защищенные endpoint'ы `/me`, `/me/profile`, `/me/score`
 
 Сейчас любой внешний клиент может отправить любой `username` и любой `score`.
 
 Что сделать:
-- добавить `X-API-Key` или `Authorization` token для запросов от мобильного приложения
-- хранить секрет в переменных окружения
-- отклонять запросы без валидного ключа
+- ~~добавить `X-API-Key` или `Authorization` token для запросов от мобильного приложения~~
+- ~~хранить секрет в переменных окружения~~
+- ~~отклонять запросы без валидного ключа~~
 
 Результат:
 - случайные внешние запросы перестанут писать данные в вашу БД
@@ -207,7 +215,6 @@ Status:
 ## Suggested Execution Order
 
 ### Phase 1
-- auth token for client requests
 - unified error responses
 - tests for current endpoints
 
@@ -232,6 +239,6 @@ Status:
 
 Если выбирать одно следующее улучшение, то лучше всего сделать:
 
-`Add API authentication between Flutter app and backend`
+`Unify error responses for mobile client`
 
-Это самое дешевое улучшение с самым большим эффектом, потому что сейчас backend открыт для любых внешних запросов.
+Авторизация между Flutter и backend уже добавлена, следующий полезный шаг — привести ошибки к единому контракту `code` + `message`.

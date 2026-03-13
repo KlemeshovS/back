@@ -17,6 +17,27 @@ class RegisterUserRequest(BaseModel):
     username: Username
 
 
+class AnonymousAuthResponse(BaseModel):
+    user_id: int
+    access_token: str
+    token_type: str = "bearer"
+
+
+class ProfileUpdateRequest(BaseModel):
+    username: Username | None = None
+    participate_in_rating: bool
+
+
+class ProfileResponse(BaseModel):
+    id: int
+    username: str | None = None
+    participate_in_rating: bool
+
+
+class ScoreUpdateRequest(BaseModel):
+    score: int = Field(ge=-2_147_483_648, le=2_147_483_647)
+
+
 class UpdateScoreRequest(BaseModel):
     user_id: int | None = Field(default=None, ge=1)
     username: Username | None = None
@@ -33,7 +54,7 @@ class UpdateScoreRequest(BaseModel):
 class UserScoreResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
-    username: str
+    username: str | None = None
     score: int
 
 
