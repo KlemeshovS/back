@@ -140,7 +140,8 @@ docker compose up --build
 
 После запуска API будет доступно на:
 - `http://localhost:8000`
-- Swagger UI: `http://localhost:8000/docs`
+- Swagger UI: `http://localhost:8000/api/swagger`
+- Text docs: `http://localhost:8000/api/docs`
 
 ## Что нужно сделать руками на сервере
 

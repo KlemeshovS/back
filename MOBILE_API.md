@@ -9,7 +9,7 @@ https://api.wobbly.site
 ## Swagger
 
 ```text
-https://api.wobbly.site/docs
+https://api.wobbly.site/api/swagger
 ```
 
 ## Authorization
