@@ -73,7 +73,7 @@ def register_user(payload: RegisterUserRequest, request: Request) -> StatusRespo
                     """
                     INSERT INTO users (username)
                     VALUES (%s)
-                    RETURNING username;
+                    RETURNING id, username;
                     """,
                     (payload.username,),
                 )
@@ -85,7 +85,7 @@ def register_user(payload: RegisterUserRequest, request: Request) -> StatusRespo
             detail="Username already exists",
         ) from exc
 
-    return StatusResponse(status="created", username=user["username"])
+    return StatusResponse(status="created", id=user["id"], username=user["username"])
 
 
 @app.post("/users/score", response_model=UserScoreResponse)
@@ -97,8 +97,13 @@ def update_score(payload: UpdateScoreRequest, request: Request) -> UserScoreResp
         window_seconds=settings.score_ip_window_seconds,
         detail="Too many score updates from this IP. Please try again later.",
     )
+    if payload.user_id is not None:
+        user_key = f"id:{payload.user_id}"
+    else:
+        user_key = f"username:{payload.username.lower()}"
+
     enforce_rate_limit(
-        key=f"score:username:{payload.username.lower()}",
+        key=f"score:user:{user_key}",
         limit=settings.score_username_rate_limit,
         window_seconds=settings.score_username_window_seconds,
         detail="Too many score updates for this user. Please try again later.",
@@ -106,23 +111,35 @@ def update_score(payload: UpdateScoreRequest, request: Request) -> UserScoreResp
 
     with get_connection() as conn:
         with conn.cursor() as cur:
-            cur.execute(
-                """
-                UPDATE users
-                SET score = %s,
-                    updated_at = NOW()
-                WHERE username = %s
-                RETURNING username, score;
-                """,
-                (payload.score, payload.username),
-            )
+            if payload.user_id is not None:
+                cur.execute(
+                    """
+                    UPDATE users
+                    SET score = %s,
+                        updated_at = NOW()
+                    WHERE id = %s
+                    RETURNING username, score;
+                    """,
+                    (payload.score, payload.user_id),
+                )
+            else:
+                cur.execute(
+                    """
+                    UPDATE users
+                    SET score = %s,
+                        updated_at = NOW()
+                    WHERE username = %s
+                    RETURNING username, score;
+                    """,
+                    (payload.score, payload.username),
+                )
             user = cur.fetchone()
         conn.commit()
 
     if user is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Username not found",
+            detail="User not found",
         )
 
     return UserScoreResponse(**user)
