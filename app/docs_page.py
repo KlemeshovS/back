@@ -27,6 +27,7 @@ DOCS_HTML = """<!DOCTYPE html>
         var(--bg);
       color: var(--text);
       line-height: 1.55;
+      overflow-x: hidden;
     }
 
     .layout {
@@ -40,6 +41,7 @@ DOCS_HTML = """<!DOCTYPE html>
       top: 0;
       height: 100vh;
       padding: 32px 20px;
+      overflow-y: auto;
       border-right: 1px solid var(--border);
       background: rgba(10, 12, 24, 0.85);
       backdrop-filter: blur(10px);
@@ -75,6 +77,7 @@ DOCS_HTML = """<!DOCTYPE html>
     .content {
       padding: 40px 56px 80px;
       max-width: 980px;
+      width: min(100%, 980px);
     }
 
     .hero {
@@ -86,14 +89,15 @@ DOCS_HTML = """<!DOCTYPE html>
     }
 
     h1, h2, h3 { margin-top: 0; }
-    h1 { font-size: 42px; margin-bottom: 8px; }
+    h1 { font-size: clamp(32px, 5vw, 42px); margin-bottom: 8px; }
     h2 {
-      font-size: 28px;
+      font-size: clamp(24px, 3.4vw, 28px);
       margin: 40px 0 16px;
       padding-top: 12px;
+      scroll-margin-top: 16px;
     }
     h3 {
-      font-size: 20px;
+      font-size: clamp(18px, 2.4vw, 20px);
       margin: 28px 0 12px;
     }
 
@@ -148,6 +152,8 @@ DOCS_HTML = """<!DOCTYPE html>
       border-radius: 16px;
       overflow-x: auto;
       border: 1px solid var(--border);
+      white-space: pre-wrap;
+      word-break: break-word;
     }
 
     .quick-grid {
@@ -194,14 +200,52 @@ DOCS_HTML = """<!DOCTYPE html>
         height: auto;
         border-right: 0;
         border-bottom: 1px solid var(--border);
+        padding: 20px 16px 14px;
       }
 
       .content {
         padding: 28px 20px 60px;
       }
 
-      h1 {
-        font-size: 34px;
+      .sidebar nav {
+        display: flex;
+        gap: 8px;
+        overflow-x: auto;
+        padding-bottom: 4px;
+        margin: 0 -2px;
+        scrollbar-width: thin;
+      }
+
+      .sidebar a {
+        display: inline-flex;
+        white-space: nowrap;
+        margin-bottom: 0;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .content {
+        padding: 20px 14px 48px;
+      }
+
+      .hero,
+      .card,
+      .quick-box {
+        padding: 18px;
+        border-radius: 18px;
+      }
+
+      .links {
+        flex-direction: column;
+      }
+
+      .links a {
+        width: 100%;
+        text-align: center;
+      }
+
+      .quick-grid {
+        grid-template-columns: 1fr;
       }
     }
   </style>
@@ -211,16 +255,18 @@ DOCS_HTML = """<!DOCTYPE html>
     <aside class="sidebar">
       <div class="brand">Wobbly API</div>
       <div class="subtitle">Документация для мобильного приложения</div>
-      <a href="#base">Base URL</a>
-      <a href="#flow">Интеграционный Flow</a>
-      <a href="#auth-anonymous">POST /auth/anonymous</a>
-      <a href="#me">GET /me</a>
-      <a href="#profile">PATCH /me/profile</a>
-      <a href="#score">POST /me/score</a>
-      <a href="#top">GET /leaderboard/top</a>
-      <a href="#bottom">GET /leaderboard/bottom</a>
-      <a href="#errors">Ошибки</a>
-      <a href="#legacy">Legacy</a>
+      <nav>
+        <a href="#base">Base URL</a>
+        <a href="#flow">Интеграционный Flow</a>
+        <a href="#auth-anonymous">POST /auth/anonymous</a>
+        <a href="#me">GET /me</a>
+        <a href="#profile">PATCH /me/profile</a>
+        <a href="#score">POST /me/score</a>
+        <a href="#top">GET /leaderboard/top</a>
+        <a href="#bottom">GET /leaderboard/bottom</a>
+        <a href="#errors">Ошибки</a>
+        <a href="#legacy">Legacy</a>
+      </nav>
     </aside>
 
     <main class="content">

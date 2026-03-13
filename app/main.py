@@ -2,7 +2,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import Depends, FastAPI, Header, HTTPException, Query, Request, status
 from fastapi.openapi.docs import get_swagger_ui_html
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, RedirectResponse
 from psycopg.errors import UniqueViolation
 
 from app.auth import generate_access_token, hash_access_token
@@ -117,6 +117,11 @@ def swagger_ui() -> HTMLResponse:
         openapi_url=app.openapi_url,
         title=f"{app.title} - Swagger UI",
     )
+
+
+@app.get("/docs", include_in_schema=False)
+def legacy_swagger_redirect() -> RedirectResponse:
+    return RedirectResponse(url="/api/swagger", status_code=status.HTTP_307_TEMPORARY_REDIRECT)
 
 
 @app.get("/api/docs", include_in_schema=False)
