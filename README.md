@@ -187,3 +187,7 @@ api.example.com {
 
 - workflow: `DEVELOPMENT_WORKFLOW.md`
 - conventions: trunk-based development + Conventional Commits
+
+## Mobile App
+
+- mobile API: `MOBILE_API.md`
