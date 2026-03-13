@@ -11,6 +11,23 @@
 - PostgreSQL
 - Docker Compose
 
+## Current Project Snapshot
+
+Если работа переносится в новый чат, это нужно считать актуальной базой проекта:
+- production API: `https://api.wobbly.site`
+- production Swagger: `https://api.wobbly.site/api/swagger`
+- production text docs: `https://api.wobbly.site/api/docs`
+- production site: `https://wobbly.site`
+- продовый сервис: `rating-service.service`
+- продовый путь на сервере: `/opt/rating-service`
+- reverse proxy в production: `nginx`
+- деплой в production сейчас делается не через `git pull` на сервере, а через копирование файлов в `/opt/rating-service` и `systemctl restart rating-service`
+
+Это важно:
+- локальный `docker compose` нужен для разработки
+- production topology уже другая, и ее не нужно заново угадывать
+- точные команды деплоя описаны в `DEPLOY.md`
+
 ## API
 
 ### `POST /auth/anonymous`
@@ -189,6 +206,26 @@ api.example.com {
 - workflow: `DEVELOPMENT_WORKFLOW.md`
 - conventions: trunk-based development + Conventional Commits
 
+## Context Transfer
+
+Если работа переносится в новый чат, новый чат должен сначала прочитать:
+- `README.md`
+- `BACKEND_ROADMAP.md`
+- `MOBILE_API.md`
+- `DEPLOY.md`
+- `DEVELOPMENT_WORKFLOW.md`
+
+Перед новым анализом не надо заново выяснять:
+- где находится production-код
+- как называется systemd unit
+- через что отдается `wobbly.site`
+- через что отдается `api.wobbly.site`
+- как именно сейчас делается deploy
+
 ## Mobile App
 
 - mobile API: `MOBILE_API.md`
+
+## Deployment
+
+- deploy guide: `DEPLOY.md`

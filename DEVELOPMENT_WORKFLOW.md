@@ -101,3 +101,46 @@ Commit message оформляем по `Conventional Commits`.
 - большие задачи режем на несколько маленьких commits, если это помогает чтению истории
 - `main` держим как самую актуальную и стабильную ветку
 - после merge удаляем ветку локально и в GitHub
+
+## Handoff Rule
+
+Если работа переносится в новый чат, сначала нужно прочитать:
+- `README.md`
+- `BACKEND_ROADMAP.md`
+- `MOBILE_API.md`
+- `DEPLOY.md`
+- `DEVELOPMENT_WORKFLOW.md`
+
+Не надо заново угадывать:
+- как называется продовый сервис
+- где лежит код на сервере
+- какой домен обслуживает API
+- через что реально деплоится production
+
+## Handoff Checklist
+
+Перед тем как начинать новый анализ после переноса контекста:
+1. прочитать основные `.md` файлы
+2. сверить локальное состояние через `git status --short --branch`
+3. если задача связана с production, сначала прочитать `DEPLOY.md`
+4. только потом смотреть код и делать выводы
+
+Если задача связана с production, не нужно сначала исследовать сервер через поиск:
+- `find / ...`
+- `grep -R /etc/...`
+- случайный перебор `docker compose`, `systemd` и путей
+
+Это уже известно и зафиксировано в `DEPLOY.md`.
+
+## Production Knowledge Rule
+
+Для этого проекта считаем зафиксированными такие факты:
+- live app path: `/opt/rating-service`
+- live service: `rating-service.service`
+- reverse proxy: `nginx`
+- main site host: `wobbly.site`
+- API host: `api.wobbly.site`
+- deploy access: `root@api.wobbly.site` через `deploy_key`
+- production deploy сейчас это `scp`/копирование файлов + `systemctl restart rating-service`
+
+Если эти факты не опровергнуты явным изменением в репозитории или на сервере, не надо их перепроверять с нуля.
