@@ -3,81 +3,276 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Wobbly</title>
-  <meta name="description" content="Wobbly helps you track your drinking streaks and slips with less friction." />
+  <title>Wobbly — minimal sobriety tracker</title>
+  <meta
+    name="description"
+    content="Wobbly is a minimal sobriety tracker for iPhone. Log days fast, see your rhythm clearly, and stay focused without pressure."
+  />
+  <meta name="theme-color" content="#0b0d1b" />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="Wobbly" />
+  <meta property="og:title" content="Wobbly — minimal sobriety tracker" />
+  <meta
+    property="og:description"
+    content="A calm, modern way to track sober days, spot patterns, and stay focused on real progress."
+  />
+  <meta property="og:image" content="https://wobbly.site/static/assets/og/wobbly-og.svg" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Wobbly — minimal sobriety tracker" />
+  <meta
+    name="twitter:description"
+    content="A calm, modern way to track sober days, spot patterns, and stay focused on real progress."
+  />
+  <meta name="twitter:image" content="https://wobbly.site/static/assets/og/wobbly-og.svg" />
+  <link rel="icon" type="image/svg+xml" href="/static/assets/og/wobbly-mark.svg" />
+  <link rel="preload" href="/static/css/landing.css" as="style" />
   <link rel="stylesheet" href="/static/css/landing.css" />
 </head>
 <body>
+  <div class="ambient ambient-a" aria-hidden="true"></div>
+  <div class="ambient ambient-b" aria-hidden="true"></div>
+  <div class="ambient ambient-c" aria-hidden="true"></div>
+
   <main class="page">
-    <section class="shell">
-      <div class="hero">
+    <div class="shell">
+      <header class="topbar" data-reveal>
+        <a class="brand" href="/" aria-label="Wobbly home">
+          <span class="brand-mark" aria-hidden="true"></span>
+          <span class="brand-name">Wobbly</span>
+        </a>
+        <a
+          class="store-link"
+          href="https://apps.apple.com/ru/app/wobbly-sobriety-tracker/id6755603610?l=en-GB"
+          target="_blank"
+          rel="noreferrer"
+          data-i18n="navStore"
+        ></a>
+      </header>
+
+      <section class="hero" data-reveal>
         <div class="hero-copy">
           <div class="eyebrow" data-i18n="eyebrow"></div>
-          <h1 data-i18n="headline"></h1>
-          <p class="lead" data-i18n="body"></p>
-          <div class="actions">
-            <div class="cta-card">
-              <div class="cta-copy">
-                <strong data-i18n="ctaTitle"></strong>
-                <span data-i18n="ctaBody"></span>
-              </div>
-              <a class="app-store" href="https://apps.apple.com/ru/app/wobbly-sobriety-tracker/id6755603610?l=en-GB" target="_blank" rel="noreferrer" aria-label="App Store">
-                <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                  <path d="M16.37 12.56c.02 2.04 1.8 2.72 1.82 2.73-.02.05-.28.97-.92 1.92-.55.82-1.13 1.64-2.03 1.66-.88.02-1.16-.52-2.17-.52-1.01 0-1.32.5-2.14.54-.86.03-1.52-.87-2.08-1.69-1.15-1.66-2.02-4.68-.84-6.73.59-1.01 1.63-1.66 2.77-1.68.86-.02 1.67.58 2.18.58.51 0 1.48-.71 2.49-.61.42.02 1.61.17 2.37 1.28-.06.04-1.42.83-1.41 2.52Zm-1.92-4.94c.46-.56.78-1.35.69-2.13-.67.03-1.47.45-1.96 1.01-.43.5-.81 1.3-.71 2.06.75.06 1.52-.38 1.98-.94Z"/>
-                </svg>
-                <span class="app-store-copy">
-                  <small data-i18n="storeLabel"></small>
-                  <span>
-                    <small data-i18n="badgeTop"></small>
-                    <strong data-i18n="badgeBottom"></strong>
-                  </span>
-                </span>
-              </a>
-            </div>
-            <div class="hint" data-i18n="hint"></div>
+          <h1 data-i18n="heroTitle"></h1>
+          <p class="hero-subtitle" data-i18n="heroBody"></p>
+          <div class="hero-actions">
+            <a
+              class="primary-cta"
+              href="https://apps.apple.com/ru/app/wobbly-sobriety-tracker/id6755603610?l=en-GB"
+              target="_blank"
+              rel="noreferrer"
+              aria-label="Download on the App Store"
+            >
+              <span class="cta-label" data-i18n="ctaLabel"></span>
+              <span class="cta-title" data-i18n="ctaTitle"></span>
+            </a>
+            <p class="hero-note" data-i18n="heroNote"></p>
           </div>
         </div>
 
-        <div class="phone-wrap">
-          <div class="phone" aria-hidden="true">
-            <div class="screen">
-              <div class="icon">
-                <div class="icon-mark"></div>
+        <div class="hero-visual" aria-hidden="true">
+          <div class="floating-card floating-card-top">
+            <strong data-i18n="feature1Title"></strong>
+            <span data-i18n="feature1Body"></span>
+          </div>
+          <div class="floating-card floating-card-middle">
+            <strong data-i18n="feature2Title"></strong>
+            <span data-i18n="feature2Body"></span>
+          </div>
+          <div class="floating-card floating-card-bottom">
+            <strong data-i18n="feature3Title"></strong>
+            <span data-i18n="feature3Body"></span>
+          </div>
+
+          <div class="phone phone-main">
+            <div class="phone-screen">
+              <div class="screen-top">
+                <span class="screen-date" data-i18n="screenDate"></span>
+                <span class="screen-pill" data-i18n="screenLabel"></span>
               </div>
-              <h2>Wobbly</h2>
-              <p data-i18n="screenBody"></p>
-              <div class="mini-cards">
-                <div class="mini-card">
-                  <strong data-i18n="feature1Title"></strong>
-                  <span data-i18n="feature1Body"></span>
-                </div>
-                <div class="mini-card">
-                  <strong data-i18n="feature2Title"></strong>
-                  <span data-i18n="feature2Body"></span>
-                </div>
+              <div class="screen-score">
+                <strong data-i18n="screenNumber"></strong>
+                <span data-i18n="screenNumberLabel"></span>
+              </div>
+              <div class="screen-chart">
+                <span class="bar bar-1"></span>
+                <span class="bar bar-2"></span>
+                <span class="bar bar-3"></span>
+                <span class="bar bar-4"></span>
+                <span class="bar bar-5"></span>
+                <span class="bar bar-6"></span>
+                <span class="bar bar-7"></span>
+              </div>
+              <div class="screen-card">
+                <strong data-i18n="screenCardTitle"></strong>
+                <span data-i18n="screenCardBody"></span>
               </div>
             </div>
           </div>
         </div>
-      </div>
-
-      <section class="features">
-        <article class="feature">
-          <strong data-i18n="feature1Title"></strong>
-          <p data-i18n="feature1Body"></p>
-        </article>
-        <article class="feature">
-          <strong data-i18n="feature2Title"></strong>
-          <p data-i18n="feature2Body"></p>
-        </article>
-        <article class="feature">
-          <strong data-i18n="feature3Title"></strong>
-          <p data-i18n="feature3Body"></p>
-        </article>
       </section>
 
-      <footer data-i18n="footer"></footer>
-    </section>
+      <section class="section product" data-reveal>
+        <div class="section-heading">
+          <span class="section-kicker" data-i18n="productKicker"></span>
+          <h2 data-i18n="productTitle"></h2>
+        </div>
+        <div class="product-grid">
+          <article class="product-card glass-card">
+            <p data-i18n="productBody"></p>
+          </article>
+          <article class="product-card product-stats">
+            <div class="stat-line">
+              <strong data-i18n="productStat1Value"></strong>
+              <span data-i18n="productStat1Label"></span>
+            </div>
+            <div class="stat-line">
+              <strong data-i18n="productStat2Value"></strong>
+              <span data-i18n="productStat2Label"></span>
+            </div>
+            <div class="stat-line">
+              <strong data-i18n="productStat3Value"></strong>
+              <span data-i18n="productStat3Label"></span>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section class="section" data-reveal>
+        <div class="section-heading">
+          <span class="section-kicker" data-i18n="featuresKicker"></span>
+          <h2 data-i18n="featuresTitle"></h2>
+        </div>
+        <div class="feature-grid">
+          <article class="feature-card glass-card">
+            <div class="feature-icon feature-icon-a" aria-hidden="true"></div>
+            <strong data-i18n="feature1Title"></strong>
+            <p data-i18n="feature1BodyLong"></p>
+          </article>
+          <article class="feature-card glass-card">
+            <div class="feature-icon feature-icon-b" aria-hidden="true"></div>
+            <strong data-i18n="feature2Title"></strong>
+            <p data-i18n="feature2BodyLong"></p>
+          </article>
+          <article class="feature-card glass-card">
+            <div class="feature-icon feature-icon-c" aria-hidden="true"></div>
+            <strong data-i18n="feature3Title"></strong>
+            <p data-i18n="feature3BodyLong"></p>
+          </article>
+        </div>
+      </section>
+
+      <section class="section" data-reveal>
+        <div class="section-heading">
+          <span class="section-kicker" data-i18n="stepsKicker"></span>
+          <h2 data-i18n="stepsTitle"></h2>
+        </div>
+        <div class="steps-grid">
+          <article class="step-card">
+            <span class="step-number">01</span>
+            <strong data-i18n="step1Title"></strong>
+            <p data-i18n="step1Body"></p>
+          </article>
+          <article class="step-card">
+            <span class="step-number">02</span>
+            <strong data-i18n="step2Title"></strong>
+            <p data-i18n="step2Body"></p>
+          </article>
+          <article class="step-card">
+            <span class="step-number">03</span>
+            <strong data-i18n="step3Title"></strong>
+            <p data-i18n="step3Body"></p>
+          </article>
+        </div>
+      </section>
+
+      <section class="section screenshots" data-reveal>
+        <div class="section-heading">
+          <span class="section-kicker" data-i18n="shotsKicker"></span>
+          <h2 data-i18n="shotsTitle"></h2>
+        </div>
+        <div class="screens-grid" aria-hidden="true">
+          <div class="phone phone-small">
+            <div class="phone-screen shot-a">
+              <div class="shot-header">
+                <span class="shot-dot"></span>
+                <span class="shot-line"></span>
+              </div>
+              <div class="shot-block shot-block-a"></div>
+              <div class="shot-list">
+                <span></span>
+                <span></span>
+                <span></span>
+              </div>
+            </div>
+          </div>
+          <div class="phone phone-large">
+            <div class="phone-screen shot-b">
+              <div class="screen-score">
+                <strong data-i18n="shotCenterNumber"></strong>
+                <span data-i18n="shotCenterLabel"></span>
+              </div>
+              <div class="screen-chart">
+                <span class="bar bar-1"></span>
+                <span class="bar bar-2"></span>
+                <span class="bar bar-3"></span>
+                <span class="bar bar-4"></span>
+                <span class="bar bar-5"></span>
+                <span class="bar bar-6"></span>
+                <span class="bar bar-7"></span>
+              </div>
+              <div class="screen-card">
+                <strong data-i18n="shotCenterCardTitle"></strong>
+                <span data-i18n="shotCenterCardBody"></span>
+              </div>
+            </div>
+          </div>
+          <div class="phone phone-small">
+            <div class="phone-screen shot-c">
+              <div class="shot-calendar">
+                <span></span>
+                <span></span>
+                <span></span>
+                <span></span>
+                <span></span>
+                <span></span>
+                <span></span>
+                <span></span>
+                <span></span>
+              </div>
+              <div class="shot-block shot-block-c"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section cta-section" id="download" data-reveal>
+        <div class="cta-panel glass-card">
+          <div class="cta-panel-copy">
+            <span class="section-kicker" data-i18n="ctaKicker"></span>
+            <h2 data-i18n="ctaSectionTitle"></h2>
+            <p data-i18n="ctaSectionBody"></p>
+          </div>
+          <a
+            class="primary-cta primary-cta-large"
+            href="https://apps.apple.com/ru/app/wobbly-sobriety-tracker/id6755603610?l=en-GB"
+            target="_blank"
+            rel="noreferrer"
+            aria-label="Download on the App Store"
+          >
+            <span class="cta-label" data-i18n="ctaLabel"></span>
+            <span class="cta-title" data-i18n="ctaTitle"></span>
+          </a>
+        </div>
+      </section>
+
+      <footer class="footer" data-reveal>
+        <span class="footer-brand">Wobbly</span>
+        <nav class="footer-nav" aria-label="Footer">
+          <a href="/privacy" data-i18n="footerPrivacy"></a>
+          <a href="mailto:hello@wobbly.site" data-i18n="footerContact"></a>
+        </nav>
+      </footer>
+    </div>
   </main>
 
   <script src="/static/js/landing.js" defer></script>
