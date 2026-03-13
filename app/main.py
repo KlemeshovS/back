@@ -1,11 +1,14 @@
 from contextlib import asynccontextmanager
 
 from fastapi import Depends, FastAPI, Header, HTTPException, Query, Request, status
+from fastapi.openapi.docs import get_swagger_ui_html
+from fastapi.responses import HTMLResponse
 from psycopg.errors import UniqueViolation
 
 from app.auth import generate_access_token, hash_access_token
 from app.config import settings
 from app.database import get_connection, init_db
+from app.docs_page import DOCS_HTML
 from app.rate_limit import rate_limiter
 from app.schemas import (
     AnonymousAuthResponse,
@@ -26,7 +29,13 @@ async def lifespan(_: FastAPI):
     yield
 
 
-app = FastAPI(title="Rating Service", lifespan=lifespan)
+app = FastAPI(
+    title="Rating Service",
+    lifespan=lifespan,
+    docs_url=None,
+    redoc_url=None,
+    openapi_url="/api/openapi.json",
+)
 
 
 def get_client_ip(request: Request) -> str:
@@ -100,6 +109,19 @@ def get_current_user(authorization: str | None = Header(default=None)) -> dict:
 @app.get("/health")
 def healthcheck() -> dict[str, str]:
     return {"status": "ok"}
+
+
+@app.get("/api/swagger", include_in_schema=False)
+def swagger_ui() -> HTMLResponse:
+    return get_swagger_ui_html(
+        openapi_url=app.openapi_url,
+        title=f"{app.title} - Swagger UI",
+    )
+
+
+@app.get("/api/docs", include_in_schema=False)
+def docs_page() -> HTMLResponse:
+    return HTMLResponse(content=DOCS_HTML)
 
 
 @app.post(
