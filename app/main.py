@@ -9,6 +9,7 @@ from app.auth import generate_access_token, hash_access_token
 from app.config import settings
 from app.database import get_connection, init_db
 from app.docs_page import DOCS_HTML
+from app.landing_page import render_landing_page
 from app.rate_limit import rate_limiter
 from app.schemas import (
     AnonymousAuthResponse,
@@ -104,6 +105,23 @@ def get_current_user(authorization: str | None = Header(default=None)) -> dict:
         )
 
     return user
+
+
+def get_preferred_locale(request: Request) -> str:
+    accept_language = request.headers.get("accept-language", "").lower()
+    if "ru" in accept_language:
+        return "ru"
+
+    return "en"
+
+
+@app.get("/", include_in_schema=False)
+def landing_page(request: Request) -> HTMLResponse:
+    host = request.headers.get("host", "")
+    if host.startswith("wobbly.site"):
+        return HTMLResponse(content=render_landing_page(get_preferred_locale(request)))
+
+    return HTMLResponse(content="<h1>Wobbly API</h1>", status_code=status.HTTP_200_OK)
 
 
 @app.get("/health")
