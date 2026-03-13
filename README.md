@@ -13,7 +13,65 @@
 
 ## API
 
+### `POST /auth/anonymous`
+
+Создает анонимного пользователя и возвращает bearer token.
+
+Response:
+
+```json
+{
+  "user_id": 15,
+  "access_token": "rt_xxxxx",
+  "token_type": "bearer"
+}
+```
+
+После этого токен надо передавать в заголовке:
+
+```http
+Authorization: Bearer rt_xxxxx
+```
+
+### `GET /me`
+
+Возвращает профиль текущего авторизованного пользователя.
+
+### `PATCH /me/profile`
+
+Request:
+
+```json
+{
+  "username": "player_1",
+  "participate_in_rating": true
+}
+```
+
+Responses:
+- `200` профиль обновлён
+- `401` не передан или невалиден bearer token
+- `409` такой `username` уже существует
+- `422` нельзя включить участие в рейтинге без `username`
+
+### `POST /me/score`
+
+Request:
+
+```json
+{
+  "score": 42
+}
+```
+
+Responses:
+- `200` рейтинг обновлён
+- `401` не передан или невалиден bearer token
+- `429` слишком много обновлений рейтинга
+
 ### `POST /users/register`
+
+Legacy endpoint. Оставлен для обратной совместимости.
 
 Request:
 
@@ -39,6 +97,8 @@ Response:
 ```
 
 ### `POST /users/score`
+
+Legacy endpoint. Оставлен для обратной совместимости.
 
 Request:
 
@@ -115,10 +175,10 @@ api.example.com {
 - подготовил backend
 - добавил контейнеризацию
 - описал API-контракт
+- добавил anonymous auth через bearer token
 
 ## Что ещё можно улучшить
 
-- добавить авторизацию запросов от мобильного клиента
 - вынести rate limiting в Redis или PostgreSQL для multi-instance окружения
 - вынести миграции в Alembic
 - добавить тесты
