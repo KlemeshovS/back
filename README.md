@@ -21,7 +21,8 @@
 - продовый сервис: `rating-service.service`
 - продовый путь на сервере: `/opt/rating-service`
 - reverse proxy в production: `nginx`
-- деплой в production сейчас делается не через `git pull` на сервере, а через копирование файлов в `/opt/rating-service` и `systemctl restart rating-service`
+- основной путь деплоя теперь: merge в `main` -> GitHub Actions -> проверки -> deploy на production
+- ручной deploy через копирование файлов в `/opt/rating-service` и `systemctl restart rating-service` остается как fallback
 
 Это важно:
 - локальный `docker compose` нужен для разработки
