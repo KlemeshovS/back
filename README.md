@@ -229,3 +229,4 @@ api.example.com {
 ## Deployment
 
 - deploy guide: `DEPLOY.md`
+- GitHub Actions pipeline: `.github/workflows/pipeline.yml`

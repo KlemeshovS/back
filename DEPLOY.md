@@ -234,3 +234,45 @@ curl -H 'Accept-Language: en-US,en;q=0.9' https://wobbly.site
 - site host: `wobbly.site`
 - deploy access: `root@api.wobbly.site` через `deploy_key`
 - prod deploy is file copy + systemctl restart, not git pull on server
+
+## CI/CD Automation
+
+Теперь стандартный целевой flow такой:
+1. разработка идет в короткой ветке
+2. ветка вливается в `main`
+3. GitHub Actions запускает `.github/workflows/pipeline.yml`
+4. job `verify` прогоняет проверки
+5. если проверки успешны, job `deploy` выкатывает текущий `main` на production
+
+### GitHub Secrets
+
+Для workflow нужно завести такие secrets в GitHub repository settings:
+- `DEPLOY_HOST`
+- `DEPLOY_USER`
+- `DEPLOY_PATH`
+- `DEPLOY_SERVICE`
+- `DEPLOY_OWNER`
+- `DEPLOY_SSH_KEY`
+
+Для текущего production значения такие:
+- `DEPLOY_HOST=api.wobbly.site`
+- `DEPLOY_USER=root`
+- `DEPLOY_PATH=/opt/rating-service`
+- `DEPLOY_SERVICE=rating-service`
+- `DEPLOY_OWNER=ratingapp:ratingapp`
+
+`DEPLOY_SSH_KEY` должен содержать приватный ключ, который пускает на production-сервер.
+
+### Workflow Behavior
+
+`pipeline.yml` делает следующее:
+- на `pull_request` в `main` запускает только `verify`
+- на `push` в `main` запускает `verify`, а затем `deploy`
+
+### Local Scripts Used By CI/CD
+
+Pipeline опирается на два локальных скрипта:
+- `scripts/ci_check.sh`
+- `scripts/deploy_release.sh`
+
+Это сделано специально, чтобы логика проверки и деплоя не была размазана только по YAML.
