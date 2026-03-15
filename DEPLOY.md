@@ -244,6 +244,11 @@ curl -H 'Accept-Language: en-US,en;q=0.9' https://wobbly.site
 4. job `verify` прогоняет проверки
 5. если проверки успешны, job `deploy` выкатывает текущий `main` на production
 
+Текущее состояние:
+- workflow уже лежит в репозитории: `.github/workflows/pipeline.yml`
+- repository secrets для deploy уже заведены в GitHub
+- целевой основной путь доставки теперь через GitHub Actions, а не через ручной `scp`
+
 ### GitHub Secrets
 
 Для workflow нужно завести такие secrets в GitHub repository settings:
@@ -263,6 +268,13 @@ curl -H 'Accept-Language: en-US,en;q=0.9' https://wobbly.site
 
 `DEPLOY_SSH_KEY` должен содержать приватный ключ, который пускает на production-сервер.
 
+Важно:
+- в secret должен лежать именно приватный ключ
+- ключ нужно вставлять многострочно, как есть
+- нельзя вставлять `.pub`
+- нельзя сворачивать ключ в одну строку
+- если ключ защищен passphrase, GitHub Actions не сможет использовать его без дополнительной настройки
+
 ### Workflow Behavior
 
 `pipeline.yml` делает следующее:
@@ -276,3 +288,42 @@ Pipeline опирается на два локальных скрипта:
 - `scripts/deploy_release.sh`
 
 Это сделано специально, чтобы логика проверки и деплоя не была размазана только по YAML.
+
+### Common Failure: SSH Key Parsing
+
+Если GitHub Actions падает с ошибкой вида:
+
+```text
+Load key "/home/runner/.ssh/deploy_key": error in libcrypto
+Permission denied (publickey,password)
+```
+
+Почти всегда это значит одно из следующего:
+- в `DEPLOY_SSH_KEY` вставлен публичный ключ вместо приватного
+- приватный ключ вставлен без переносов строк
+- ключ поврежден при копировании
+- ключ зашифрован passphrase и runner не может его открыть
+
+Правильный `DEPLOY_SSH_KEY` должен выглядеть примерно так:
+
+```text
+-----BEGIN OPENSSH PRIVATE KEY-----
+...
+-----END OPENSSH PRIVATE KEY-----
+```
+
+Для этого проекта ориентир такой:
+- локально этот же ключ должен пускать командой `ssh -i /Users/klem/Documents/eguene/deploy_key root@api.wobbly.site`
+- именно содержимое этого приватного файла и нужно класть в `DEPLOY_SSH_KEY`
+
+### Operational Rule
+
+Если pipeline после merge в `main` зеленый, считаем production-деплой выполненным.
+
+Если pipeline красный:
+1. сначала смотрим job `verify`
+2. если `verify` зеленый, смотрим job `deploy`
+3. если ошибка связана с SSH, сначала проверяем `DEPLOY_SSH_KEY`
+4. только потом идем к ручному fallback deploy
+
+Ручной deploy по `scp` и `systemctl restart` оставляем только как запасной вариант.

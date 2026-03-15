@@ -91,7 +91,9 @@ Commit message оформляем по `Conventional Commits`.
 4. сделать commit в формате Conventional Commits
 5. запушить ветку
 6. влить изменения обратно в `main`
-7. удалить ветку локально и на remote после merge
+7. дождаться GitHub Actions pipeline
+8. если pipeline зеленый, считать deploy завершенным
+9. удалить ветку локально и на remote после merge
 
 ## Our Team Rule
 
@@ -101,6 +103,7 @@ Commit message оформляем по `Conventional Commits`.
 - большие задачи режем на несколько маленьких commits, если это помогает чтению истории
 - `main` держим как самую актуальную и стабильную ветку
 - после merge удаляем ветку локально и в GitHub
+- после merge в `main` ориентируемся сначала на GitHub Actions pipeline, а не на ручной деплой
 
 ## Handoff Rule
 
