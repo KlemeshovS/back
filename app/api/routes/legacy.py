@@ -2,7 +2,12 @@ from fastapi import APIRouter, Request, status
 
 from app.api.dependencies import enforce_rate_limit, get_client_ip
 from app.core.config import settings
-from app.domain.schemas import RegisterUserRequest, StatusResponse, UpdateScoreRequest, UserScoreResponse
+from app.domain.schemas import (
+    RegisterUserRequest,
+    StatusResponse,
+    UpdateScoreRequest,
+    UserScoreResponse,
+)
 from app.services import user_service
 
 router = APIRouter()

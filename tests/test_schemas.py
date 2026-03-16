@@ -1,7 +1,11 @@
 import pytest
 from pydantic import ValidationError
 
-from app.domain.schemas import ProfileUpdateRequest, RatingParticipationUpdateRequest, UpdateScoreRequest
+from app.domain.schemas import (
+    ProfileUpdateRequest,
+    RatingParticipationUpdateRequest,
+    UpdateScoreRequest,
+)
 
 
 def test_update_score_request_requires_identifier() -> None:

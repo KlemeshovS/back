@@ -12,7 +12,11 @@ from app.domain.schemas import (
 )
 
 
-def save_profile(user_id: int, username: str | None, participate_in_rating: bool) -> ProfileResponse:
+def save_profile(
+    user_id: int,
+    username: str | None,
+    participate_in_rating: bool,
+) -> ProfileResponse:
     if participate_in_rating and not username:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
@@ -112,7 +116,11 @@ def update_my_score(user_id: int, score: int) -> UserScoreResponse:
     return UserScoreResponse(**user)
 
 
-def update_legacy_score(score: int, user_id: int | None = None, username: str | None = None) -> UserScoreResponse:
+def update_legacy_score(
+    score: int,
+    user_id: int | None = None,
+    username: str | None = None,
+) -> UserScoreResponse:
     with get_connection() as conn:
         with conn.cursor() as cur:
             if user_id is not None:
