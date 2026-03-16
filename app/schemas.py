@@ -8,8 +8,8 @@ from app.domain.schemas import (
     ScoreUpdateRequest,
     StatusResponse,
     UpdateScoreRequest,
-    UserScoreResponse,
     Username,
+    UserScoreResponse,
 )
 
 __all__ = [

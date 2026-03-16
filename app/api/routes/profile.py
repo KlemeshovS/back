@@ -12,10 +12,11 @@ from app.domain.schemas import (
 from app.services import user_service
 
 router = APIRouter()
+current_user_dependency = Depends(get_current_user)
 
 
 @router.get("/me", response_model=ProfileResponse)
-def get_my_profile(current_user: dict = Depends(get_current_user)) -> ProfileResponse:
+def get_my_profile(current_user: dict = current_user_dependency) -> ProfileResponse:
     return ProfileResponse(
         id=current_user["id"],
         username=current_user["username"],
@@ -26,7 +27,7 @@ def get_my_profile(current_user: dict = Depends(get_current_user)) -> ProfileRes
 @router.patch("/me/profile", response_model=ProfileResponse)
 def update_my_profile(
     payload: ProfileUpdateRequest,
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = current_user_dependency,
 ) -> ProfileResponse:
     username = payload.username if payload.username is not None else current_user["username"]
     return user_service.save_profile(current_user["id"], username, payload.participate_in_rating)
@@ -35,7 +36,7 @@ def update_my_profile(
 @router.patch("/me/rating", response_model=ProfileResponse)
 def update_my_rating_participation(
     payload: RatingParticipationUpdateRequest,
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = current_user_dependency,
 ) -> ProfileResponse:
     return user_service.save_profile(
         current_user["id"],
@@ -48,7 +49,7 @@ def update_my_rating_participation(
 def update_my_score(
     payload: ScoreUpdateRequest,
     request: Request,
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = current_user_dependency,
 ) -> UserScoreResponse:
     client_ip = get_client_ip(request)
     enforce_rate_limit(
