@@ -106,6 +106,7 @@ Commit message оформляем по `Conventional Commits`.
 - после merge в `main` ориентируемся сначала на GitHub Actions pipeline, а не на ручной деплой
 - если меняется API-контракт или поведение endpoint'ов, в том же изменении нужно обновлять `https://api.wobbly.site/api/docs`
 - по мере роста API текстовую docs page нужно упрощать и перестраивать так, чтобы она оставалась удобной для чтения
+- API-изменение без обновления docs считается незавершенным
 
 ## Handoff Rule
 

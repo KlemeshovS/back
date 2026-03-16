@@ -16,6 +16,7 @@ from app.schemas import (
     LeaderboardResponse,
     ProfileResponse,
     ProfileUpdateRequest,
+    RatingParticipationUpdateRequest,
     RegisterUserRequest,
     ScoreUpdateRequest,
     StatusResponse,
@@ -110,6 +111,43 @@ def get_current_user(authorization: str | None = Header(default=None)) -> dict:
     return user
 
 
+def save_profile(user_id: int, username: str | None, participate_in_rating: bool) -> ProfileResponse:
+    if participate_in_rating and not username:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Username is required to participate in rating",
+        )
+
+    try:
+        with get_connection() as conn:
+            with conn.cursor() as cur:
+                cur.execute(
+                    """
+                    UPDATE users
+                    SET username = %s,
+                        is_rating_enabled = %s,
+                        updated_at = NOW(),
+                        last_seen_at = NOW()
+                    WHERE id = %s
+                    RETURNING id, username, is_rating_enabled;
+                    """,
+                    (username, participate_in_rating, user_id),
+                )
+                user = cur.fetchone()
+            conn.commit()
+    except UniqueViolation as exc:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Username already exists",
+        ) from exc
+
+    return ProfileResponse(
+        id=user["id"],
+        username=user["username"],
+        participate_in_rating=user["is_rating_enabled"],
+    )
+
+
 @app.get("/", include_in_schema=False)
 def landing_page(request: Request):
     host = request.headers.get("host", "")
@@ -199,40 +237,18 @@ def update_my_profile(
     current_user: dict = Depends(get_current_user),
 ) -> ProfileResponse:
     username = payload.username if payload.username is not None else current_user["username"]
+    return save_profile(current_user["id"], username, payload.participate_in_rating)
 
-    if payload.participate_in_rating and not username:
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail="Username is required to participate in rating",
-        )
 
-    try:
-        with get_connection() as conn:
-            with conn.cursor() as cur:
-                cur.execute(
-                    """
-                    UPDATE users
-                    SET username = %s,
-                        is_rating_enabled = %s,
-                        updated_at = NOW(),
-                        last_seen_at = NOW()
-                    WHERE id = %s
-                    RETURNING id, username, is_rating_enabled;
-                    """,
-                    (username, payload.participate_in_rating, current_user["id"]),
-                )
-                user = cur.fetchone()
-            conn.commit()
-    except UniqueViolation as exc:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="Username already exists",
-        ) from exc
-
-    return ProfileResponse(
-        id=user["id"],
-        username=user["username"],
-        participate_in_rating=user["is_rating_enabled"],
+@app.patch("/me/rating", response_model=ProfileResponse)
+def update_my_rating_participation(
+    payload: RatingParticipationUpdateRequest,
+    current_user: dict = Depends(get_current_user),
+) -> ProfileResponse:
+    return save_profile(
+        current_user["id"],
+        current_user["username"],
+        payload.participate_in_rating,
     )
 
 
