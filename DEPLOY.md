@@ -189,6 +189,8 @@ Pipeline опирается на локальные скрипты:
 - распаковывает release
 - обновляет Python dependencies в production venv через `pip install -r requirements.txt`
 - только потом перезапускает `rating-service`
+- ждет не только `systemctl is-active`, но и успешный ответ `http://127.0.0.1:8000/health`
+- если `/health` не поднимается вовремя, печатает свежие `journalctl` логи сервиса и завершает deploy с ошибкой
 
 ## API Docs Sync Rule
 

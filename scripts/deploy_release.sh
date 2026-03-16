@@ -48,6 +48,13 @@ ssh -o BatchMode=yes -i "$SSH_KEY_PATH" "${DEPLOY_USER}@${DEPLOY_HOST}" "\
     sleep 2; \
   done && \
   systemctl is-active '${DEPLOY_SERVICE}' && \
-  curl -fsS http://127.0.0.1:8000/health"
+  for attempt in 1 2 3 4 5 6 7 8 9 10; do \
+    if curl -fsS http://127.0.0.1:8000/health; then \
+      exit 0; \
+    fi; \
+    sleep 2; \
+  done; \
+  journalctl -u '${DEPLOY_SERVICE}' -n 50 --no-pager; \
+  exit 1"
 
 rm -f "$TMP_ARCHIVE"
