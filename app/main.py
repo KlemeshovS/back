@@ -368,14 +368,16 @@ def update_score(payload: UpdateScoreRequest, request: Request) -> UserScoreResp
     return UserScoreResponse(**user)
 
 
-def fetch_leaderboard(order: str, limit: int) -> LeaderboardResponse:
+def fetch_leaderboard(order: str, score_filter: str, limit: int) -> LeaderboardResponse:
     with get_connection() as conn:
         with conn.cursor() as cur:
             cur.execute(
-                """
+                f"""
                 SELECT COUNT(*) AS total
                 FROM users
-                WHERE is_rating_enabled = TRUE AND username IS NOT NULL;
+                WHERE is_rating_enabled = TRUE
+                  AND username IS NOT NULL
+                  AND score {score_filter};
                 """
             )
             total_row = cur.fetchone()
@@ -383,7 +385,9 @@ def fetch_leaderboard(order: str, limit: int) -> LeaderboardResponse:
                 f"""
                 SELECT username, score
                 FROM users
-                WHERE is_rating_enabled = TRUE AND username IS NOT NULL
+                WHERE is_rating_enabled = TRUE
+                  AND username IS NOT NULL
+                  AND score {score_filter}
                 ORDER BY score {order}, username ASC
                 LIMIT %s;
                 """,
@@ -399,9 +403,9 @@ def fetch_leaderboard(order: str, limit: int) -> LeaderboardResponse:
 
 @app.get("/leaderboard/top", response_model=LeaderboardResponse)
 def top_leaderboard(limit: int = Query(default=100, ge=1, le=100)) -> LeaderboardResponse:
-    return fetch_leaderboard("DESC", limit)
+    return fetch_leaderboard("DESC", ">= 0", limit)
 
 
 @app.get("/leaderboard/bottom", response_model=LeaderboardResponse)
 def bottom_leaderboard(limit: int = Query(default=100, ge=1, le=100)) -> LeaderboardResponse:
-    return fetch_leaderboard("ASC", limit)
+    return fetch_leaderboard("ASC", "< 0", limit)

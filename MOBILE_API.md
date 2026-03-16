@@ -205,7 +205,7 @@ Response:
 
 ### `GET /leaderboard/top?limit=100`
 
-Возвращает топ пользователей.
+Возвращает топ пользователей только с `score >= 0`.
 
 Response:
 
@@ -227,7 +227,7 @@ Response:
 
 ### `GET /leaderboard/bottom?limit=100`
 
-Возвращает антитоп пользователей.
+Возвращает антитоп пользователей только с `score < 0`.
 
 Response:
 
