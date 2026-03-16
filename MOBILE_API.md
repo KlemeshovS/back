@@ -23,7 +23,7 @@ https://api.wobbly.site/api/docs
 Для защищенных методов нужно передавать:
 
 ```http
-Authorization: Bearer <access_token>
+Authorization: Bearer <accessToken>
 ```
 
 Защищенные методы:
@@ -35,12 +35,12 @@ Authorization: Bearer <access_token>
 ## Storage On Mobile App Side
 
 Нужно сохранять локально:
-- `access_token`
-- `user_id`
+- `accessToken`
+- `userId`
 
 Можно дополнительно кешировать:
 - `username`
-- `participate_in_rating`
+- `participateInRating`
 
 Источником истины лучше считать ответ `GET /me`.
 
@@ -48,11 +48,11 @@ Authorization: Bearer <access_token>
 
 ### First Launch
 
-1. Проверить, есть ли локально `access_token`
+1. Проверить, есть ли локально `accessToken`
 2. Если токена нет:
    - вызвать `POST /auth/anonymous`
-   - сохранить `access_token`
-   - сохранить `user_id`
+   - сохранить `accessToken`
+   - сохранить `userId`
 
 ### Regular App Start
 
@@ -97,9 +97,9 @@ Response:
 
 ```json
 {
-  "user_id": 26,
-  "access_token": "rt_xxxxx",
-  "token_type": "bearer"
+  "userId": 26,
+  "accessToken": "rt_xxxxx",
+  "tokenType": "bearer"
 }
 ```
 
@@ -113,7 +113,7 @@ Response:
 {
   "id": 26,
   "username": null,
-  "participate_in_rating": false
+  "participateInRating": false
 }
 ```
 
@@ -126,7 +126,7 @@ Request:
 ```json
 {
   "username": "player_1",
-  "participate_in_rating": true
+  "participateInRating": true
 }
 ```
 
@@ -136,12 +136,12 @@ Response:
 {
   "id": 26,
   "username": "player_1",
-  "participate_in_rating": true
+  "participateInRating": true
 }
 ```
 
 Правила:
-- если `participate_in_rating = true`, `username` должен быть заполнен
+- если `participateInRating = true`, `username` должен быть заполнен
 - `username` должен быть уникальным
 - разрешены только латинские буквы, цифры, `_`, `.`, `-`
 
@@ -153,7 +153,7 @@ Request:
 
 ```json
 {
-  "participate_in_rating": false
+  "participateInRating": false
 }
 ```
 
@@ -163,13 +163,13 @@ Response:
 {
   "id": 26,
   "username": "player_1",
-  "participate_in_rating": false
+  "participateInRating": false
 }
 ```
 
 Важно:
-- если отправить `"participate_in_rating": true` без сохраненного `username`, backend вернет `422`
-- если отправить `"participate_in_rating": false`, пользователь исключается из leaderboard
+- если отправить `"participateInRating": true` без сохраненного `username`, backend вернет `422`
+- если отправить `"participateInRating": false`, пользователь исключается из leaderboard
 
 ### `POST /me/score`
 
@@ -193,7 +193,7 @@ Response:
 ```
 
 Важно:
-- мобильное приложение не должно передавать `user_id`
+- мобильное приложение не должно передавать `userId`
 - мобильное приложение не должно передавать `username`
 - backend сам определяет пользователя по токену
 

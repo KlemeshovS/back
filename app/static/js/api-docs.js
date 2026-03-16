@@ -8,7 +8,7 @@ class DocsPage {
           {
             pre: "https://api.wobbly.site",
             muted:
-              "Для защищенных методов нужно передавать заголовок Authorization: Bearer <access_token>.",
+              "Для защищенных методов нужно передавать заголовок Authorization: Bearer <accessToken>.",
           },
         ],
       },
@@ -18,7 +18,7 @@ class DocsPage {
         quickGrid: [
           {
             title: "1. Первый запуск",
-            body: "Вызвать POST /auth/anonymous, сохранить access_token и user_id.",
+            body: "Вызвать POST /auth/anonymous, сохранить accessToken и userId.",
           },
           {
             title: "2. Загрузка профиля",
@@ -26,7 +26,7 @@ class DocsPage {
           },
           {
             title: "3. Сохранение профиля",
-            body: "Вызвать PATCH /me/profile с username и participate_in_rating.",
+            body: "Вызвать PATCH /me/profile с username и participateInRating.",
           },
           {
             title: "4. Участие в рейтинге",
@@ -61,9 +61,9 @@ class DocsPage {
             paragraphs: ["Создает anonymous user и возвращает bearer token."],
             request: "{}",
             response: `{
-  "user_id": 26,
-  "access_token": "rt_xxxxx",
-  "token_type": "bearer"
+  "userId": 26,
+  "accessToken": "rt_xxxxx",
+  "tokenType": "bearer"
 }`,
           },
         ],
@@ -76,11 +76,11 @@ class DocsPage {
             method: "GET",
             badgeClass: "get",
             path: "/me",
-            headers: "Authorization: Bearer <access_token>",
+            headers: "Authorization: Bearer <accessToken>",
             response: `{
   "id": 26,
   "username": null,
-  "participate_in_rating": false
+  "participateInRating": false
 }`,
           },
         ],
@@ -93,19 +93,19 @@ class DocsPage {
             method: "PATCH",
             badgeClass: "patch",
             path: "/me/profile",
-            headers: `Authorization: Bearer <access_token>
+            headers: `Authorization: Bearer <accessToken>
 Content-Type: application/json`,
             request: `{
   "username": "player_1",
-  "participate_in_rating": true
+  "participateInRating": true
 }`,
             response: `{
   "id": 26,
   "username": "player_1",
-  "participate_in_rating": true
+  "participateInRating": true
 }`,
             list: [
-              "Если participate_in_rating = true, username должен быть заполнен.",
+              "Если participateInRating = true, username должен быть заполнен.",
               "username должен быть уникальным.",
               "Разрешены только латиница, цифры, _, ., -.",
             ],
@@ -120,19 +120,19 @@ Content-Type: application/json`,
             method: "PATCH",
             badgeClass: "patch",
             path: "/me/rating",
-            headers: `Authorization: Bearer <access_token>
+            headers: `Authorization: Bearer <accessToken>
 Content-Type: application/json`,
             request: `{
-  "participate_in_rating": false
+  "participateInRating": false
 }`,
             response: `{
   "id": 26,
   "username": "player_1",
-  "participate_in_rating": false
+  "participateInRating": false
 }`,
             list: [
-              "Если participate_in_rating = true, у пользователя уже должен быть username.",
-              "Если participate_in_rating = false, пользователь исключается из leaderboard.",
+              "Если participateInRating = true, у пользователя уже должен быть username.",
+              "Если participateInRating = false, пользователь исключается из leaderboard.",
             ],
           },
         ],
@@ -145,7 +145,7 @@ Content-Type: application/json`,
             method: "POST",
             badgeClass: "post",
             path: "/me/score",
-            headers: `Authorization: Bearer <access_token>
+            headers: `Authorization: Bearer <accessToken>
 Content-Type: application/json`,
             request: `{
   "score": 123
@@ -155,7 +155,7 @@ Content-Type: application/json`,
   "score": 123
 }`,
             muted:
-              "Мобильное приложение не должно передавать user_id или username. Backend определяет пользователя по токену.",
+              "Мобильное приложение не должно передавать userId или username. Backend определяет пользователя по токену.",
           },
         ],
       },

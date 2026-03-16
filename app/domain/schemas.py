@@ -2,52 +2,66 @@ from __future__ import annotations
 
 from typing import Optional
 
-from pydantic import BaseModel, ConfigDict, Field, StringConstraints, model_validator
-from typing_extensions import Annotated
-
-Username = Annotated[
-    str,
-    StringConstraints(
-        strip_whitespace=True,
-        min_length=3,
-        max_length=64,
-        pattern=r"^[A-Za-z0-9_.-]+$",
-    ),
-]
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 
-class RegisterUserRequest(BaseModel):
-    username: Username
+def to_camel(value: str) -> str:
+    parts = value.split("_")
+    return parts[0] + "".join(part.capitalize() for part in parts[1:])
 
 
-class AnonymousAuthResponse(BaseModel):
+class ApiModel(BaseModel):
+    model_config = ConfigDict(
+        alias_generator=to_camel,
+        populate_by_name=True,
+    )
+
+USERNAME_PATTERN = r"^[A-Za-z0-9_.-]+$"
+Username = str
+
+
+class RegisterUserRequest(ApiModel):
+    username: str = Field(min_length=3, max_length=64, pattern=USERNAME_PATTERN)
+
+
+class AnonymousAuthResponse(ApiModel):
     user_id: int
     access_token: str
     token_type: str = "bearer"
 
 
-class ProfileUpdateRequest(BaseModel):
-    username: Optional[Username] = None
+class ProfileUpdateRequest(ApiModel):
+    username: Optional[str] = Field(
+        default=None,
+        min_length=3,
+        max_length=64,
+        pattern=USERNAME_PATTERN,
+    )
     participate_in_rating: bool
 
 
-class RatingParticipationUpdateRequest(BaseModel):
+class RatingParticipationUpdateRequest(ApiModel):
     participate_in_rating: bool
 
 
-class ProfileResponse(BaseModel):
+class ProfileResponse(ApiModel):
     id: int
     username: Optional[str] = None
     participate_in_rating: bool
 
 
-class ScoreUpdateRequest(BaseModel):
+class ScoreUpdateRequest(ApiModel):
     score: int = Field(ge=-2_147_483_648, le=2_147_483_647)
 
 
-class UpdateScoreRequest(BaseModel):
+class UpdateScoreRequest(ApiModel):
     user_id: Optional[int] = Field(default=None, ge=1)
-    username: Optional[Username] = None
+    username: Optional[str] = Field(
+        default=None,
+        min_length=3,
+        max_length=64,
+        pattern=USERNAME_PATTERN,
+    )
     score: int = Field(ge=-2_147_483_648, le=2_147_483_647)
 
     @model_validator(mode="after")
@@ -58,19 +72,23 @@ class UpdateScoreRequest(BaseModel):
         return self
 
 
-class UserScoreResponse(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
+class UserScoreResponse(ApiModel):
+    model_config = ConfigDict(
+        alias_generator=to_camel,
+        populate_by_name=True,
+        from_attributes=True,
+    )
 
     username: Optional[str] = None
     score: int
 
 
-class LeaderboardResponse(BaseModel):
+class LeaderboardResponse(ApiModel):
     items: list[UserScoreResponse]
     total: int
 
 
-class StatusResponse(BaseModel):
+class StatusResponse(ApiModel):
     status: str
     id: int
     username: str
