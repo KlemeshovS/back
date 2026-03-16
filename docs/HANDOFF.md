@@ -18,6 +18,7 @@
 - production path: `/opt/rating-service`
 - live service: `rating-service.service`
 - reverse proxy: `nginx`
+- базовый `nginx` rate limiting уже включен на `api.wobbly.site`
 - app process: `uvicorn` behind systemd
 - SSH access: `root@api.wobbly.site` через локальный `deploy_key`
 - рабочий пользователь приложения: `ratingapp`
@@ -177,3 +178,4 @@ Tooling config:
 - readiness endpoint `/ready`
 - richer integration tests with test DB
 - structured logging
+- fail2ban for repeated 401/429 abuse

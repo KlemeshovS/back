@@ -55,6 +55,7 @@ Backend, landing page и production docs для `Wobbly`.
 - продовый сервис: `rating-service.service`
 - продовый путь на сервере: `/opt/rating-service`
 - reverse proxy в production: `nginx`
+- базовый edge-side rate limiting уже включен на `api.wobbly.site`
 - основной путь деплоя: merge в `main` -> GitHub Actions -> verify -> deploy
 - ручной deploy через копирование файлов в `/opt/rating-service` и `systemctl restart rating-service` остается fallback-сценарием
 
@@ -190,6 +191,7 @@ docker compose up --build
 - усилить integration tests сценариями с тестовой БД
 - добавить readiness endpoint
 - добавить structured logging
+- добавить fail2ban или Cloudflare как следующий anti-abuse слой
 
 ## Development
 
