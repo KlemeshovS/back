@@ -1,7 +1,6 @@
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints, model_validator
 from typing_extensions import Annotated
 
-
 Username = Annotated[
     str,
     StringConstraints(
