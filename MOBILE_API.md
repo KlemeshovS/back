@@ -12,6 +12,12 @@ https://api.wobbly.site
 https://api.wobbly.site/api/swagger
 ```
 
+## Text Docs
+
+```text
+https://api.wobbly.site/api/docs
+```
+
 ## Authorization
 
 Для защищенных методов нужно передавать:
@@ -59,6 +65,9 @@ Authorization: Bearer <access_token>
 Когда пользователь вводит имя и включает участие в рейтинге:
 - вызвать `PATCH /me/profile`
 
+Если нужно отдельно включить или выключить себя из рейтингов:
+- вызвать `PATCH /me/rating`
+
 ### Score Update
 
 Когда приложение хочет отправить рейтинг:
@@ -94,19 +103,9 @@ Response:
 }
 ```
 
-Что делать на стороне мобильного приложения:
-- сохранить `user_id`
-- сохранить `access_token`
-
 ### `GET /me`
 
 Возвращает профиль текущего авторизованного пользователя.
-
-Headers:
-
-```http
-Authorization: Bearer <access_token>
-```
 
 Response:
 
@@ -118,20 +117,9 @@ Response:
 }
 ```
 
-Пояснение:
-- `username = null` означает, что имя еще не задано
-- `participate_in_rating = false` означает, что пользователь пока не участвует в рейтинге
-
 ### `PATCH /me/profile`
 
 Обновляет имя и участие в рейтинге.
-
-Headers:
-
-```http
-Authorization: Bearer <access_token>
-Content-Type: application/json
-```
 
 Request:
 
@@ -155,32 +143,11 @@ Response:
 Правила:
 - если `participate_in_rating = true`, `username` должен быть заполнен
 - `username` должен быть уникальным
-- разрешены только:
-  - латинские буквы
-  - цифры
-  - `_`
-  - `.`
-  - `-`
-
-Примеры валидных имен:
-- `Test`
-- `test_1`
-- `user.name`
-
-Примеры невалидных имен:
-- `Test!`
-- `БОГ`
+- разрешены только латинские буквы, цифры, `_`, `.`, `-`
 
 ### `PATCH /me/rating`
 
 Позволяет отдельно включать и выключать участие текущего пользователя в рейтинге.
-
-Headers:
-
-```http
-Authorization: Bearer <access_token>
-Content-Type: application/json
-```
 
 Request:
 
@@ -208,13 +175,6 @@ Response:
 
 Обновляет рейтинг текущего авторизованного пользователя.
 
-Headers:
-
-```http
-Authorization: Bearer <access_token>
-Content-Type: application/json
-```
-
 Request:
 
 ```json
@@ -241,40 +201,22 @@ Response:
 
 Возвращает топ пользователей только с `score >= 0`.
 
-Response:
-
-```json
-{
-  "items": [
-    {
-      "username": "player_1",
-      "score": 2731
-    },
-    {
-      "username": "player_2",
-      "score": 1545
-    }
-  ],
-  "total": 20
-}
-```
-
 ### `GET /leaderboard/bottom?limit=100`
 
 Возвращает антитоп пользователей только с `score < 0`.
 
-Response:
+Пример:
 
 ```json
 {
   "items": [
     {
       "username": "player_10",
-      "score": 1
+      "score": -1
     },
     {
       "username": "player_7",
-      "score": 3
+      "score": -3
     }
   ],
   "total": 20
@@ -284,7 +226,6 @@ Response:
 ## Error Handling
 
 Минимально на стороне мобильного приложения нужно обрабатывать:
-
 - `200` / `201` — success
 - `401` — token missing or invalid
 - `409` — username already exists
@@ -300,46 +241,12 @@ Response:
 
 Для нового мобильного приложения использовать их не нужно.
 
-## Recommended Mobile App Scenario
+## Chat Transfer Note
 
-### First app launch
+Если работа по мобильной интеграции переносится в новый чат, сначала нужно прочитать:
+- `HANDOFF.md`
+- `README.md`
+- `MOBILE_API.md`
 
-1. Вызвать `POST /auth/anonymous`
-2. Сохранить `access_token`
-3. Сохранить `user_id`
-
-### Open profile
-
-1. Вызвать `GET /me`
-2. Если `username == null`, показать форму заполнения имени
-
-### Save profile
-
-1. Вызвать `PATCH /me/profile`
-2. Передать:
-
-```json
-{
-  "username": "chosen_name",
-  "participate_in_rating": true
-}
-```
-
-### Send score
-
-1. Вызвать `POST /me/score`
-2. Передать:
-
-```json
-{
-  "score": 123
-}
-```
-
-### Open leaderboard
-
-1. Вызвать `GET /leaderboard/top?limit=100`
-
-### Open anti-leaderboard
-
-1. Вызвать `GET /leaderboard/bottom?limit=100`
+Актуальная человекочитаемая docs page для команды мобильного приложения:
+- `https://api.wobbly.site/api/docs`

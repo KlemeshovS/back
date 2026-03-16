@@ -1,28 +1,36 @@
 # Rating Service MVP
 
-Простой backend для:
-- регистрации уникального `username`
-- сохранения рейтинга для пользователя
-- выдачи `top 100` и `anti-top 100`
+Backend, landing page и production docs для `Wobbly`.
+
+Сейчас проект включает:
+- API для anonymous auth, профиля и рейтингов
+- landing page на `https://wobbly.site`
+- текстовую docs page на `https://api.wobbly.site/api/docs`
+- production deploy через GitHub Actions
 
 ## Стек
 
 - FastAPI
 - PostgreSQL
-- Docker Compose
+- Docker Compose для локальной разработки
+- systemd + nginx в production
+- GitHub Actions для CI/CD
 
 ## Project Structure
 
-Текущая структура проекта после первой фазы рефакторинга:
-- `app/main.py` — тонкий FastAPI entrypoint
-- `app/api/` — app factory, dependencies и route modules
+Текущая структура проекта после второго этапа рефакторинга:
+- `app/main.py` — минимальный entrypoint
+- `app/api/app.py` — app factory
+- `app/api/dependencies.py` — общие dependencies
+- `app/api/routes/` — route modules по зонам ответственности
 - `app/core/` — auth, config, rate limiting
 - `app/db/` — database access и init_db
 - `app/domain/` — Pydantic schemas
-- `app/services/` — business logic for users and leaderboards
+- `app/services/` — business logic
 - `app/static/` — landing, docs page, css, js, assets
 - `scripts/` — CI checks, deploy, docs sync checks
-- `tests/` — unit tests
+- `tests/` — unit и integration tests
+- `.github/workflows/pipeline.yml` — verify + deploy pipeline
 - `pyproject.toml` — lint/test tooling config
 
 Старые модули:
@@ -44,13 +52,14 @@
 - продовый сервис: `rating-service.service`
 - продовый путь на сервере: `/opt/rating-service`
 - reverse proxy в production: `nginx`
-- основной путь деплоя теперь: merge в `main` -> GitHub Actions -> проверки -> deploy на production
-- ручной deploy через копирование файлов в `/opt/rating-service` и `systemctl restart rating-service` остается как fallback
+- основной путь деплоя: merge в `main` -> GitHub Actions -> verify -> deploy
+- ручной deploy через копирование файлов в `/opt/rating-service` и `systemctl restart rating-service` остается fallback-сценарием
 
 Это важно:
 - локальный `docker compose` нужен для разработки
 - production topology уже другая, и ее не нужно заново угадывать
 - точные команды деплоя описаны в `DEPLOY.md`
+- отдельная сводка для переноса контекста лежит в `HANDOFF.md`
 
 ## API
 
@@ -131,55 +140,9 @@ Responses:
 
 Legacy endpoint. Оставлен для обратной совместимости.
 
-Request:
-
-```json
-{
-  "username": "player_1"
-}
-```
-
-Responses:
-- `201` пользователь создан
-- `409` пользователь уже существует
-- `429` слишком много попыток регистрации
-
-Response:
-
-```json
-{
-  "status": "created",
-  "id": 1,
-  "username": "player_1"
-}
-```
-
 ### `POST /users/score`
 
 Legacy endpoint. Оставлен для обратной совместимости.
-
-Request:
-
-```json
-{
-  "user_id": 1,
-  "score": 42
-}
-```
-
-Также временно поддерживается старый формат:
-
-```json
-{
-  "username": "player_1",
-  "score": 42
-}
-```
-
-Responses:
-- `200` рейтинг обновлён
-- `404` пользователь не найден
-- `429` слишком много обновлений рейтинга
 
 ### `GET /leaderboard/top?limit=100`
 
@@ -188,6 +151,10 @@ Responses:
 ### `GET /leaderboard/bottom?limit=100`
 
 Возвращает пользователей с минимальным рейтингом, у которых `score < 0`.
+
+Подробный мобильный контракт:
+- `MOBILE_API.md`
+- `https://api.wobbly.site/api/docs`
 
 ## Локальный запуск
 
@@ -201,76 +168,36 @@ docker compose up --build
 - Swagger UI: `http://localhost:8000/api/swagger`
 - Text docs: `http://localhost:8000/api/docs`
 
-## Что нужно сделать руками на сервере
-
-1. Дать SSH-доступ по ключу или паролю.
-2. Завести домен или поддомен и направить DNS на сервер.
-3. Создать `.env` с боевыми значениями.
-4. Настроить резервные копии PostgreSQL.
-
-## Production-запуск на сервере
-
-Сервис можно поднять сразу по IP:
-
-```bash
-cp .env.example .env
-docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
-```
-
-С текущим `deploy/Caddyfile` Caddy слушает `:80` и проксирует в API. Это подходит для запуска по IP.
-
-Если появится домен, замени `deploy/Caddyfile` на:
-
-```caddy
-api.example.com {
-    reverse_proxy api:8000
-}
-```
-
-После этого Caddy сам выпустит HTTPS-сертификат Let's Encrypt.
-
-## Что я уже сделал
-
-- подготовил backend
-- добавил контейнеризацию
-- описал API-контракт
-- добавил anonymous auth через bearer token
-
 ## Что ещё можно улучшить
 
-- вынести rate limiting в Redis или PostgreSQL для multi-instance окружения
 - вынести миграции в Alembic
-- добавить тесты
+- усилить integration tests сценариями с тестовой БД
+- унифицировать ошибки в формате `code` + `message`
+- добавить readiness endpoint
+- добавить structured logging
 
 ## Development
 
 - workflow: `DEVELOPMENT_WORKFLOW.md`
+- production/deploy: `DEPLOY.md`
+- handoff summary: `HANDOFF.md`
 - conventions: trunk-based development + Conventional Commits
 - если меняется API, нужно обновлять текстовую docs page на `https://api.wobbly.site/api/docs` в том же изменении
 - CI дополнительно проверяет, что API-изменения не уходят без обновления `/api/docs`
 - linters and tests: `ruff`, `pytest`
+- после рефакторинга новые endpoint changes обычно живут в `app/api/routes/`, `app/services/`, `app/domain/`, `app/core/`
+
+Если меняется поведение API, обычно нужно обновлять:
+- `app/static/js/api-docs.js`
+- при необходимости `MOBILE_API.md`
+- при необходимости `README.md`
 
 ## Context Transfer
 
 Если работа переносится в новый чат, новый чат должен сначала прочитать:
+- `HANDOFF.md`
 - `README.md`
 - `BACKEND_ROADMAP.md`
 - `MOBILE_API.md`
 - `DEPLOY.md`
 - `DEVELOPMENT_WORKFLOW.md`
-
-Перед новым анализом не надо заново выяснять:
-- где находится production-код
-- как называется systemd unit
-- через что отдается `wobbly.site`
-- через что отдается `api.wobbly.site`
-- как именно сейчас делается deploy
-
-## Mobile App
-
-- mobile API: `MOBILE_API.md`
-
-## Deployment
-
-- deploy guide: `DEPLOY.md`
-- GitHub Actions pipeline: `.github/workflows/pipeline.yml`
