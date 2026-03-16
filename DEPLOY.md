@@ -16,8 +16,6 @@
 - `uvicorn`
 - код приложения лежит в `/opt/rating-service`
 
-Это уже подтверждено на живом сервере.
-
 Сетевые адреса:
 - main site: `https://wobbly.site`
 - API: `https://api.wobbly.site`
@@ -56,6 +54,20 @@ ssh -i /Users/klem/Documents/eguene/deploy_key root@api.wobbly.site
 Ключевые пути:
 - app code: `/opt/rating-service/app`
 - backups created during manual deploys: `/opt/rating-service/.deploy-backups`
+
+## Source Of Truth For Docs Page
+
+Человекочитаемая API docs page на `https://api.wobbly.site/api/docs` собирается клиентским JavaScript.
+
+Файлы:
+- `app/static/pages/api-docs.html`
+- `app/static/css/api-docs.css`
+- `app/static/js/api-docs.js`
+
+Это важно для проверки:
+- сырой `curl` по `/api/docs` покажет HTML-оболочку
+- содержимое секций и endpoint descriptions живет в `app/static/js/api-docs.js`
+- если нужно проверить, обновилась ли текстовая документация после API change, смотри и production URL, и `app/static/js/api-docs.js`
 
 ## Quick Verification Commands
 
@@ -103,18 +115,6 @@ journalctl -u rating-service -n 100 --no-pager
 - `api.wobbly.site`
 - `wobbly.site`
 
-Проверка конфига:
-
-```bash
-nginx -t
-```
-
-Перезагрузка:
-
-```bash
-systemctl reload nginx
-```
-
 ## Certificates
 
 Сертификаты выпускаются через `certbot --nginx`.
@@ -123,121 +123,9 @@ systemctl reload nginx
 - `api.wobbly.site`
 - `wobbly.site`
 
-## Real Deploy Procedure
-
-### Important
-
-На сервере в `/opt/rating-service` лежит не git checkout, а рабочая копия проекта.
-
-Поэтому нормальный ручной деплой здесь такой:
-1. обновить нужные файлы через `scp`
-2. выставить владельца `ratingapp:ratingapp`, если нужно
-3. перезапустить `rating-service`
-4. прогнать smoke-check
-
-Если изменяются только статические файлы или шаблоны, этого достаточно. Если меняется Python-код, логика та же: копируем обновленные файлы в `/opt/rating-service`, затем перезапускаем `rating-service`.
-
-### Example Deploy
-
-```bash
-scp -i /Users/klem/Documents/eguene/deploy_key /local/file root@api.wobbly.site:/opt/rating-service/path/to/file
-ssh -i /Users/klem/Documents/eguene/deploy_key root@api.wobbly.site 'chown ratingapp:ratingapp /opt/rating-service/path/to/file && systemctl restart rating-service'
-```
-
-### If multiple files changed
-
-Можно копировать директории, например:
-
-```bash
-scp -i /Users/klem/Documents/eguene/deploy_key -r /Users/klem/Documents/eguene/app/static root@api.wobbly.site:/opt/rating-service/app/
-```
-
-## Recommended Safe Manual Deploy
-
-Перед заменой файлов желательно сделать резервную копию:
-
-```bash
-ssh -i /Users/klem/Documents/eguene/deploy_key root@api.wobbly.site 'mkdir -p /opt/rating-service/.deploy-backups/DATE_TAG'
-```
-
-Потом скопировать старые файлы туда:
-
-```bash
-ssh -i /Users/klem/Documents/eguene/deploy_key root@api.wobbly.site 'cp /opt/rating-service/path/to/file /opt/rating-service/.deploy-backups/DATE_TAG/'
-```
-
-После копирования новых файлов:
-
-```bash
-ssh -i /Users/klem/Documents/eguene/deploy_key root@api.wobbly.site 'chown ratingapp:ratingapp /opt/rating-service/path/to/file && systemctl restart rating-service'
-```
-
-## Smoke Checks After Deploy
-
-Проверка API локально на сервере:
-
-```bash
-curl -fsS http://127.0.0.1:8000/health
-```
-
-Проверка публичного API:
-
-```bash
-curl -I https://api.wobbly.site/api/swagger
-curl -I https://api.wobbly.site/api/docs
-curl -I https://api.wobbly.site/docs
-```
-
-Проверка главной страницы:
-
-```bash
-curl -I https://wobbly.site
-```
-
-Проверка локализации landing page:
-
-```bash
-curl -H 'Accept-Language: ru-RU,ru;q=0.9' https://wobbly.site
-curl -H 'Accept-Language: en-US,en;q=0.9' https://wobbly.site
-```
-
-## Minimal Deploy Checklist
-
-Если нужно быстро и без повторного исследования выкатить изменение:
-1. локально проверить измененные файлы
-2. при необходимости сделать backup в `/opt/rating-service/.deploy-backups/DATE_TAG`
-3. скопировать файлы в `/opt/rating-service`
-4. выставить владельца `ratingapp:ratingapp`
-5. перезапустить `rating-service`
-6. проверить `/health`
-7. проверить затронутые публичные URL
-
-## Handoff Summary
-
-Если контекст переносится в новый чат, этот блок можно считать краткой operational truth:
-- production code lives in `/opt/rating-service`
-- service name is `rating-service.service`
-- public reverse proxy is `nginx`
-- SSH access uses `root@api.wobbly.site` and local `deploy_key`
-- production deploy is manual file copy plus service restart
-- `docker compose` в репозитории не является текущим live deploy path
-
-## Notes For Future Chats
-
-Если контекст переносится в новый чат, не надо заново угадывать прод-контур.
-
-Нужно сразу опираться на эти факты:
-- prod path: `/opt/rating-service`
-- service: `rating-service.service`
-- reverse proxy: `nginx`
-- API host: `api.wobbly.site`
-- site host: `wobbly.site`
-- deploy access: `root@api.wobbly.site` через `deploy_key`
-- prod deploy is file copy + systemctl restart, not git pull on server
-
 ## CI/CD Automation
 
-Теперь стандартный целевой flow такой:
+Теперь стандартный flow такой:
 1. разработка идет в короткой ветке
 2. ветка вливается в `main`
 3. GitHub Actions запускает `.github/workflows/pipeline.yml`
@@ -249,9 +137,17 @@ curl -H 'Accept-Language: en-US,en;q=0.9' https://wobbly.site
 - repository secrets для deploy уже заведены в GitHub
 - целевой основной путь доставки теперь через GitHub Actions, а не через ручной `scp`
 
+### Workflow Behavior
+
+`pipeline.yml` делает следующее:
+- на `pull_request` в `main` запускает только `verify`
+- на `push` в `main` запускает `verify`, а затем `deploy`
+- `verify` ставит Python и Node tooling, гоняет `ruff`, `pytest`, JS syntax checks, Docker config validation и docs sync check
+- `deploy` собирает release archive, копирует его на production и перезапускает `rating-service`
+
 ### GitHub Secrets
 
-Для workflow нужно завести такие secrets в GitHub repository settings:
+Для workflow нужны такие secrets в GitHub repository settings:
 - `DEPLOY_HOST`
 - `DEPLOY_USER`
 - `DEPLOY_PATH`
@@ -266,30 +162,32 @@ curl -H 'Accept-Language: en-US,en;q=0.9' https://wobbly.site
 - `DEPLOY_SERVICE=rating-service`
 - `DEPLOY_OWNER=ratingapp:ratingapp`
 
-`DEPLOY_SSH_KEY` должен содержать приватный ключ, который пускает на production-сервер.
-
-Важно:
-- в secret должен лежать именно приватный ключ
-- ключ нужно вставлять многострочно, как есть
-- нельзя вставлять `.pub`
-- нельзя сворачивать ключ в одну строку
-- если ключ защищен passphrase, GitHub Actions не сможет использовать его без дополнительной настройки
-
-### Workflow Behavior
-
-`pipeline.yml` делает следующее:
-- на `pull_request` в `main` запускает только `verify`
-- на `push` в `main` запускает `verify`, а затем `deploy`
-
 ### Local Scripts Used By CI/CD
 
-Pipeline опирается на два локальных скрипта:
+Pipeline опирается на локальные скрипты:
 - `scripts/ci_check.sh`
+- `scripts/check_api_docs_sync.sh`
 - `scripts/deploy_release.sh`
 
-Это сделано специально, чтобы логика проверки и деплоя не была размазана только по YAML.
+## API Docs Sync Rule
 
-### Common Failure: SSH Key Parsing
+Если меняется API, pipeline должен увидеть обновление docs в том же изменении.
+
+Проверка делается скриптом:
+- `scripts/check_api_docs_sync.sh`
+
+После рефакторинга ориентироваться нужно на текущую архитектуру:
+- route and behavior changes обычно живут в `app/api/routes/`
+- schema changes живут в `app/domain/`
+- business logic живет в `app/services/`
+- auth and shared behavior могут жить в `app/core/`
+
+Если поведение API меняется, вместе с этим должны обновляться:
+- `app/static/js/api-docs.js`
+- при необходимости `MOBILE_API.md`
+- при необходимости `README.md`
+
+## Common Failure: SSH Key Parsing
 
 Если GitHub Actions падает с ошибкой вида:
 
@@ -316,14 +214,63 @@ Permission denied (publickey,password)
 - локально этот же ключ должен пускать командой `ssh -i /Users/klem/Documents/eguene/deploy_key root@api.wobbly.site`
 - именно содержимое этого приватного файла и нужно класть в `DEPLOY_SSH_KEY`
 
-### Operational Rule
+## Real Manual Deploy Procedure
 
-Если pipeline после merge в `main` зеленый, считаем production-деплой выполненным.
+### Important
 
-Если pipeline красный:
-1. сначала смотрим job `verify`
-2. если `verify` зеленый, смотрим job `deploy`
-3. если ошибка связана с SSH, сначала проверяем `DEPLOY_SSH_KEY`
-4. только потом идем к ручному fallback deploy
+На сервере в `/opt/rating-service` лежит не git checkout, а рабочая копия проекта.
 
-Ручной deploy по `scp` и `systemctl restart` оставляем только как запасной вариант.
+Поэтому нормальный ручной deploy здесь такой:
+1. обновить нужные файлы через `scp`
+2. выставить владельца `ratingapp:ratingapp`, если нужно
+3. перезапустить `rating-service`
+4. прогнать smoke-check
+
+### Example Deploy
+
+```bash
+scp -i /Users/klem/Documents/eguene/deploy_key /local/file root@api.wobbly.site:/opt/rating-service/path/to/file
+ssh -i /Users/klem/Documents/eguene/deploy_key root@api.wobbly.site 'chown ratingapp:ratingapp /opt/rating-service/path/to/file && systemctl restart rating-service'
+```
+
+## Smoke Checks After Deploy
+
+Проверка API локально на сервере:
+
+```bash
+curl -fsS http://127.0.0.1:8000/health
+```
+
+Проверка публичного API:
+
+```bash
+curl -I https://api.wobbly.site/api/swagger
+curl -I https://api.wobbly.site/api/docs
+curl -I https://api.wobbly.site/docs
+```
+
+Проверка главной страницы:
+
+```bash
+curl -I https://wobbly.site
+```
+
+## Handoff Summary
+
+Если контекст переносится в новый чат, этот блок можно считать краткой operational truth:
+- production code lives in `/opt/rating-service`
+- service name is `rating-service.service`
+- public reverse proxy is `nginx`
+- SSH access uses `root@api.wobbly.site` and local `deploy_key`
+- primary production deploy is GitHub Actions after merge to `main`
+- manual production deploy is fallback file copy plus service restart
+- `docker compose` в репозитории не является текущим live deploy path
+
+## Operational Rule
+
+Если pipeline зеленый после merge в `main`, это и есть основной подтвержденный deploy result.
+
+К ручному деплою стоит возвращаться только если:
+- GitHub Actions недоступен
+- сломан deploy job
+- нужен срочный hotfix вне обычного flow

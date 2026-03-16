@@ -9,9 +9,16 @@
 - обновлять `score` по `username`
 - обновлять `score` по `user_id`
 - обновлять `score` от авторизованного пользователя через `/me/score`
+- отдельно включать и выключать участие через `/me/rating`
 - отдавать `top 100` и `bottom 100`
 - работать на `https://api.wobbly.site`
 - ограничивать частоту регистрации и обновления рейтинга через rate limiting
+
+Дополнительно уже сделано:
+- проект разнесен на `app/api`, `app/services`, `app/core`, `app/db`, `app/domain`
+- добавлены `ruff` и `pytest`
+- добавлены unit tests и integration tests
+- CI/CD уже автоматизирован через GitHub Actions
 
 Это нормальный MVP, но для реального production ему не хватает защиты, наблюдаемости и более строгой модели данных.
 
@@ -23,43 +30,22 @@ Status:
 - done
 - добавлен `POST /auth/anonymous`
 - backend выдает bearer token
-- появились защищенные endpoint'ы `/me`, `/me/profile`, `/me/score`
-
-Сейчас любой внешний клиент может отправить любой `username` и любой `score`.
-
-Что сделать:
-- ~~добавить `X-API-Key` или `Authorization` token для запросов от мобильного приложения~~
-- ~~хранить секрет в переменных окружения~~
-- ~~отклонять запросы без валидного ключа~~
-
-Результат:
-- случайные внешние запросы перестанут писать данные в вашу БД
+- появились защищенные endpoint'ы `/me`, `/me/profile`, `/me/rating`, `/me/score`
 
 ### 2. ~~Limit abuse and spam~~
 
 Status:
 - done
 - rate limiting уже добавлен для регистрации по IP
-- rate limiting уже добавлен для обновления рейтинга по IP и по `username`
+- rate limiting уже добавлен для обновления рейтинга
 - осталось отдельно реализовать логирование подозрительных всплесков запросов
-
-Что сделать:
-- ~~добавить rate limiting по IP и по `username`~~
-- ~~ограничить частоту обновления рейтинга~~
-- логировать подозрительные всплески запросов
-
-Результат:
-- меньше риска накрутки и перегрузки API
 
 ### 3. Harden input validation
 
 Что сделать:
-- запретить нежелательные `username`
 - определить допустимый диапазон `score`
 - решить, можно ли уменьшать `score`, или только обновлять на новое значение
-
-Результат:
-- меньше мусорных и сломанных данных в таблице
+- при необходимости усилить правила `username`
 
 ## Priority 2: Data Model
 
@@ -70,11 +56,7 @@ Status:
 Что сделать:
 - оставить таблицу `users` для актуального состояния
 - добавить таблицу `score_events`
-- писать туда историю изменений: `username`, `old_score`, `new_score`, `source`, `created_at`
-
-Результат:
-- можно расследовать ошибки и накрутку
-- можно строить аналитику и графики
+- писать туда историю изменений: `old_score`, `new_score`, `source`, `created_at`
 
 ### 5. Add timestamps and audit fields
 
@@ -82,18 +64,11 @@ Status:
 - хранить `created_at`, `updated_at`, `last_seen_at`
 - при обновлении рейтинга обновлять `last_seen_at`
 
-Результат:
-- видно активность пользователей
-- проще чистить неактуальные данные
-
 ### 6. Add migration tool
 
 Что сделать:
 - подключить `Alembic`
 - хранить изменения схемы как миграции
-
-Результат:
-- безопасные изменения БД без ручного SQL
 
 ## Priority 3: Reliability
 
@@ -104,27 +79,20 @@ Status:
 - хранить несколько последних копий
 - выносить бэкапы за пределы сервера, например в S3-compatible storage
 
-Результат:
-- БД можно восстановить после ошибки или падения сервера
+### 8. ~~Improve deployment flow~~
 
-### 8. Improve deployment flow
-
-Что сделать:
-- завести отдельный `DEPLOY.md`
-- автоматизировать деплой через GitHub Actions или простой deploy script
-- сделать systemd reload/restart частью стандартного процесса
-
-Результат:
-- меньше ручных ошибок при выкладке
+Status:
+- done
+- есть `DEPLOY.md`
+- есть GitHub Actions pipeline
+- после merge в `main` идет автоматический verify + deploy
+- ручной deploy оставлен как fallback
 
 ### 9. Add health checks and readiness checks
 
 Что сделать:
 - оставить `/health`
 - добавить `/ready`, который проверяет доступность PostgreSQL
-
-Результат:
-- проще мониторить, живо ли приложение на самом деле
 
 ## Priority 4: Observability
 
@@ -134,17 +102,11 @@ Status:
 - перейти на JSON-логи
 - писать `request_id`, endpoint, status code, latency
 
-Результат:
-- проще искать проблемы и анализировать запросы
-
 ### 11. Add error monitoring
 
 Что сделать:
 - подключить Sentry или аналог
 - отправлять unhandled exceptions и важные warnings
-
-Результат:
-- ошибки будут видны сразу, а не только по жалобам пользователей
 
 ### 12. Add metrics
 
@@ -154,18 +116,12 @@ Status:
 - время ответа
 - количество обновлений рейтинга
 
-Результат:
-- можно понимать нагрузку и деградации
-
 ## Priority 5: API Evolution
 
 ### 13. Version the API
 
 Что сделать:
 - перевести маршруты на `/api/v1/...`
-
-Результат:
-- можно спокойно развивать API без поломки мобильного клиента
 
 ### 14. Improve response contract
 
@@ -179,9 +135,6 @@ Status:
 - унифицировать ошибки
 - возвращать коды и понятные поля, например `code`, `message`
 
-Результат:
-- Flutter-клиент проще поддерживать
-
 ### 15. Add pagination and richer leaderboard queries
 
 Что сделать:
@@ -189,42 +142,33 @@ Status:
 - сделать выдачу позиции конкретного пользователя
 - добавить фильтры, если появятся режимы рейтингов
 
-Результат:
-- API будет готово к росту функциональности
-
 ## Priority 6: Testing
 
 ### 16. Add automated tests
 
 Status:
 - in progress
-- добавлен базовый test scaffold
 - добавлены unit tests для auth, rate limiter и schema validation
+- добавлены integration tests для API endpoint'ов
 - тесты и lint checks подключены в CI
-- дальше нужны integration tests для API и сценариев с БД
+- дальше нужны integration tests со сценариями на тестовой БД
 
 Что сделать:
 - ~~unit tests для валидации~~
-- integration tests для API
+- ~~integration tests для API~~
 - тесты на ошибки: duplicate username, missing user, invalid payload
-
-Результат:
-- меньше регрессий при доработках
+- тесты с реальной тестовой PostgreSQL или изолированной test DB
 
 ### 17. Add staging checks
 
 Что сделать:
 - перед деплоем гонять тесты и basic smoke checks
 
-Результат:
-- меньше шансов сломать production
-
 ## Suggested Execution Order
 
 ### Phase 1
 - unified error responses
-- tests for current endpoints
-- lint and test tooling baseline
+- тесты на ошибочные сценарии
 
 ### Phase 2
 - Alembic migrations
@@ -236,7 +180,6 @@ Status:
 - structured logging
 - Sentry
 - metrics
-- deployment automation
 
 ### Phase 4
 - API versioning
@@ -245,8 +188,8 @@ Status:
 
 ## Recommended First Task
 
-Если выбирать одно следующее улучшение, то лучше всего сделать:
+Если выбирать одно следующее улучшение, лучше всего сделать:
 
 `Unify error responses for mobile client`
 
-Авторизация между Flutter и backend уже добавлена, следующий полезный шаг — привести ошибки к единому контракту `code` + `message`.
+Следующий полезный шаг — привести ошибки к единому контракту `code` + `message`.

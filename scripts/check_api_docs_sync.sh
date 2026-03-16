@@ -24,7 +24,7 @@ API_CHANGED=false
 DOCS_CHANGED=false
 
 while IFS= read -r file; do
-  if [[ "$file" == "app/main.py" || "$file" == "app/schemas.py" ]]; then
+  if [[ "$file" == app/api/routes/* || "$file" == "app/api/dependencies.py" || "$file" == "app/api/app.py" || "$file" == app/services/* || "$file" == app/domain/* || "$file" == app/core/* || "$file" == "app/main.py" || "$file" == "app/schemas.py" ]]; then
     API_CHANGED=true
   fi
 
