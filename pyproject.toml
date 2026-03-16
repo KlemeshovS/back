@@ -1,6 +1,11 @@
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["."]
+filterwarnings = [
+  "ignore:The 'alias' attribute with value .* was provided to the `Field\\(\\)` function:pydantic.warnings.UnsupportedFieldAttributeWarning",
+  "ignore:The 'validation_alias' attribute with value .* was provided to the `Field\\(\\)` function:pydantic.warnings.UnsupportedFieldAttributeWarning",
+  "ignore:The 'serialization_alias' attribute with value .* was provided to the `Field\\(\\)` function:pydantic.warnings.UnsupportedFieldAttributeWarning",
+]
 
 [tool.ruff]
 target-version = "py39"
@@ -14,4 +19,3 @@ exclude = [
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "B"]
-
