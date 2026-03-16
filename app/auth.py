@@ -1,10 +1,3 @@
-from hashlib import sha256
-from secrets import token_urlsafe
+from app.core.auth import generate_access_token, hash_access_token
 
-
-def generate_access_token() -> str:
-    return f"rt_{token_urlsafe(32)}"
-
-
-def hash_access_token(token: str) -> str:
-    return sha256(token.encode("utf-8")).hexdigest()
+__all__ = ["generate_access_token", "hash_access_token"]

@@ -196,8 +196,15 @@ Status:
 
 ### 16. Add automated tests
 
+Status:
+- in progress
+- добавлен базовый test scaffold
+- добавлены unit tests для auth, rate limiter и schema validation
+- тесты и lint checks подключены в CI
+- дальше нужны integration tests для API и сценариев с БД
+
 Что сделать:
-- unit tests для валидации
+- ~~unit tests для валидации~~
 - integration tests для API
 - тесты на ошибки: duplicate username, missing user, invalid payload
 
@@ -217,6 +224,7 @@ Status:
 ### Phase 1
 - unified error responses
 - tests for current endpoints
+- lint and test tooling baseline
 
 ### Phase 2
 - Alembic migrations

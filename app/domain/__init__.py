@@ -9,7 +9,6 @@ from app.domain.schemas import (
     StatusResponse,
     UpdateScoreRequest,
     UserScoreResponse,
-    Username,
 )
 
 __all__ = [
@@ -23,5 +22,4 @@ __all__ = [
     "StatusResponse",
     "UpdateScoreRequest",
     "UserScoreResponse",
-    "Username",
 ]

@@ -7,11 +7,11 @@ from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from psycopg.errors import UniqueViolation
 
-from app.auth import generate_access_token, hash_access_token
-from app.config import settings
-from app.database import get_connection, init_db
-from app.rate_limit import rate_limiter
-from app.schemas import (
+from app.core.auth import generate_access_token, hash_access_token
+from app.core.config import settings
+from app.core.rate_limit import rate_limiter
+from app.db.database import get_connection, init_db
+from app.domain.schemas import (
     AnonymousAuthResponse,
     LeaderboardResponse,
     ProfileResponse,

@@ -11,6 +11,27 @@
 - PostgreSQL
 - Docker Compose
 
+## Project Structure
+
+Текущая структура проекта после первой фазы рефакторинга:
+- `app/main.py` — FastAPI entrypoint и маршруты
+- `app/core/` — auth, config, rate limiting
+- `app/db/` — database access и init_db
+- `app/domain/` — Pydantic schemas
+- `app/static/` — landing, docs page, css, js, assets
+- `scripts/` — CI checks, deploy, docs sync checks
+- `tests/` — unit tests
+- `pyproject.toml` — lint/test tooling config
+
+Старые модули:
+- `app/auth.py`
+- `app/config.py`
+- `app/database.py`
+- `app/rate_limit.py`
+- `app/schemas.py`
+
+пока оставлены как compatibility wrappers, чтобы рефакторинг был безопасным и не ломал imports одним шагом.
+
 ## Current Project Snapshot
 
 Если работа переносится в новый чат, это нужно считать актуальной базой проекта:
@@ -225,6 +246,7 @@ api.example.com {
 - conventions: trunk-based development + Conventional Commits
 - если меняется API, нужно обновлять текстовую docs page на `https://api.wobbly.site/api/docs` в том же изменении
 - CI дополнительно проверяет, что API-изменения не уходят без обновления `/api/docs`
+- linters and tests: `ruff`, `pytest`
 
 ## Context Transfer
 
