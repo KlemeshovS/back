@@ -61,6 +61,7 @@ Commit message оформляем по `Conventional Commits`.
 Для этого проекта дальше придерживаемся таких правил:
 - новые задачи делаем в отдельных ветках вида `feat/...`, `fix/...`, `docs/...`, `chore/...`
 - commit message всегда следует Conventional Commits
+- локальный `pre-commit` hook должен быть включен через `./scripts/install_git_hooks.sh`
 - большие задачи режем на несколько маленьких commits, если это помогает чтению истории
 - `main` держим как самую актуальную и стабильную ветку
 - после merge удаляем ветку локально и в GitHub
@@ -126,3 +127,26 @@ Commit message оформляем по `Conventional Commits`.
 - core utilities должны идти в `app/core/`
 
 Если новая задача снова раздувает `app/main.py`, это признак, что изменение кладется не туда.
+
+## Local Hooks Rule
+
+В проекте есть локальный обязательный guard перед коммитом:
+- `.githooks/pre-commit`
+- `scripts/pre_commit_check.sh`
+
+Он делает:
+- `ruff check --fix`
+- повторную проверку `ruff`
+- Python syntax checks
+- JavaScript syntax checks
+
+Подключение hooks:
+
+```bash
+./scripts/install_git_hooks.sh
+```
+
+Тяжелые проверки остаются в CI:
+- `pytest`
+- `docker compose config`
+- docs sync check

@@ -117,6 +117,11 @@ Tooling config:
 - `scripts/check_api_docs_sync.sh`
 - `scripts/deploy_release.sh`
 
+Локальные guardrails перед коммитом:
+- `.githooks/pre-commit`
+- `scripts/pre_commit_check.sh`
+- `scripts/install_git_hooks.sh`
+
 Секреты GitHub Actions уже заведены:
 - `DEPLOY_HOST`
 - `DEPLOY_USER`

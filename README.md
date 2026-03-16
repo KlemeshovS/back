@@ -29,6 +29,7 @@ Backend, landing page и production docs для `Wobbly`.
 - `app/services/` — business logic
 - `app/static/` — landing, docs page, css, js, assets
 - `scripts/` — CI checks, deploy, docs sync checks
+- `.githooks/` — локальные git hooks
 - `tests/` — unit и integration tests
 - `.github/workflows/pipeline.yml` — verify + deploy pipeline
 - `pyproject.toml` — lint/test tooling config
@@ -185,12 +186,19 @@ docker compose up --build
 - если меняется API, нужно обновлять текстовую docs page на `https://api.wobbly.site/api/docs` в том же изменении
 - CI дополнительно проверяет, что API-изменения не уходят без обновления `/api/docs`
 - linters and tests: `ruff`, `pytest`
+- локальный обязательный pre-commit guard: `.githooks/pre-commit`
 - после рефакторинга новые endpoint changes обычно живут в `app/api/routes/`, `app/services/`, `app/domain/`, `app/core/`
 
 Если меняется поведение API, обычно нужно обновлять:
 - `app/static/js/api-docs.js`
 - при необходимости `MOBILE_API.md`
 - при необходимости `README.md`
+
+Чтобы включить локальный обязательный pre-commit hook:
+
+```bash
+./scripts/install_git_hooks.sh
+```
 
 ## Context Transfer
 
