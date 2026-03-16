@@ -116,6 +116,10 @@ journalctl -u rating-service -n 100 --no-pager
 - `api.wobbly.site`
 - `wobbly.site`
 
+Для `api.wobbly.site` rate limiting config теперь хранится в репозитории:
+- `deploy/nginx/api-rate-limits.conf`
+- `deploy/nginx/api.wobbly.site.conf`
+
 ## Certificates
 
 Сертификаты выпускаются через `certbot --nginx`.
