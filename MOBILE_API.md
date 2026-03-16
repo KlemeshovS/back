@@ -243,15 +243,15 @@ Response:
 ```
 
 Основные коды:
-- `MISSING_AUTHORIZATION_HEADER`
-- `INVALID_AUTHORIZATION_HEADER`
-- `INVALID_TOKEN`
-- `USERNAME_ALREADY_EXISTS`
-- `USERNAME_REQUIRED_FOR_RATING`
-- `USER_NOT_FOUND`
-- `RATE_LIMIT_EXCEEDED`
-- `VALIDATION_ERROR`
-- `INTERNAL_SERVER_ERROR`
+- `MISSING_AUTHORIZATION_HEADER` — в запросе отсутствует заголовок `Authorization: Bearer <accessToken>`
+- `INVALID_AUTHORIZATION_HEADER` — заголовок `Authorization` передан в неправильном формате
+- `INVALID_TOKEN` — токен передан, но не найден в системе или больше невалиден
+- `USERNAME_ALREADY_EXISTS` — такое имя уже занято другим пользователем
+- `USERNAME_REQUIRED_FOR_RATING` — нельзя включить участие в рейтинге без `username`
+- `USER_NOT_FOUND` — пользователь не найден по переданным данным
+- `RATE_LIMIT_EXCEEDED` — превышен лимит запросов, нужно повторить позже
+- `VALIDATION_ERROR` — тело запроса не прошло валидацию: не хватает полей или формат данных неверный
+- `INTERNAL_SERVER_ERROR` — внутренняя ошибка backend
 
 ## Legacy Endpoints
 
