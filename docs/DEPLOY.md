@@ -120,6 +120,11 @@ journalctl -u rating-service -n 100 --no-pager
 - `deploy/nginx/api-rate-limits.conf`
 - `deploy/nginx/api.wobbly.site.conf`
 
+Текущий production уже использует этот rate limiting слой:
+- `10 requests/second` на IP
+- burst `30`
+- `20` одновременных соединений на IP
+
 ## Certificates
 
 Сертификаты выпускаются через `certbot --nginx`.
@@ -195,6 +200,10 @@ Pipeline опирается на локальные скрипты:
 - только потом перезапускает `rating-service`
 - ждет не только `systemctl is-active`, но и успешный ответ `http://127.0.0.1:8000/health`
 - если `/health` не поднимается вовремя, печатает свежие `journalctl` логи сервиса и завершает deploy с ошибкой
+
+Важно:
+- `nginx` конфиги не раскатываются текущим GitHub Actions deploy автоматически
+- изменения в `deploy/nginx/` нужно применять на сервер отдельно через `nginx -t` и `systemctl reload nginx`
 
 ## API Docs Sync Rule
 

@@ -16,6 +16,7 @@
 - есть единый error contract
 - включен `TrustedHostMiddleware`
 - включен ограниченный CORS policy
+- включен `nginx` rate limiting для `api.wobbly.site`
 
 Это уже защищает от части случайного мусора, но не заменяет сетевую защиту и антифрод.
 
@@ -24,7 +25,7 @@
 ### 1. Reverse Proxy Rate Limiting
 
 Что сделать:
-- добавить rate limiting на уровне `nginx`
+- добавить и поддерживать rate limiting на уровне `nginx`
 - отдельно ограничить:
   - burst по IP
   - sustained rate по IP
@@ -34,8 +35,8 @@
 - мусор лучше отбрасывать до Python
 - это дешевле по CPU и памяти
 
-Рекомендуемый приоритет:
-- самый ближайший инфраструктурный шаг
+Статус:
+- done as first edge layer
 
 ### 2. Separate Limits Per Endpoint
 
@@ -107,7 +108,7 @@
 
 ## First Infrastructure Layer
 
-Следующий практический слой:
+Первый включенный edge слой:
 - `nginx` rate limiting для `api.wobbly.site`
 
 Что добавлено в репозиторий:
@@ -150,6 +151,6 @@
 
 Если брать следующий самый полезный шаг после текущих backend-изменений:
 
-`Add nginx rate limiting for api.wobbly.site`
+`Add fail2ban for repeated 401/429 abuse patterns`
 
-Это самый практичный следующий слой, потому что он отсечет часть мусора еще до FastAPI.
+Это логичный следующий шаг после `nginx` rate limiting: он даст временный ban для IP, которые системно спамят API и упираются в auth/rate limits.

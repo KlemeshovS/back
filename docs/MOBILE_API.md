@@ -32,6 +32,11 @@ Authorization: Bearer <accessToken>
 - `PATCH /me/rating`
 - `POST /me/score`
 
+После включения `TrustedHostMiddleware`, ограниченного CORS и `nginx` rate limiting мобильному приложению ничего менять не нужно, если оно:
+- использует `https://api.wobbly.site`
+- не подменяет вручную заголовок `Host`
+- передает `Authorization: Bearer <accessToken>` в защищенные методы
+
 ## Storage On Mobile App Side
 
 Нужно сохранять локально:

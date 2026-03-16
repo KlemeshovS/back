@@ -26,6 +26,7 @@
 - есть unit tests и integration tests
 - CI/CD уже автоматизирован через GitHub Actions
 - production deploy идет через `verify -> deploy`
+- базовый anti-abuse слой уже есть на уровне `TrustedHostMiddleware`, CORS и `nginx` rate limiting
 
 Это уже не просто MVP. Сейчас следующий фокус должен быть не на базовом CRUD, а на надежности, наблюдаемости и эволюции модели данных.
 
@@ -238,6 +239,7 @@
 - done: автоматизирован deploy после merge в `main`
 - done: deploy script обновляет dependencies в production venv
 - done: deploy script ждет успешный `/health` перед завершением
+- done: `nginx` rate limiting включен для `api.wobbly.site`
 
 ### Testing / Tooling
 - done: добавлены `ruff` и `pytest`
@@ -250,3 +252,4 @@
 - done: docs sync включен в CI
 - done: при изменении API docs page обновляется в том же изменении
 - done: проектный handoff и deploy context зафиксированы в `.md`
+- done: non-README docs вынесены в `docs/`
