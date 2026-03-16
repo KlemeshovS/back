@@ -206,6 +206,7 @@ api.example.com {
 
 - workflow: `DEVELOPMENT_WORKFLOW.md`
 - conventions: trunk-based development + Conventional Commits
+- если меняется API, нужно обновлять текстовую docs page на `https://api.wobbly.site/api/docs` в том же изменении
 
 ## Context Transfer
 

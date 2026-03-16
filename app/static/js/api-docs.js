@@ -35,6 +35,18 @@ class DocsPage {
         ],
       },
       {
+        id: "maintenance",
+        title: "Правило Поддержки Docs",
+        cards: [
+          {
+            paragraphs: [
+              "Если меняется API-контракт, страницу /api/docs нужно обновлять в том же изменении, что и backend.",
+              "По мере роста API эта страница должна оставаться удобочитаемой: группировать методы по смыслу, упрощать объяснения и не превращаться в длинную неструктурированную стену текста.",
+            ],
+          },
+        ],
+      },
+      {
         id: "auth-anonymous",
         title: "POST /auth/anonymous",
         cards: [
@@ -126,6 +138,7 @@ Content-Type: application/json`,
             method: "GET",
             badgeClass: "get",
             path: "/leaderboard/top?limit=100",
+            paragraphs: ["Возвращает только пользователей с score >= 0."],
             response: `{
   "items": [
     {
@@ -150,15 +163,16 @@ Content-Type: application/json`,
             method: "GET",
             badgeClass: "get",
             path: "/leaderboard/bottom?limit=100",
+            paragraphs: ["Возвращает только пользователей с score < 0."],
             response: `{
   "items": [
     {
       "username": "player_10",
-      "score": 1
+      "score": -12
     },
     {
       "username": "player_7",
-      "score": 3
+      "score": -3
     }
   ],
   "total": 20
