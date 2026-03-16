@@ -138,7 +138,16 @@ Tooling config:
 - `DEPLOY_PATH`
 - `DEPLOY_SERVICE`
 - `DEPLOY_OWNER`
+- `DEPLOY_VENV_PATH`
 - `DEPLOY_SSH_KEY`
+
+Во время production deploy:
+- release архив распаковывается в `/opt/rating-service`
+- затем обновляются Python dependencies в server venv
+- только после этого перезапускается `rating-service.service`
+
+Для текущего production:
+- `DEPLOY_VENV_PATH=/opt/rating-service/.venv`
 
 Типовая проблема:
 - `Load key ... error in libcrypto`

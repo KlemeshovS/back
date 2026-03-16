@@ -164,6 +164,7 @@ journalctl -u rating-service -n 100 --no-pager
 - `DEPLOY_PATH`
 - `DEPLOY_SERVICE`
 - `DEPLOY_OWNER`
+- `DEPLOY_VENV_PATH`
 - `DEPLOY_SSH_KEY`
 
 Для текущего production значения такие:
@@ -172,6 +173,10 @@ journalctl -u rating-service -n 100 --no-pager
 - `DEPLOY_PATH=/opt/rating-service`
 - `DEPLOY_SERVICE=rating-service`
 - `DEPLOY_OWNER=ratingapp:ratingapp`
+- `DEPLOY_VENV_PATH=/opt/rating-service/.venv`
+
+Если `DEPLOY_VENV_PATH` не задан, deploy script использует дефолт:
+- `${DEPLOY_PATH}/.venv`
 
 ### Local Scripts Used By CI/CD
 
@@ -179,6 +184,11 @@ Pipeline опирается на локальные скрипты:
 - `scripts/ci_check.sh`
 - `scripts/check_api_docs_sync.sh`
 - `scripts/deploy_release.sh`
+
+Во время deploy script теперь:
+- распаковывает release
+- обновляет Python dependencies в production venv через `pip install -r requirements.txt`
+- только потом перезапускает `rating-service`
 
 ## API Docs Sync Rule
 

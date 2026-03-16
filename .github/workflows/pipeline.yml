@@ -80,6 +80,7 @@ jobs:
           DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
           DEPLOY_SERVICE: ${{ secrets.DEPLOY_SERVICE }}
           DEPLOY_OWNER: ${{ secrets.DEPLOY_OWNER }}
+          DEPLOY_VENV_PATH: ${{ secrets.DEPLOY_VENV_PATH }}
           SSH_KEY_PATH: /home/runner/.ssh/deploy_key
         run: ./scripts/deploy_release.sh
 
