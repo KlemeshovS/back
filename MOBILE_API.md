@@ -233,6 +233,26 @@ Response:
 - `429` — too many requests
 - `500` — internal server error
 
+Все ошибки API теперь приходят в одном формате:
+
+```json
+{
+  "code": "USERNAME_ALREADY_EXISTS",
+  "message": "Username already exists"
+}
+```
+
+Основные коды:
+- `MISSING_AUTHORIZATION_HEADER`
+- `INVALID_AUTHORIZATION_HEADER`
+- `INVALID_TOKEN`
+- `USERNAME_ALREADY_EXISTS`
+- `USERNAME_REQUIRED_FOR_RATING`
+- `USER_NOT_FOUND`
+- `RATE_LIMIT_EXCEEDED`
+- `VALIDATION_ERROR`
+- `INTERNAL_SERVER_ERROR`
+
 ## Legacy Endpoints
 
 Эти методы оставлены только для обратной совместимости:

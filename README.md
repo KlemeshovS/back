@@ -28,6 +28,7 @@ Backend, landing page и production docs для `Wobbly`.
 - `app/domain/` — Pydantic schemas
 - `app/services/` — business logic
 - `app/static/` — landing, docs page, css, js, assets
+- `alembic/` — migration scripts
 - `scripts/` — CI checks, deploy, docs sync checks
 - `.githooks/` — локальные git hooks
 - `tests/` — unit и integration tests
@@ -145,6 +146,28 @@ Legacy endpoint. Оставлен для обратной совместимос
 
 Legacy endpoint. Оставлен для обратной совместимости.
 
+## Error Contract
+
+Ошибки API теперь возвращаются в едином формате:
+
+```json
+{
+  "code": "USERNAME_ALREADY_EXISTS",
+  "message": "Username already exists"
+}
+```
+
+Основные коды:
+- `MISSING_AUTHORIZATION_HEADER`
+- `INVALID_AUTHORIZATION_HEADER`
+- `INVALID_TOKEN`
+- `USERNAME_ALREADY_EXISTS`
+- `USERNAME_REQUIRED_FOR_RATING`
+- `USER_NOT_FOUND`
+- `RATE_LIMIT_EXCEEDED`
+- `VALIDATION_ERROR`
+- `INTERNAL_SERVER_ERROR`
+
 ### `GET /leaderboard/top?limit=100`
 
 Возвращает пользователей с максимальным рейтингом, у которых `score >= 0`.
@@ -171,9 +194,7 @@ docker compose up --build
 
 ## Что ещё можно улучшить
 
-- вынести миграции в Alembic
 - усилить integration tests сценариями с тестовой БД
-- унифицировать ошибки в формате `code` + `message`
 - добавить readiness endpoint
 - добавить structured logging
 
@@ -188,6 +209,7 @@ docker compose up --build
 - linters and tests: `ruff`, `pytest`
 - локальные обязательные hooks: `.githooks/pre-commit`, `.githooks/pre-push`
 - после рефакторинга новые endpoint changes обычно живут в `app/api/routes/`, `app/services/`, `app/domain/`, `app/core/`
+- schema changes теперь должны идти через Alembic migrations
 
 Если меняется поведение API, обычно нужно обновлять:
 - `app/static/js/api-docs.js`

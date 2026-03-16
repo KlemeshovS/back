@@ -1,4 +1,5 @@
 from contextlib import contextmanager
+from pathlib import Path
 
 from psycopg import connect
 from psycopg.rows import dict_row
@@ -7,62 +8,14 @@ from app.core.config import settings
 
 
 def init_db() -> None:
-    with connect(settings.database_url) as conn:
-        with conn.cursor() as cur:
-            cur.execute(
-                """
-                CREATE TABLE IF NOT EXISTS users (
-                    id BIGSERIAL PRIMARY KEY,
-                    username VARCHAR(64) UNIQUE,
-                    auth_token_hash VARCHAR(64) UNIQUE,
-                    is_rating_enabled BOOLEAN NOT NULL DEFAULT FALSE,
-                    score INTEGER NOT NULL DEFAULT 0,
-                    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-                    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-                    last_seen_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-                );
-                """
-            )
-            cur.execute("ALTER TABLE users ALTER COLUMN username DROP NOT NULL;")
-            cur.execute(
-                """
-                ALTER TABLE users
-                ADD COLUMN IF NOT EXISTS auth_token_hash VARCHAR(64) UNIQUE;
-                """
-            )
-            cur.execute(
-                """
-                ALTER TABLE users
-                ADD COLUMN IF NOT EXISTS is_rating_enabled BOOLEAN NOT NULL DEFAULT FALSE;
-                """
-            )
-            cur.execute(
-                """
-                ALTER TABLE users
-                ADD COLUMN IF NOT EXISTS last_seen_at TIMESTAMPTZ NOT NULL DEFAULT NOW();
-                """
-            )
-            cur.execute(
-                """
-                UPDATE users
-                SET is_rating_enabled = TRUE
-                WHERE username IS NOT NULL AND is_rating_enabled = FALSE;
-                """
-            )
-            cur.execute(
-                """
-                CREATE INDEX IF NOT EXISTS idx_users_score
-                ON users (score, username);
-                """
-            )
-            cur.execute(
-                """
-                CREATE UNIQUE INDEX IF NOT EXISTS idx_users_auth_token_hash
-                ON users (auth_token_hash)
-                WHERE auth_token_hash IS NOT NULL;
-                """
-            )
-        conn.commit()
+    import alembic.command as alembic_command
+    import alembic.config as alembic_config
+
+    root_dir = Path(__file__).resolve().parents[2]
+    config = alembic_config.Config(str(root_dir / "alembic.ini"))
+    config.set_main_option("script_location", str(root_dir / "alembic"))
+    config.set_main_option("sqlalchemy.url", settings.database_url)
+    alembic_command.upgrade(config, "head")
 
 
 @contextmanager

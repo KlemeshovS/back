@@ -51,6 +51,21 @@ class DocsPage {
         ],
       },
       {
+        id: "errors-contract",
+        title: "Единый Формат Ошибок",
+        cards: [
+          {
+            paragraphs: [
+              "Все ошибки API теперь возвращаются в одном формате: code + message.",
+            ],
+            response: `{
+  "code": "USERNAME_ALREADY_EXISTS",
+  "message": "Username already exists"
+}`,
+          },
+        ],
+      },
+      {
         id: "auth-anonymous",
         title: "POST /auth/anonymous",
         cards: [
@@ -215,12 +230,15 @@ Content-Type: application/json`,
         cards: [
           {
             list: [
-              "200 / 201 — success",
-              "401 — token missing or invalid",
-              "409 — username already exists",
-              "422 — invalid data",
-              "429 — too many requests",
-              "500 — internal server error",
+              "MISSING_AUTHORIZATION_HEADER",
+              "INVALID_AUTHORIZATION_HEADER",
+              "INVALID_TOKEN",
+              "USERNAME_ALREADY_EXISTS",
+              "USERNAME_REQUIRED_FOR_RATING",
+              "USER_NOT_FOUND",
+              "RATE_LIMIT_EXCEEDED",
+              "VALIDATION_ERROR",
+              "INTERNAL_SERVER_ERROR",
             ],
           },
         ],
