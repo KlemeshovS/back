@@ -256,9 +256,9 @@ Response:
 ## Chat Transfer Note
 
 Если работа по мобильной интеграции переносится в новый чат, сначала нужно прочитать:
-- `HANDOFF.md`
+- `docs/HANDOFF.md`
 - `README.md`
-- `MOBILE_API.md`
+- `docs/MOBILE_API.md`
 
 Актуальная человекочитаемая docs page для команды мобильного приложения:
 - `https://api.wobbly.site/api/docs`

@@ -16,6 +16,18 @@ class Settings(BaseSettings):
         default="postgresql://app:app@db:5432/app",
         alias="DATABASE_URL",
     )
+    trusted_hosts: str = Field(
+        default=(
+            "api.wobbly.site,wobbly.site,localhost,127.0.0.1,85.239.57.243,testserver"
+        ),
+        alias="TRUSTED_HOSTS",
+    )
+    cors_allowed_origins: str = Field(
+        default=(
+            "https://wobbly.site,https://api.wobbly.site,http://localhost,http://127.0.0.1"
+        ),
+        alias="CORS_ALLOWED_ORIGINS",
+    )
 
     model_config = SettingsConfigDict(
         env_file=".env",
@@ -23,6 +35,19 @@ class Settings(BaseSettings):
         populate_by_name=True,
         extra="ignore",
     )
+
+    @staticmethod
+    def _parse_csv(value: str) -> list[str]:
+        items = [item.strip() for item in value.split(",")]
+        return [item for item in items if item]
+
+    @property
+    def trusted_hosts_list(self) -> list[str]:
+        return self._parse_csv(self.trusted_hosts)
+
+    @property
+    def cors_allowed_origins_list(self) -> list[str]:
+        return self._parse_csv(self.cors_allowed_origins)
 
 
 settings = Settings()

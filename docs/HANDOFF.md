@@ -36,7 +36,6 @@
 - `app/api/routes/`:
   - `auth.py`
   - `profile.py`
-  - `legacy.py`
   - `leaderboard.py`
   - `docs.py`
   - `site.py`
@@ -74,7 +73,7 @@ Compatibility wrappers пока оставлены:
 
 Если меняется API, в том же изменении нужно обновлять:
 - `app/static/js/api-docs.js`
-- при необходимости `MOBILE_API.md`
+- при необходимости `docs/MOBILE_API.md`
 - при необходимости `README.md`
 
 Ошибки API теперь стандартизированы:
@@ -156,19 +155,20 @@ Tooling config:
 ## What To Read First In A New Chat
 
 Порядок чтения:
-1. `HANDOFF.md`
+1. `docs/HANDOFF.md`
 2. `README.md`
-3. `DEPLOY.md`
-4. `DEVELOPMENT_WORKFLOW.md`
-5. `MOBILE_API.md`
-6. `BACKEND_ROADMAP.md`
+3. `docs/DEPLOY.md`
+4. `docs/DEVELOPMENT_WORKFLOW.md`
+5. `docs/MOBILE_API.md`
+6. `docs/BACKEND_ROADMAP.md`
+7. если задача про защиту API: `docs/ANTI_ABUSE.md`
 
 ## Recommended First Commands
 
 Если новый чат продолжает работу:
 1. `git status --short --branch`
-2. если задача про production: прочитать `DEPLOY.md`
-3. если задача про API: прочитать `MOBILE_API.md` и посмотреть `app/static/js/api-docs.js`
+2. если задача про production: прочитать `docs/DEPLOY.md`
+3. если задача про API: прочитать `docs/MOBILE_API.md` и посмотреть `app/static/js/api-docs.js`
 4. если задача про архитектуру: смотреть `app/api/`, `app/services/`, `app/core/`, `app/domain/`, `app/db/`
 
 ## Current Next Improvements
