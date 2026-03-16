@@ -145,6 +145,7 @@ Tooling config:
 - release архив распаковывается в `/opt/rating-service`
 - затем обновляются Python dependencies в server venv
 - только после этого перезапускается `rating-service.service`
+- deploy считается успешным только если поднялся локальный `/health`
 
 Для текущего production:
 - `DEPLOY_VENV_PATH=/opt/rating-service/.venv`
