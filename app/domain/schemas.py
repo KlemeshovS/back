@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+from typing import Optional
+
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints, model_validator
 from typing_extensions import Annotated
 
@@ -23,7 +27,7 @@ class AnonymousAuthResponse(BaseModel):
 
 
 class ProfileUpdateRequest(BaseModel):
-    username: Username | None = None
+    username: Optional[Username] = None
     participate_in_rating: bool
 
 
@@ -33,7 +37,7 @@ class RatingParticipationUpdateRequest(BaseModel):
 
 class ProfileResponse(BaseModel):
     id: int
-    username: str | None = None
+    username: Optional[str] = None
     participate_in_rating: bool
 
 
@@ -42,8 +46,8 @@ class ScoreUpdateRequest(BaseModel):
 
 
 class UpdateScoreRequest(BaseModel):
-    user_id: int | None = Field(default=None, ge=1)
-    username: Username | None = None
+    user_id: Optional[int] = Field(default=None, ge=1)
+    username: Optional[Username] = None
     score: int = Field(ge=-2_147_483_648, le=2_147_483_647)
 
     @model_validator(mode="after")
@@ -57,7 +61,7 @@ class UpdateScoreRequest(BaseModel):
 class UserScoreResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
-    username: str | None = None
+    username: Optional[str] = None
     score: int
 
 

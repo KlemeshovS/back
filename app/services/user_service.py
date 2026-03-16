@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+from typing import Optional
+
 from fastapi import HTTPException, status
 from psycopg.errors import UniqueViolation
 
@@ -14,7 +18,7 @@ from app.domain.schemas import (
 
 def save_profile(
     user_id: int,
-    username: str | None,
+    username: Optional[str],
     participate_in_rating: bool,
 ) -> ProfileResponse:
     if participate_in_rating and not username:
@@ -118,8 +122,8 @@ def update_my_score(user_id: int, score: int) -> UserScoreResponse:
 
 def update_legacy_score(
     score: int,
-    user_id: int | None = None,
-    username: str | None = None,
+    user_id: Optional[int] = None,
+    username: Optional[str] = None,
 ) -> UserScoreResponse:
     with get_connection() as conn:
         with conn.cursor() as cur:

@@ -186,7 +186,7 @@ docker compose up --build
 - если меняется API, нужно обновлять текстовую docs page на `https://api.wobbly.site/api/docs` в том же изменении
 - CI дополнительно проверяет, что API-изменения не уходят без обновления `/api/docs`
 - linters and tests: `ruff`, `pytest`
-- локальный обязательный pre-commit guard: `.githooks/pre-commit`
+- локальные обязательные hooks: `.githooks/pre-commit`, `.githooks/pre-push`
 - после рефакторинга новые endpoint changes обычно живут в `app/api/routes/`, `app/services/`, `app/domain/`, `app/core/`
 
 Если меняется поведение API, обычно нужно обновлять:
@@ -194,11 +194,15 @@ docker compose up --build
 - при необходимости `MOBILE_API.md`
 - при необходимости `README.md`
 
-Чтобы включить локальный обязательный pre-commit hook:
+Чтобы включить локальные hooks:
 
 ```bash
 ./scripts/install_git_hooks.sh
 ```
+
+Что делают hooks:
+- `pre-commit` — `ruff --fix`, `ruff`, Python syntax, JS syntax
+- `pre-push` — `pytest`
 
 ## Context Transfer
 

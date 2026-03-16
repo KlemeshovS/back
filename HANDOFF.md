@@ -119,7 +119,9 @@ Tooling config:
 
 Локальные guardrails перед коммитом:
 - `.githooks/pre-commit`
+- `.githooks/pre-push`
 - `scripts/pre_commit_check.sh`
+- `scripts/pre_push_check.sh`
 - `scripts/install_git_hooks.sh`
 
 Секреты GitHub Actions уже заведены:
