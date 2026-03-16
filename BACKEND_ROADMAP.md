@@ -4,188 +4,246 @@
 
 Сейчас backend уже умеет:
 - создавать anonymous user и выдавать bearer token
-- регистрировать уникальный `username`
-- возвращать `id` пользователя при регистрации
-- обновлять `score` по `username`
-- обновлять `score` по `user_id`
-- обновлять `score` от авторизованного пользователя через `/me/score`
-- отдельно включать и выключать участие через `/me/rating`
-- отдавать `top 100` и `bottom 100`
+- работать только через актуальный auth-flow:
+  - `POST /auth/anonymous`
+  - `GET /me`
+  - `PATCH /me/profile`
+  - `PATCH /me/rating`
+  - `POST /me/score`
+- отдельно включать и выключать участие в рейтинге через `/me/rating`
+- отдавать `top 100` только для `score >= 0`
+- отдавать `bottom 100` только для `score < 0`
+- использовать единый error contract в формате `code + message`
+- использовать публичный `camelCase` API contract
 - работать на `https://api.wobbly.site`
-- ограничивать частоту регистрации и обновления рейтинга через rate limiting
+- публиковать Swagger на `https://api.wobbly.site/api/swagger`
+- публиковать человекочитаемую docs page на `https://api.wobbly.site/api/docs`
 
-Дополнительно уже сделано:
+Инженерная база уже тоже есть:
 - проект разнесен на `app/api`, `app/services`, `app/core`, `app/db`, `app/domain`
-- добавлены `ruff` и `pytest`
-- добавлены unit tests и integration tests
-- CI/CD уже автоматизирован через GitHub Actions
-
-Это нормальный MVP, но для реального production ему не хватает защиты, наблюдаемости и более строгой модели данных.
-
-## Priority 1: Security
-
-### 1. ~~Add client authentication~~
-
-Status:
-- done
-- добавлен `POST /auth/anonymous`
-- backend выдает bearer token
-- появились защищенные endpoint'ы `/me`, `/me/profile`, `/me/rating`, `/me/score`
-
-### 2. ~~Limit abuse and spam~~
-
-Status:
-- done
-- rate limiting уже добавлен для регистрации по IP
-- rate limiting уже добавлен для обновления рейтинга
-- осталось отдельно реализовать логирование подозрительных всплесков запросов
-
-### 3. Harden input validation
-
-Что сделать:
-- определить допустимый диапазон `score`
-- решить, можно ли уменьшать `score`, или только обновлять на новое значение
-- при необходимости усилить правила `username`
-
-## Priority 2: Data Model
-
-### 4. Split current state and history
-
-Сейчас хранится только текущее значение `score`.
-
-Что сделать:
-- оставить таблицу `users` для актуального состояния
-- добавить таблицу `score_events`
-- писать туда историю изменений: `old_score`, `new_score`, `source`, `created_at`
-
-### 5. Add timestamps and audit fields
-
-Что сделать:
-- хранить `created_at`, `updated_at`, `last_seen_at`
-- при обновлении рейтинга обновлять `last_seen_at`
-
-### 6. Add migration tool
-
-Status:
-- done
 - подключен `Alembic`
-- изменения схемы хранятся в `alembic/versions/`
-- приложение на старте прогоняет `upgrade head`
+- добавлены `ruff`, `pytest`, pre-commit и pre-push hooks
+- есть unit tests и integration tests
+- CI/CD уже автоматизирован через GitHub Actions
+- production deploy идет через `verify -> deploy`
 
-## Priority 3: Reliability
+Это уже не просто MVP. Сейчас следующий фокус должен быть не на базовом CRUD, а на надежности, наблюдаемости и эволюции модели данных.
+
+## Active Priorities
+
+### 1. Add readiness endpoint
+
+Что сделать:
+- добавить `/ready`
+- проверять доступность PostgreSQL
+- возвращать понятный статус для production smoke-check и deploy pipeline
+
+Почему это важно:
+- сейчас `/health` проверяет только то, что приложение поднялось
+- для production и deploy полезнее отличать “процесс жив” от “приложение готово обслуживать запросы”
+
+### 2. Add score history table
+
+Что сделать:
+- добавить таблицу `score_events`
+- хранить историю изменений рейтинга:
+  - `user_id`
+  - `old_score`
+  - `new_score`
+  - `source`
+  - `created_at`
+- оставить таблицу `users` как current state
+
+Почему это важно:
+- сейчас хранится только текущий `score`
+- невозможно разбирать историю изменений, спорные кейсы и аномалии
+
+### 3. Harden score rules
+
+Что сделать:
+- явно зафиксировать бизнес-правила для `score`
+- определить допустимый диапазон
+- решить, можно ли уменьшать `score`
+- решить, допустимы ли скачки и перезапись любым значением
+
+Почему это важно:
+- сейчас техническая валидация есть, но продуктовая модель рейтинга еще не до конца закреплена
+
+### 4. Add integration tests with real test DB
+
+Что сделать:
+- поднять изолированную test PostgreSQL для CI
+- добавить сценарии с реальной БД вместо только monkeypatch-based tests
+- покрыть:
+  - anonymous auth flow
+  - profile update
+  - rating toggle
+  - score update
+  - leaderboard queries
+  - error scenarios
+
+Почему это важно:
+- текущие integration tests уже полезны, но они не ловят проблемы SQL, миграций и реальных DB-paths
+
+### 5. Add structured logging
+
+Что сделать:
+- перейти на структурированные логи
+- логировать:
+  - `request_id`
+  - endpoint
+  - status code
+  - latency
+  - error code
+
+Почему это важно:
+- без этого неудобно разбирать инциденты и ошибки мобильной интеграции
+
+### 6. Add error monitoring
+
+Что сделать:
+- подключить Sentry или аналог
+- отправлять unhandled exceptions
+- отдельно отмечать важные production warnings
+
+Почему это важно:
+- сейчас мы видим инциденты в основном через ручную проверку логов
 
 ### 7. Add automated backups
 
 Что сделать:
 - ежедневный `pg_dump`
 - хранить несколько последних копий
-- выносить бэкапы за пределы сервера, например в S3-compatible storage
+- выносить backup за пределы сервера
 
-### 8. ~~Improve deployment flow~~
+Почему это важно:
+- локальные backup-файлы уже делались руками
+- нужен системный, повторяемый процесс
 
-Status:
-- done
-- есть `DEPLOY.md`
-- есть GitHub Actions pipeline
-- после merge в `main` идет автоматический verify + deploy
-- ручной deploy оставлен как fallback
-
-### 9. Add health checks and readiness checks
+### 8. Improve leaderboard queries
 
 Что сделать:
-- оставить `/health`
-- добавить `/ready`, который проверяет доступность PostgreSQL
+- добавить `offset`
+- добавить получение позиции конкретного пользователя
+- при необходимости добавить дополнительные режимы leaderboard
 
-## Priority 4: Observability
+Почему это важно:
+- текущего `top/bottom limit` хватает для простого экрана
+- но API уже упирается в следующий уровень функциональности
 
-### 10. Add structured logging
-
-Что сделать:
-- перейти на JSON-логи
-- писать `request_id`, endpoint, status code, latency
-
-### 11. Add error monitoring
+### 9. Introduce API versioning
 
 Что сделать:
-- подключить Sentry или аналог
-- отправлять unhandled exceptions и важные warnings
+- перевести публичный контракт на `/api/v1/...`
+- оставить ясный путь для будущих несовместимых изменений
 
-### 12. Add metrics
+Почему это важно:
+- контракт уже живет в мобильном приложении
+- дальше breaking changes будут дороже
 
-Что сделать:
-- собирать количество запросов
-- ошибки по endpoint
-- время ответа
-- количество обновлений рейтинга
-
-## Priority 5: API Evolution
-
-### 13. Version the API
+### 10. Add anti-fraud and abuse signals
 
 Что сделать:
-- перевести маршруты на `/api/v1/...`
+- логировать подозрительные всплески запросов
+- анализировать аномальные прыжки `score`
+- при необходимости добавить soft-block или manual review markers
 
-### 14. Improve response contract
+Почему это важно:
+- базовый rate limiting уже есть
+- следующая ступень это не только ограничение запросов, но и детекция странного поведения
 
-Status:
-- done
-- регистрация уже возвращает `id` и `username`
-- обновление рейтинга уже поддерживает `userId`
-- ошибки унифицированы в формате `code` + `message`
-
-### 15. Add pagination and richer leaderboard queries
+### 11. Clean up remaining compatibility wrappers
 
 Что сделать:
-- кроме `limit`, добавить `offset`
-- сделать выдачу позиции конкретного пользователя
-- добавить фильтры, если появятся режимы рейтингов
+- убрать re-export wrappers, если они больше не нужны:
+  - `app/auth.py`
+  - `app/config.py`
+  - `app/database.py`
+  - `app/rate_limit.py`
+  - `app/schemas.py`
 
-## Priority 6: Testing
+Почему это важно:
+- они были полезны на переходном этапе рефакторинга
+- дальше лучше оставить одну ясную структуру без дублирующих точек входа
 
-### 16. Add automated tests
-
-Status:
-- in progress
-- добавлены unit tests для auth, rate limiter и schema validation
-- добавлены integration tests для API endpoint'ов
-- тесты и lint checks подключены в CI
-- дальше нужны integration tests со сценариями на тестовой БД
+### 12. Add developer ergonomics
 
 Что сделать:
-- ~~unit tests для валидации~~
-- ~~integration tests для API~~
-- тесты на ошибки: duplicate username, missing user, invalid payload
-- тесты с реальной тестовой PostgreSQL или изолированной test DB
+- вынести dev dependencies в отдельный файл или optional extras
+- добавить `make`/`just` команды или короткие scripts для частых операций
+- упростить bootstrap локальной среды
 
-### 17. Add staging checks
-
-Что сделать:
-- перед деплоем гонять тесты и basic smoke checks
+Почему это важно:
+- tooling уже есть
+- теперь стоит сделать его проще в использовании для следующего разработчика
 
 ## Suggested Execution Order
 
 ### Phase 1
-- тесты на ошибочные сценарии
+- `/ready`
+- integration tests with real test DB
+- structured logging
 
 ### Phase 2
-- score history table
+- `score_events`
 - backups
-- readiness endpoint
+- anti-fraud signals
 
 ### Phase 3
-- structured logging
-- Sentry
-- metrics
+- error monitoring
+- richer leaderboard queries
+- cleanup of compatibility wrappers
 
 ### Phase 4
 - API versioning
-- richer leaderboard methods
-- anti-fraud rules
+- developer ergonomics improvements
 
-## Recommended First Task
+## Recommended Next Task
 
 Если выбирать одно следующее улучшение, лучше всего сделать:
 
 `Add readiness endpoint`
 
-После унификации ошибок и подключения миграций следующий практический шаг — отделить простой `/health` от реальной проверки готовности через `/ready`.
+Это самый маленький и самый практичный следующий шаг: он сразу улучшит production deploy, monitoring и понимание реальной готовности backend.
+
+## Completed
+
+Ниже задачи, которые уже закрыты и больше не должны висеть в активной части roadmap.
+
+### Security
+- done: anonymous auth и bearer token flow
+- done: rate limiting для регистрации и обновления рейтинга
+- done: базовая input validation для `username` и payload schemas
+
+### API
+- done: переход на публичный `camelCase` contract
+- done: единый error contract в формате `code + message`
+- done: отдельный toggle участия в рейтинге через `PATCH /me/rating`
+- done: удалены legacy endpoint'ы:
+  - `POST /users/register`
+  - `POST /users/score`
+
+### Data / DB
+- done: подключен `Alembic`
+- done: базовые timestamps уже есть:
+  - `created_at`
+  - `updated_at`
+  - `last_seen_at`
+
+### Reliability / Delivery
+- done: настроен GitHub Actions pipeline
+- done: автоматизирован deploy после merge в `main`
+- done: deploy script обновляет dependencies в production venv
+- done: deploy script ждет успешный `/health` перед завершением
+
+### Testing / Tooling
+- done: добавлены `ruff` и `pytest`
+- done: добавлены unit tests
+- done: добавлены integration tests для API routes
+- done: добавлены pre-commit и pre-push hooks
+
+### Docs / Process
+- done: `/api/docs` и `/api/swagger` разведены по отдельным путям
+- done: docs sync включен в CI
+- done: при изменении API docs page обновляется в том же изменении
+- done: проектный handoff и deploy context зафиксированы в `.md`
