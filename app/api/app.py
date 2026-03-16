@@ -1,0 +1,43 @@
+from contextlib import asynccontextmanager
+from pathlib import Path
+
+from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
+
+from app.api.routes import auth, docs, health, leaderboard, legacy, profile, site
+from app.db.database import init_db
+
+
+@asynccontextmanager
+async def db_lifespan(_: FastAPI):
+    init_db()
+    yield
+
+
+@asynccontextmanager
+async def noop_lifespan(_: FastAPI):
+    yield
+
+
+def create_app(init_database: bool = True) -> FastAPI:
+    app = FastAPI(
+        title="Rating Service",
+        lifespan=db_lifespan if init_database else noop_lifespan,
+        docs_url=None,
+        redoc_url=None,
+        openapi_url="/api/openapi.json",
+    )
+
+    static_dir = Path(__file__).resolve().parents[1] / "static"
+    app.state.static_dir = static_dir
+    app.mount("/static", StaticFiles(directory=static_dir), name="static")
+
+    app.include_router(site.router)
+    app.include_router(health.router)
+    app.include_router(docs.router)
+    app.include_router(auth.router)
+    app.include_router(profile.router)
+    app.include_router(legacy.router)
+    app.include_router(leaderboard.router)
+
+    return app
