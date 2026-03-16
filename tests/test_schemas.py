@@ -14,7 +14,7 @@ def test_update_score_request_requires_identifier() -> None:
 
 
 def test_update_score_request_accepts_user_id() -> None:
-    payload = UpdateScoreRequest(user_id=1, score=10)
+    payload = UpdateScoreRequest.model_validate({"userId": 1, "score": 10})
 
     assert payload.user_id == 1
     assert payload.score == 10
@@ -26,6 +26,17 @@ def test_profile_update_rejects_invalid_username() -> None:
 
 
 def test_rating_participation_update_accepts_boolean_toggle() -> None:
-    payload = RatingParticipationUpdateRequest(participate_in_rating=False)
+    payload = RatingParticipationUpdateRequest.model_validate(
+        {"participateInRating": False}
+    )
 
     assert payload.participate_in_rating is False
+
+
+def test_profile_response_serializes_camel_case() -> None:
+    payload = ProfileUpdateRequest(username="good_name", participate_in_rating=True)
+
+    assert payload.model_dump(by_alias=True) == {
+        "username": "good_name",
+        "participateInRating": True,
+    }

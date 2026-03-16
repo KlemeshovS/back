@@ -72,9 +72,9 @@ Response:
 
 ```json
 {
-  "user_id": 15,
-  "access_token": "rt_xxxxx",
-  "token_type": "bearer"
+  "userId": 15,
+  "accessToken": "rt_xxxxx",
+  "tokenType": "bearer"
 }
 ```
 
@@ -95,7 +95,7 @@ Request:
 ```json
 {
   "username": "player_1",
-  "participate_in_rating": true
+  "participateInRating": true
 }
 ```
 
@@ -113,7 +113,7 @@ Request:
 
 ```json
 {
-  "participate_in_rating": true
+  "participateInRating": true
 }
 ```
 

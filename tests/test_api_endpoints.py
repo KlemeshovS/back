@@ -50,12 +50,35 @@ def test_patch_me_rating_updates_participation(monkeypatch) -> None:
 
     response = client.patch(
         "/me/rating",
-        json={"participate_in_rating": False},
+        json={"participateInRating": False},
         headers={"Authorization": "Bearer token"},
     )
 
     assert response.status_code == 200
-    assert response.json()["participate_in_rating"] is False
+    assert response.json()["participateInRating"] is False
+
+
+def test_auth_anonymous_returns_camel_case_response(monkeypatch) -> None:
+    client = build_client()
+
+    monkeypatch.setattr(
+        user_service,
+        "create_anonymous_user",
+        lambda: {
+            "user_id": 9,
+            "access_token": "rt_test",
+            "token_type": "bearer",
+        },
+    )
+
+    response = client.post("/auth/anonymous")
+
+    assert response.status_code == 201
+    assert response.json() == {
+        "userId": 9,
+        "accessToken": "rt_test",
+        "tokenType": "bearer",
+    }
 
 
 def test_legacy_register_returns_created(monkeypatch) -> None:
