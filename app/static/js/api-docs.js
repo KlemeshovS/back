@@ -243,18 +243,6 @@ Content-Type: application/json`,
           },
         ],
       },
-      {
-        id: "legacy",
-        title: "Legacy",
-        cards: [
-          {
-            paragraphs: [
-              "Эти методы оставлены только для обратной совместимости и не должны использоваться новым мобильным приложением:",
-            ],
-            list: ["POST /users/register", "POST /users/score"],
-          },
-        ],
-      },
     ];
   }
 

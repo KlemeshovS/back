@@ -11,7 +11,7 @@ from app.api.error_handlers import (
     unhandled_exception_handler,
     validation_exception_handler,
 )
-from app.api.routes import auth, docs, health, leaderboard, legacy, profile, site
+from app.api.routes import auth, docs, health, leaderboard, profile, site
 from app.core.errors import ApiError
 from app.db.database import init_db
 
@@ -49,7 +49,6 @@ def create_app(init_database: bool = True) -> FastAPI:
     app.include_router(docs.router)
     app.include_router(auth.router)
     app.include_router(profile.router)
-    app.include_router(legacy.router)
     app.include_router(leaderboard.router)
 
     return app

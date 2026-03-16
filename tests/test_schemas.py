@@ -4,20 +4,7 @@ from pydantic import ValidationError
 from app.domain.schemas import (
     ProfileUpdateRequest,
     RatingParticipationUpdateRequest,
-    UpdateScoreRequest,
 )
-
-
-def test_update_score_request_requires_identifier() -> None:
-    with pytest.raises(ValidationError):
-        UpdateScoreRequest(score=10)
-
-
-def test_update_score_request_accepts_user_id() -> None:
-    payload = UpdateScoreRequest.model_validate({"userId": 1, "score": 10})
-
-    assert payload.user_id == 1
-    assert payload.score == 10
 
 
 def test_profile_update_rejects_invalid_username() -> None:

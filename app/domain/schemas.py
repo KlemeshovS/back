@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Optional
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field
 
 
 def to_camel(value: str) -> str:
@@ -18,10 +18,6 @@ class ApiModel(BaseModel):
 
 USERNAME_PATTERN = r"^[A-Za-z0-9_.-]+$"
 Username = str
-
-
-class RegisterUserRequest(ApiModel):
-    username: str = Field(min_length=3, max_length=64, pattern=USERNAME_PATTERN)
 
 
 class AnonymousAuthResponse(ApiModel):
@@ -54,24 +50,6 @@ class ScoreUpdateRequest(ApiModel):
     score: int = Field(ge=-2_147_483_648, le=2_147_483_647)
 
 
-class UpdateScoreRequest(ApiModel):
-    user_id: Optional[int] = Field(default=None, ge=1)
-    username: Optional[str] = Field(
-        default=None,
-        min_length=3,
-        max_length=64,
-        pattern=USERNAME_PATTERN,
-    )
-    score: int = Field(ge=-2_147_483_648, le=2_147_483_647)
-
-    @model_validator(mode="after")
-    def validate_identifier(self) -> "UpdateScoreRequest":
-        if self.user_id is None and self.username is None:
-            raise ValueError("Either user_id or username must be provided")
-
-        return self
-
-
 class UserScoreResponse(ApiModel):
     model_config = ConfigDict(
         alias_generator=to_camel,
@@ -86,12 +64,6 @@ class UserScoreResponse(ApiModel):
 class LeaderboardResponse(ApiModel):
     items: list[UserScoreResponse]
     total: int
-
-
-class StatusResponse(ApiModel):
-    status: str
-    id: int
-    username: str
 
 
 class ErrorResponse(ApiModel):
