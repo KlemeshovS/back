@@ -143,6 +143,7 @@ journalctl -u rating-service -n 100 --no-pager
 - на `pull_request` в `main` запускает только `verify`
 - на `push` в `main` запускает `verify`, а затем `deploy`
 - `verify` ставит Python и Node tooling, гоняет `ruff`, `pytest`, JS syntax checks, Docker config validation и docs sync check
+- `verify` checkout'ит репозиторий с полной историей, чтобы docs sync check мог сравнивать `base sha` и `head sha`
 - `deploy` собирает release archive, копирует его на production и перезапускает `rating-service`
 
 ### GitHub Secrets

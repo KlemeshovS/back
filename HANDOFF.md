@@ -117,6 +117,10 @@ Tooling config:
 - `scripts/check_api_docs_sync.sh`
 - `scripts/deploy_release.sh`
 
+Нюанс docs sync check:
+- в GitHub Actions `verify` использует полный fetch history
+- если `base sha` все равно недоступен локально, `scripts/check_api_docs_sync.sh` пропускает проверку вместо `fatal: bad object`
+
 Локальные guardrails перед коммитом:
 - `.githooks/pre-commit`
 - `.githooks/pre-push`
