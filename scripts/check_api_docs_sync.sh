@@ -13,6 +13,11 @@ if [[ -z "$BASE_REF" ]]; then
   exit 0
 fi
 
+if ! git cat-file -e "${BASE_REF}^{commit}" 2>/dev/null; then
+  echo "API_DOCS_BASE_REF is not available in local git history, skipping docs sync check"
+  exit 0
+fi
+
 CHANGED_FILES="$(git diff --name-only "$BASE_REF" "$HEAD_REF")"
 
 if [[ -z "$CHANGED_FILES" ]]; then
