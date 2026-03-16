@@ -32,6 +32,7 @@ Backend, landing page и production docs для `Wobbly`.
 - `scripts/` — CI checks, deploy, docs sync checks
 - `.githooks/` — локальные git hooks
 - `tests/` — unit и integration tests
+- `docs/` — operational, mobile, roadmap и handoff документация
 - `.github/workflows/pipeline.yml` — verify + deploy pipeline
 - `pyproject.toml` — lint/test tooling config
 
@@ -60,8 +61,8 @@ Backend, landing page и production docs для `Wobbly`.
 Это важно:
 - локальный `docker compose` нужен для разработки
 - production topology уже другая, и ее не нужно заново угадывать
-- точные команды деплоя описаны в `DEPLOY.md`
-- отдельная сводка для переноса контекста лежит в `HANDOFF.md`
+- точные команды деплоя описаны в `docs/DEPLOY.md`
+- отдельная сводка для переноса контекста лежит в `docs/HANDOFF.md`
 
 ## API
 
@@ -169,7 +170,7 @@ Responses:
 Возвращает пользователей с минимальным рейтингом, у которых `score < 0`.
 
 Подробный мобильный контракт:
-- `MOBILE_API.md`
+- `docs/MOBILE_API.md`
 - `https://api.wobbly.site/api/docs`
 
 ## Локальный запуск
@@ -192,9 +193,11 @@ docker compose up --build
 
 ## Development
 
-- workflow: `DEVELOPMENT_WORKFLOW.md`
-- production/deploy: `DEPLOY.md`
-- handoff summary: `HANDOFF.md`
+- workflow: `docs/DEVELOPMENT_WORKFLOW.md`
+- production/deploy: `docs/DEPLOY.md`
+- handoff summary: `docs/HANDOFF.md`
+- anti-abuse plan: `docs/ANTI_ABUSE.md`
+- backend roadmap: `docs/BACKEND_ROADMAP.md`
 - conventions: trunk-based development + Conventional Commits
 - если меняется API, нужно обновлять текстовую docs page на `https://api.wobbly.site/api/docs` в том же изменении
 - CI дополнительно проверяет, что API-изменения не уходят без обновления `/api/docs`
@@ -205,7 +208,7 @@ docker compose up --build
 
 Если меняется поведение API, обычно нужно обновлять:
 - `app/static/js/api-docs.js`
-- при необходимости `MOBILE_API.md`
+- при необходимости `docs/MOBILE_API.md`
 - при необходимости `README.md`
 
 Чтобы включить локальные hooks:
@@ -221,9 +224,9 @@ docker compose up --build
 ## Context Transfer
 
 Если работа переносится в новый чат, новый чат должен сначала прочитать:
-- `HANDOFF.md`
+- `docs/HANDOFF.md`
 - `README.md`
-- `BACKEND_ROADMAP.md`
-- `MOBILE_API.md`
-- `DEPLOY.md`
-- `DEVELOPMENT_WORKFLOW.md`
+- `docs/BACKEND_ROADMAP.md`
+- `docs/MOBILE_API.md`
+- `docs/DEPLOY.md`
+- `docs/DEVELOPMENT_WORKFLOW.md`

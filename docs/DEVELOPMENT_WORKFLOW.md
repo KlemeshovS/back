@@ -73,12 +73,12 @@ Commit message оформляем по `Conventional Commits`.
 ## Handoff Rule
 
 Если работа переносится в новый чат, сначала нужно прочитать:
-- `HANDOFF.md`
+- `docs/HANDOFF.md`
 - `README.md`
-- `BACKEND_ROADMAP.md`
-- `MOBILE_API.md`
-- `DEPLOY.md`
-- `DEVELOPMENT_WORKFLOW.md`
+- `docs/BACKEND_ROADMAP.md`
+- `docs/MOBILE_API.md`
+- `docs/DEPLOY.md`
+- `docs/DEVELOPMENT_WORKFLOW.md`
 
 Не надо заново угадывать:
 - как называется продовый сервис
@@ -89,10 +89,10 @@ Commit message оформляем по `Conventional Commits`.
 ## Handoff Checklist
 
 Перед тем как начинать новый анализ после переноса контекста:
-1. прочитать `HANDOFF.md`
+1. прочитать `docs/HANDOFF.md`
 2. прочитать основные `.md` файлы
 3. сверить локальное состояние через `git status --short --branch`
-4. если задача связана с production, сначала прочитать `DEPLOY.md`
+4. если задача связана с production, сначала прочитать `docs/DEPLOY.md`
 5. только потом смотреть код и делать выводы
 
 Если задача связана с production, не нужно сначала исследовать сервер через поиск:
@@ -100,7 +100,7 @@ Commit message оформляем по `Conventional Commits`.
 - `grep -R /etc/...`
 - случайный перебор `docker compose`, `systemd` и путей
 
-Это уже известно и зафиксировано в `DEPLOY.md`.
+Это уже известно и зафиксировано в `docs/DEPLOY.md`.
 
 ## Production Knowledge Rule
 

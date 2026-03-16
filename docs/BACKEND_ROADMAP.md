@@ -31,6 +31,9 @@
 
 ## Active Priorities
 
+Отдельный operational план по защите API:
+- `docs/ANTI_ABUSE.md`
+
 ### 1. Add readiness endpoint
 
 Что сделать:

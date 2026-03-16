@@ -3,7 +3,9 @@ from pathlib import Path
 
 from fastapi import FastAPI, HTTPException
 from fastapi.exceptions import RequestValidationError
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from starlette.middleware.trustedhost import TrustedHostMiddleware
 
 from app.api.error_handlers import (
     api_error_handler,
@@ -12,6 +14,7 @@ from app.api.error_handlers import (
     validation_exception_handler,
 )
 from app.api.routes import auth, docs, health, leaderboard, profile, site
+from app.core.config import settings
 from app.core.errors import ApiError
 from app.db.database import init_db
 
@@ -34,6 +37,17 @@ def create_app(init_database: bool = True) -> FastAPI:
         docs_url=None,
         redoc_url=None,
         openapi_url="/api/openapi.json",
+    )
+    app.add_middleware(
+        TrustedHostMiddleware,
+        allowed_hosts=settings.trusted_hosts_list,
+    )
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=settings.cors_allowed_origins_list,
+        allow_credentials=True,
+        allow_methods=["GET", "POST", "PATCH", "OPTIONS"],
+        allow_headers=["Authorization", "Content-Type"],
     )
 
     static_dir = Path(__file__).resolve().parents[1] / "static"

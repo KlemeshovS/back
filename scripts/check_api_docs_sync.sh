@@ -33,7 +33,7 @@ while IFS= read -r file; do
     API_CHANGED=true
   fi
 
-  if [[ "$file" == "app/static/js/api-docs.js" || "$file" == "app/static/pages/api-docs.html" || "$file" == "MOBILE_API.md" || "$file" == "README.md" ]]; then
+  if [[ "$file" == "app/static/js/api-docs.js" || "$file" == "app/static/pages/api-docs.html" || "$file" == "docs/MOBILE_API.md" || "$file" == "README.md" ]]; then
     DOCS_CHANGED=true
   fi
 done <<< "$CHANGED_FILES"

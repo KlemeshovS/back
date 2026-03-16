@@ -207,7 +207,7 @@ Pipeline опирается на локальные скрипты:
 
 Если поведение API меняется, вместе с этим должны обновляться:
 - `app/static/js/api-docs.js`
-- при необходимости `MOBILE_API.md`
+- при необходимости `docs/MOBILE_API.md`
 - при необходимости `README.md`
 
 ## Common Failure: SSH Key Parsing
