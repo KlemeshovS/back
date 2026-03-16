@@ -14,10 +14,12 @@
 ## Project Structure
 
 Текущая структура проекта после первой фазы рефакторинга:
-- `app/main.py` — FastAPI entrypoint и маршруты
+- `app/main.py` — тонкий FastAPI entrypoint
+- `app/api/` — app factory, dependencies и route modules
 - `app/core/` — auth, config, rate limiting
 - `app/db/` — database access и init_db
 - `app/domain/` — Pydantic schemas
+- `app/services/` — business logic for users and leaderboards
 - `app/static/` — landing, docs page, css, js, assets
 - `scripts/` — CI checks, deploy, docs sync checks
 - `tests/` — unit tests
