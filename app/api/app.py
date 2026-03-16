@@ -1,10 +1,18 @@
 from contextlib import asynccontextmanager
 from pathlib import Path
 
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
+from fastapi.exceptions import RequestValidationError
 from fastapi.staticfiles import StaticFiles
 
+from app.api.error_handlers import (
+    api_error_handler,
+    http_exception_handler,
+    unhandled_exception_handler,
+    validation_exception_handler,
+)
 from app.api.routes import auth, docs, health, leaderboard, legacy, profile, site
+from app.core.errors import ApiError
 from app.db.database import init_db
 
 
@@ -31,6 +39,10 @@ def create_app(init_database: bool = True) -> FastAPI:
     static_dir = Path(__file__).resolve().parents[1] / "static"
     app.state.static_dir = static_dir
     app.mount("/static", StaticFiles(directory=static_dir), name="static")
+    app.add_exception_handler(ApiError, api_error_handler)
+    app.add_exception_handler(HTTPException, http_exception_handler)
+    app.add_exception_handler(RequestValidationError, validation_exception_handler)
+    app.add_exception_handler(Exception, unhandled_exception_handler)
 
     app.include_router(site.router)
     app.include_router(health.router)

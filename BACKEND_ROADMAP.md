@@ -66,9 +66,11 @@ Status:
 
 ### 6. Add migration tool
 
-Что сделать:
-- подключить `Alembic`
-- хранить изменения схемы как миграции
+Status:
+- done
+- подключен `Alembic`
+- изменения схемы хранятся в `alembic/versions/`
+- приложение на старте прогоняет `upgrade head`
 
 ## Priority 3: Reliability
 
@@ -126,14 +128,10 @@ Status:
 ### 14. Improve response contract
 
 Status:
-- in progress
+- done
 - регистрация уже возвращает `id` и `username`
-- обновление рейтинга уже поддерживает `user_id`
-- осталось унифицировать ошибки в формате `code` + `message`
-
-Что сделать:
-- унифицировать ошибки
-- возвращать коды и понятные поля, например `code`, `message`
+- обновление рейтинга уже поддерживает `userId`
+- ошибки унифицированы в формате `code` + `message`
 
 ### 15. Add pagination and richer leaderboard queries
 
@@ -167,11 +165,9 @@ Status:
 ## Suggested Execution Order
 
 ### Phase 1
-- unified error responses
 - тесты на ошибочные сценарии
 
 ### Phase 2
-- Alembic migrations
 - score history table
 - backups
 - readiness endpoint
@@ -190,6 +186,6 @@ Status:
 
 Если выбирать одно следующее улучшение, лучше всего сделать:
 
-`Unify error responses for mobile client`
+`Add readiness endpoint`
 
-Следующий полезный шаг — привести ошибки к единому контракту `code` + `message`.
+После унификации ошибок и подключения миграций следующий практический шаг — отделить простой `/health` от реальной проверки готовности через `/ready`.

@@ -46,6 +46,7 @@
 - `app/db/database.py` — DB access
 - `app/domain/schemas.py` — Pydantic schemas
 - `app/static/` — landing page, docs page, css, js, assets
+- `alembic/` — migration scripts
 
 Compatibility wrappers пока оставлены:
 - `app/auth.py`
@@ -79,6 +80,9 @@ Legacy endpoint'ы еще существуют:
 - `app/static/js/api-docs.js`
 - при необходимости `MOBILE_API.md`
 - при необходимости `README.md`
+
+Ошибки API теперь стандартизированы:
+- формат ответа: `code + message`
 
 Источник правды для человекочитаемой API docs page:
 - `app/static/js/api-docs.js`
@@ -164,8 +168,6 @@ Tooling config:
 ## Current Next Improvements
 
 Самые логичные следующие технические шаги:
-- unified API errors: `code + message`
-- Alembic migrations
 - readiness endpoint `/ready`
 - richer integration tests with test DB
 - structured logging

@@ -2,9 +2,10 @@ from __future__ import annotations
 
 from typing import Optional
 
-from fastapi import Header, HTTPException, Request, status
+from fastapi import Header, Request, status
 
 from app.core.auth import hash_access_token
+from app.core.errors import ApiError, ApiErrorCode
 from app.core.rate_limit import rate_limiter
 from app.db.database import get_connection
 
@@ -25,26 +26,29 @@ def enforce_rate_limit(key: str, limit: int, window_seconds: int, detail: str) -
     if allowed:
         return
 
-    raise HTTPException(
+    raise ApiError(
         status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-        detail=detail,
+        code=ApiErrorCode.RATE_LIMIT_EXCEEDED,
+        message=detail,
         headers={"Retry-After": str(retry_after)},
     )
 
 
 def get_bearer_token(authorization: Optional[str]) -> str:
     if not authorization:
-        raise HTTPException(
+        raise ApiError(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Missing authorization header",
+            code=ApiErrorCode.MISSING_AUTHORIZATION_HEADER,
+            message="Missing authorization header",
             headers={"WWW-Authenticate": "Bearer"},
         )
 
     scheme, _, token = authorization.partition(" ")
     if scheme.lower() != "bearer" or not token:
-        raise HTTPException(
+        raise ApiError(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid authorization header",
+            code=ApiErrorCode.INVALID_AUTHORIZATION_HEADER,
+            message="Invalid authorization header",
             headers={"WWW-Authenticate": "Bearer"},
         )
 
@@ -68,9 +72,10 @@ def get_current_user(authorization: Optional[str] = Header(default=None)) -> dic
             user = cur.fetchone()
 
     if user is None:
-        raise HTTPException(
+        raise ApiError(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid token",
+            code=ApiErrorCode.INVALID_TOKEN,
+            message="Invalid token",
             headers={"WWW-Authenticate": "Bearer"},
         )
 

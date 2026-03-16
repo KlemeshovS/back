@@ -15,6 +15,7 @@
 - `rating-service.service`
 - `uvicorn`
 - код приложения лежит в `/opt/rating-service`
+- схема БД управляется через `Alembic`
 
 Сетевые адреса:
 - main site: `https://wobbly.site`
@@ -145,6 +146,15 @@ journalctl -u rating-service -n 100 --no-pager
 - `verify` ставит Python и Node tooling, гоняет `ruff`, `pytest`, JS syntax checks, Docker config validation и docs sync check
 - `verify` checkout'ит репозиторий с полной историей, чтобы docs sync check мог сравнивать `base sha` и `head sha`
 - `deploy` собирает release archive, копирует его на production и перезапускает `rating-service`
+
+### Database Migrations
+
+Схема БД теперь управляется через `Alembic`.
+
+Что важно:
+- миграции лежат в `alembic/versions/`
+- приложение на старте вызывает `alembic upgrade head` программно через `app/db/database.py`
+- это дает плавный переход без отдельного ручного SQL на сервере
 
 ### GitHub Secrets
 

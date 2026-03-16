@@ -92,3 +92,8 @@ class StatusResponse(ApiModel):
     status: str
     id: int
     username: str
+
+
+class ErrorResponse(ApiModel):
+    code: str
+    message: str

@@ -6,6 +6,7 @@ from fastapi.testclient import TestClient
 
 from app.api.app import create_app
 from app.api.dependencies import get_current_user
+from app.core.errors import ApiError, ApiErrorCode
 from app.services import user_service
 
 
@@ -78,6 +79,61 @@ def test_auth_anonymous_returns_camel_case_response(monkeypatch) -> None:
         "userId": 9,
         "accessToken": "rt_test",
         "tokenType": "bearer",
+    }
+
+
+def test_get_me_requires_authorization_header() -> None:
+    client = build_client()
+
+    response = client.get("/me")
+
+    assert response.status_code == 401
+    assert response.json() == {
+        "code": "MISSING_AUTHORIZATION_HEADER",
+        "message": "Missing authorization header",
+    }
+
+
+def test_profile_validation_error_uses_uniform_error_contract() -> None:
+    client = build_client()
+
+    client.app.dependency_overrides[get_current_user] = lambda: {
+        "id": 7,
+        "username": "player_7",
+        "is_rating_enabled": True,
+    }
+
+    response = client.patch(
+        "/me/profile",
+        json={},
+        headers={"Authorization": "Bearer token"},
+    )
+
+    assert response.status_code == 422
+    assert response.json() == {
+        "code": "VALIDATION_ERROR",
+        "message": "Invalid request payload",
+    }
+
+
+def test_legacy_register_duplicate_username_returns_uniform_error(monkeypatch) -> None:
+    client = build_client()
+
+    def fake_register_user(_: str) -> dict:
+        raise ApiError(
+            status_code=409,
+            code=ApiErrorCode.USERNAME_ALREADY_EXISTS,
+            message="Username already exists",
+        )
+
+    monkeypatch.setattr(user_service, "register_user", fake_register_user)
+
+    response = client.post("/users/register", json={"username": "player_3"})
+
+    assert response.status_code == 409
+    assert response.json() == {
+        "code": "USERNAME_ALREADY_EXISTS",
+        "message": "Username already exists",
     }
 
 

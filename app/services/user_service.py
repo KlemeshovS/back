@@ -2,10 +2,11 @@ from __future__ import annotations
 
 from typing import Optional
 
-from fastapi import HTTPException, status
+from fastapi import status
 from psycopg.errors import UniqueViolation
 
 from app.core.auth import generate_access_token, hash_access_token
+from app.core.errors import ApiError, ApiErrorCode
 from app.db.database import get_connection
 from app.domain.schemas import (
     AnonymousAuthResponse,
@@ -22,9 +23,10 @@ def save_profile(
     participate_in_rating: bool,
 ) -> ProfileResponse:
     if participate_in_rating and not username:
-        raise HTTPException(
+        raise ApiError(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail="Username is required to participate in rating",
+            code=ApiErrorCode.USERNAME_REQUIRED_FOR_RATING,
+            message="Username is required to participate in rating",
         )
 
     try:
@@ -45,9 +47,10 @@ def save_profile(
                 user = cur.fetchone()
             conn.commit()
     except UniqueViolation as exc:
-        raise HTTPException(
+        raise ApiError(
             status_code=status.HTTP_409_CONFLICT,
-            detail="Username already exists",
+            code=ApiErrorCode.USERNAME_ALREADY_EXISTS,
+            message="Username already exists",
         ) from exc
 
     return ProfileResponse(
@@ -92,9 +95,10 @@ def register_user(username: str) -> StatusResponse:
                 user = cur.fetchone()
             conn.commit()
     except UniqueViolation as exc:
-        raise HTTPException(
+        raise ApiError(
             status_code=status.HTTP_409_CONFLICT,
-            detail="Username already exists",
+            code=ApiErrorCode.USERNAME_ALREADY_EXISTS,
+            message="Username already exists",
         ) from exc
 
     return StatusResponse(status="created", id=user["id"], username=user["username"])
@@ -153,9 +157,10 @@ def update_legacy_score(
         conn.commit()
 
     if user is None:
-        raise HTTPException(
+        raise ApiError(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found",
+            code=ApiErrorCode.USER_NOT_FOUND,
+            message="User not found",
         )
 
     return UserScoreResponse(**user)
