@@ -23,6 +23,7 @@ Authorization: Bearer <access_token>
 Защищенные методы:
 - `GET /me`
 - `PATCH /me/profile`
+- `PATCH /me/rating`
 - `POST /me/score`
 
 ## Storage On Mobile App Side
@@ -169,6 +170,39 @@ Response:
 Примеры невалидных имен:
 - `Test!`
 - `БОГ`
+
+### `PATCH /me/rating`
+
+Позволяет отдельно включать и выключать участие текущего пользователя в рейтинге.
+
+Headers:
+
+```http
+Authorization: Bearer <access_token>
+Content-Type: application/json
+```
+
+Request:
+
+```json
+{
+  "participate_in_rating": false
+}
+```
+
+Response:
+
+```json
+{
+  "id": 26,
+  "username": "player_1",
+  "participate_in_rating": false
+}
+```
+
+Важно:
+- если отправить `"participate_in_rating": true` без сохраненного `username`, backend вернет `422`
+- если отправить `"participate_in_rating": false`, пользователь исключается из leaderboard
 
 ### `POST /me/score`
 

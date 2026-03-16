@@ -21,4 +21,7 @@ node --check app/static/js/api-docs.js
 echo "Validating Docker Compose config"
 docker compose config >/dev/null
 
+echo "Checking API docs sync"
+./scripts/check_api_docs_sync.sh
+
 echo "CI checks completed"

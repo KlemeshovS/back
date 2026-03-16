@@ -29,7 +29,11 @@ class DocsPage {
             body: "Вызвать PATCH /me/profile с username и participate_in_rating.",
           },
           {
-            title: "4. Обновление рейтинга",
+            title: "4. Участие в рейтинге",
+            body: "Вызвать PATCH /me/rating, чтобы отдельно включить или выключить участие пользователя в leaderboard.",
+          },
+          {
+            title: "5. Обновление рейтинга",
             body: "Вызвать POST /me/score и передать только score.",
           },
         ],
@@ -104,6 +108,31 @@ Content-Type: application/json`,
               "Если participate_in_rating = true, username должен быть заполнен.",
               "username должен быть уникальным.",
               "Разрешены только латиница, цифры, _, ., -.",
+            ],
+          },
+        ],
+      },
+      {
+        id: "rating",
+        title: "PATCH /me/rating",
+        cards: [
+          {
+            method: "PATCH",
+            badgeClass: "patch",
+            path: "/me/rating",
+            headers: `Authorization: Bearer <access_token>
+Content-Type: application/json`,
+            request: `{
+  "participate_in_rating": false
+}`,
+            response: `{
+  "id": 26,
+  "username": "player_1",
+  "participate_in_rating": false
+}`,
+            list: [
+              "Если participate_in_rating = true, у пользователя уже должен быть username.",
+              "Если participate_in_rating = false, пользователь исключается из leaderboard.",
             ],
           },
         ],

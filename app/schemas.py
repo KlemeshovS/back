@@ -28,6 +28,10 @@ class ProfileUpdateRequest(BaseModel):
     participate_in_rating: bool
 
 
+class RatingParticipationUpdateRequest(BaseModel):
+    participate_in_rating: bool
+
+
 class ProfileResponse(BaseModel):
     id: int
     username: str | None = None

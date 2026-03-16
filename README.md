@@ -72,6 +72,23 @@ Responses:
 - `409` такой `username` уже существует
 - `422` нельзя включить участие в рейтинге без `username`
 
+### `PATCH /me/rating`
+
+Позволяет отдельно включить или выключить участие текущего пользователя в рейтингах.
+
+Request:
+
+```json
+{
+  "participate_in_rating": true
+}
+```
+
+Responses:
+- `200` участие в рейтинге обновлено
+- `401` не передан или невалиден bearer token
+- `422` нельзя включить участие в рейтинге без `username`
+
 ### `POST /me/score`
 
 Request:
@@ -207,6 +224,7 @@ api.example.com {
 - workflow: `DEVELOPMENT_WORKFLOW.md`
 - conventions: trunk-based development + Conventional Commits
 - если меняется API, нужно обновлять текстовую docs page на `https://api.wobbly.site/api/docs` в том же изменении
+- CI дополнительно проверяет, что API-изменения не уходят без обновления `/api/docs`
 
 ## Context Transfer
 
