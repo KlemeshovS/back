@@ -66,10 +66,6 @@ Compatibility wrappers пока оставлены:
 - `GET /leaderboard/top`
 - `GET /leaderboard/bottom`
 
-Legacy endpoint'ы еще существуют:
-- `POST /users/register`
-- `POST /users/score`
-
 Текущее поведение leaderboard:
 - `top` возвращает только пользователей с `score >= 0`
 - `bottom` возвращает только пользователей с `score < 0`

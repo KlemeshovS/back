@@ -4,10 +4,7 @@ from app.domain.schemas import (
     ProfileResponse,
     ProfileUpdateRequest,
     RatingParticipationUpdateRequest,
-    RegisterUserRequest,
     ScoreUpdateRequest,
-    StatusResponse,
-    UpdateScoreRequest,
     UserScoreResponse,
 )
 
@@ -17,9 +14,6 @@ __all__ = [
     "ProfileResponse",
     "ProfileUpdateRequest",
     "RatingParticipationUpdateRequest",
-    "RegisterUserRequest",
     "ScoreUpdateRequest",
-    "StatusResponse",
-    "UpdateScoreRequest",
     "UserScoreResponse",
 ]

@@ -6,7 +6,6 @@ from fastapi.testclient import TestClient
 
 from app.api.app import create_app
 from app.api.dependencies import get_current_user
-from app.core.errors import ApiError, ApiErrorCode
 from app.services import user_service
 
 
@@ -114,42 +113,6 @@ def test_profile_validation_error_uses_uniform_error_contract() -> None:
         "code": "VALIDATION_ERROR",
         "message": "Invalid request payload",
     }
-
-
-def test_legacy_register_duplicate_username_returns_uniform_error(monkeypatch) -> None:
-    client = build_client()
-
-    def fake_register_user(_: str) -> dict:
-        raise ApiError(
-            status_code=409,
-            code=ApiErrorCode.USERNAME_ALREADY_EXISTS,
-            message="Username already exists",
-        )
-
-    monkeypatch.setattr(user_service, "register_user", fake_register_user)
-
-    response = client.post("/users/register", json={"username": "player_3"})
-
-    assert response.status_code == 409
-    assert response.json() == {
-        "code": "USERNAME_ALREADY_EXISTS",
-        "message": "Username already exists",
-    }
-
-
-def test_legacy_register_returns_created(monkeypatch) -> None:
-    client = build_client()
-
-    monkeypatch.setattr(
-        user_service,
-        "register_user",
-        lambda username: {"status": "created", "id": 3, "username": username},
-    )
-
-    response = client.post("/users/register", json={"username": "player_3"})
-
-    assert response.status_code == 201
-    assert response.json() == {"status": "created", "id": 3, "username": "player_3"}
 
 
 def test_top_leaderboard_returns_service_payload(monkeypatch) -> None:

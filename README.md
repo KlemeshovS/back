@@ -138,14 +138,6 @@ Responses:
 - `401` не передан или невалиден bearer token
 - `429` слишком много обновлений рейтинга
 
-### `POST /users/register`
-
-Legacy endpoint. Оставлен для обратной совместимости.
-
-### `POST /users/score`
-
-Legacy endpoint. Оставлен для обратной совместимости.
-
 ## Error Contract
 
 Ошибки API теперь возвращаются в едином формате:
