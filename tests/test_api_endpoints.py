@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+from typing import Optional
+
 from fastapi.testclient import TestClient
 
 from app.api.app import create_app
@@ -28,7 +32,11 @@ def test_patch_me_rating_updates_participation(monkeypatch) -> None:
         "is_rating_enabled": True,
     }
 
-    def fake_save_profile(user_id: int, username: str | None, participate_in_rating: bool):
+    def fake_save_profile(
+        user_id: int,
+        username: Optional[str],
+        participate_in_rating: bool,
+    ):
         assert user_id == 7
         assert username == "player_7"
         assert participate_in_rating is False

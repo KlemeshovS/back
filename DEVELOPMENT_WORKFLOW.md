@@ -61,7 +61,7 @@ Commit message оформляем по `Conventional Commits`.
 Для этого проекта дальше придерживаемся таких правил:
 - новые задачи делаем в отдельных ветках вида `feat/...`, `fix/...`, `docs/...`, `chore/...`
 - commit message всегда следует Conventional Commits
-- локальный `pre-commit` hook должен быть включен через `./scripts/install_git_hooks.sh`
+- локальные hooks должны быть включены через `./scripts/install_git_hooks.sh`
 - большие задачи режем на несколько маленьких commits, если это помогает чтению истории
 - `main` держим как самую актуальную и стабильную ветку
 - после merge удаляем ветку локально и в GitHub
@@ -133,6 +133,8 @@ Commit message оформляем по `Conventional Commits`.
 В проекте есть локальный обязательный guard перед коммитом:
 - `.githooks/pre-commit`
 - `scripts/pre_commit_check.sh`
+- `.githooks/pre-push`
+- `scripts/pre_push_check.sh`
 
 Он делает:
 - `ruff check --fix`
@@ -146,7 +148,15 @@ Commit message оформляем по `Conventional Commits`.
 ./scripts/install_git_hooks.sh
 ```
 
-Тяжелые проверки остаются в CI:
-- `pytest`
+Что проверяется локально:
+- `pre-commit`:
+  - `ruff check --fix`
+  - повторная проверка `ruff`
+  - Python syntax checks
+  - JavaScript syntax checks
+- `pre-push`:
+  - `pytest`
+
+В CI остаются:
 - `docker compose config`
 - docs sync check

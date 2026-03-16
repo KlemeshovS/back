@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+from typing import Optional
+
 from fastapi import Header, HTTPException, Request, status
 
 from app.core.auth import hash_access_token
@@ -28,7 +32,7 @@ def enforce_rate_limit(key: str, limit: int, window_seconds: int, detail: str) -
     )
 
 
-def get_bearer_token(authorization: str | None) -> str:
+def get_bearer_token(authorization: Optional[str]) -> str:
     if not authorization:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -47,7 +51,7 @@ def get_bearer_token(authorization: str | None) -> str:
     return token
 
 
-def get_current_user(authorization: str | None = Header(default=None)) -> dict:
+def get_current_user(authorization: Optional[str] = Header(default=None)) -> dict:
     token = get_bearer_token(authorization)
     token_hash = hash_access_token(token)
 
