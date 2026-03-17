@@ -176,6 +176,9 @@ Tooling config:
 
 Самые логичные следующие технические шаги:
 - readiness endpoint `/ready`
+- uptime monitoring for `/health` and `/ready`
 - richer integration tests with test DB
 - structured logging
+- Sentry or similar error monitoring
+- server monitoring for CPU/RAM/disk
 - fail2ban for repeated 401/429 abuse

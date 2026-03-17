@@ -103,7 +103,24 @@
 Почему это важно:
 - без этого неудобно разбирать инциденты и ошибки мобильной интеграции
 
-### 6. Add error monitoring
+### 6. Add uptime monitoring
+
+Что сделать:
+- поднять простой мониторинг доступности
+- проверять:
+  - `https://api.wobbly.site/health`
+  - позже `https://api.wobbly.site/ready`
+  - `https://wobbly.site`
+- завести уведомления о падении
+
+Что использовать:
+- `Uptime Kuma` как самый простой старт
+
+Почему это важно:
+- сейчас состояние приложения видно в основном вручную
+- нужен отдельный сигнал, что API или сайт недоступны
+
+### 7. Add error monitoring
 
 Что сделать:
 - подключить Sentry или аналог
@@ -113,7 +130,24 @@
 Почему это важно:
 - сейчас мы видим инциденты в основном через ручную проверку логов
 
-### 7. Add automated backups
+### 8. Add server monitoring
+
+Что сделать:
+- собрать базовые серверные метрики:
+  - CPU
+  - RAM
+  - disk
+  - restart count
+  - nginx errors
+- выбрать простой инструмент:
+  - `Netdata`
+  - или `Grafana + Prometheus` позже
+
+Почему это важно:
+- приложение может быть “живым”, но сервер уже деградирует
+- это поможет ловить проблемы до падения
+
+### 9. Add automated backups
 
 Что сделать:
 - ежедневный `pg_dump`
@@ -124,7 +158,7 @@
 - локальные backup-файлы уже делались руками
 - нужен системный, повторяемый процесс
 
-### 8. Improve leaderboard queries
+### 10. Improve leaderboard queries
 
 Что сделать:
 - добавить `offset`
@@ -135,7 +169,7 @@
 - текущего `top/bottom limit` хватает для простого экрана
 - но API уже упирается в следующий уровень функциональности
 
-### 9. Introduce API versioning
+### 11. Introduce API versioning
 
 Что сделать:
 - перевести публичный контракт на `/api/v1/...`
@@ -145,7 +179,7 @@
 - контракт уже живет в мобильном приложении
 - дальше breaking changes будут дороже
 
-### 10. Add anti-fraud and abuse signals
+### 12. Add anti-fraud and abuse signals
 
 Что сделать:
 - логировать подозрительные всплески запросов
@@ -156,7 +190,7 @@
 - базовый rate limiting уже есть
 - следующая ступень это не только ограничение запросов, но и детекция странного поведения
 
-### 11. Clean up remaining compatibility wrappers
+### 13. Clean up remaining compatibility wrappers
 
 Что сделать:
 - убрать re-export wrappers, если они больше не нужны:
@@ -170,7 +204,7 @@
 - они были полезны на переходном этапе рефакторинга
 - дальше лучше оставить одну ясную структуру без дублирующих точек входа
 
-### 12. Add developer ergonomics
+### 14. Add developer ergonomics
 
 Что сделать:
 - вынести dev dependencies в отдельный файл или optional extras
@@ -189,6 +223,8 @@
 - structured logging
 
 ### Phase 2
+- uptime monitoring
+- server monitoring
 - `score_events`
 - backups
 - anti-fraud signals
