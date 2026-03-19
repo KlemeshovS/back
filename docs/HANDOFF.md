@@ -29,7 +29,8 @@ Staging baseline тоже уже поднят:
 - staging DB: `app_staging`
 - staging nginx basic auth уже настроен
 - staging workflow лежит в `.github/workflows/staging.yml`
-- внешний DNS для `staging-api.wobbly.site` еще нужно направить на `85.239.57.243`
+- staging public URL: `https://staging-api.wobbly.site`
+- staging HTTPS уже поднят через `certbot --nginx`
 
 Важно:
 - production сейчас не живет через `docker compose up`
@@ -175,7 +176,7 @@ Tooling config:
 - `STAGING_DEPLOY_OWNER=ratingapp:ratingapp`
 - `STAGING_DEPLOY_VENV_PATH=/opt/rating-service-staging/.venv`
 - `STAGING_DEPLOY_HEALTHCHECK_URL=http://127.0.0.1:8001/health`
-- `STAGING_PUBLIC_BASE_URL=http://staging-api.wobbly.site`
+- `STAGING_PUBLIC_BASE_URL=https://staging-api.wobbly.site`
 
 Типовая проблема:
 - `Load key ... error in libcrypto`

@@ -55,6 +55,7 @@ Backend, landing page и production docs для `Wobbly`.
 - staging API path on server: `/opt/rating-service-staging`
 - staging service: `rating-service-staging.service`
 - staging database: `app_staging`
+- staging public URL: `https://staging-api.wobbly.site`
 - staging workflow: `.github/workflows/staging.yml` on `develop`
 - продовый сервис: `rating-service.service`
 - продовый путь на сервере: `/opt/rating-service`
@@ -69,7 +70,7 @@ Backend, landing page и production docs для `Wobbly`.
 - production topology уже другая, и ее не нужно заново угадывать
 - точные команды деплоя описаны в `docs/DEPLOY.md`
 - отдельная сводка для переноса контекста лежит в `docs/HANDOFF.md`
-- для публичного staging URL еще нужен DNS `staging-api.wobbly.site -> 85.239.57.243`
+- staging уже поднят на `https://staging-api.wobbly.site` и закрыт через basic auth
 
 ## API
 
