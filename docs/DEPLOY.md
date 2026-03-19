@@ -23,6 +23,15 @@
 - Swagger: `https://api.wobbly.site/api/swagger`
 - text docs: `https://api.wobbly.site/api/docs`
 
+Текущий staging baseline:
+- staging path: `/opt/rating-service-staging`
+- staging service: `rating-service-staging.service`
+- staging DB: `app_staging`
+- staging port: `8001`
+- staging nginx site: `/etc/nginx/sites-available/staging-api.wobbly.site`
+- staging basic auth file: `/etc/nginx/.htpasswd-staging-api`
+- staging public DNS еще нужно направить на `85.239.57.243`
+
 ## Access
 
 SSH-доступ:
@@ -119,6 +128,9 @@ journalctl -u rating-service -n 100 --no-pager
 Для `api.wobbly.site` rate limiting config теперь хранится в репозитории:
 - `deploy/nginx/api-rate-limits.conf`
 - `deploy/nginx/api.wobbly.site.conf`
+- staging templates тоже есть в репозитории:
+  - `deploy/nginx/staging-api.wobbly.site.conf`
+  - `deploy/systemd/rating-service-staging.service`
 
 Текущий production уже использует этот rate limiting слой:
 - `10 requests/second` на IP
@@ -176,6 +188,19 @@ journalctl -u rating-service -n 100 --no-pager
 - `DEPLOY_VENV_PATH`
 - `DEPLOY_SSH_KEY`
 
+Для staging workflow отдельно нужны:
+- `STAGING_DEPLOY_HOST`
+- `STAGING_DEPLOY_USER`
+- `STAGING_DEPLOY_PATH`
+- `STAGING_DEPLOY_SERVICE`
+- `STAGING_DEPLOY_OWNER`
+- `STAGING_DEPLOY_VENV_PATH`
+- `STAGING_DEPLOY_HEALTHCHECK_URL`
+- `STAGING_DEPLOY_SSH_KEY`
+- `STAGING_PUBLIC_BASE_URL`
+- `STAGING_BASIC_AUTH_USER`
+- `STAGING_BASIC_AUTH_PASSWORD`
+
 Для текущего production значения такие:
 - `DEPLOY_HOST=api.wobbly.site`
 - `DEPLOY_USER=root`
@@ -186,6 +211,18 @@ journalctl -u rating-service -n 100 --no-pager
 
 Если `DEPLOY_VENV_PATH` не задан, deploy script использует дефолт:
 - `${DEPLOY_PATH}/.venv`
+
+Для staging сейчас ориентир такой:
+- `STAGING_DEPLOY_HOST=api.wobbly.site`
+- `STAGING_DEPLOY_USER=root`
+- `STAGING_DEPLOY_PATH=/opt/rating-service-staging`
+- `STAGING_DEPLOY_SERVICE=rating-service-staging`
+- `STAGING_DEPLOY_OWNER=ratingapp:ratingapp`
+- `STAGING_DEPLOY_VENV_PATH=/opt/rating-service-staging/.venv`
+- `STAGING_DEPLOY_HEALTHCHECK_URL=http://127.0.0.1:8001/health`
+- `STAGING_PUBLIC_BASE_URL=http://staging-api.wobbly.site`
+
+До выпуска TLS staging smoke-check лучше ориентировать на `http://staging-api.wobbly.site`.
 
 ### Local Scripts Used By CI/CD
 
@@ -198,12 +235,25 @@ Pipeline опирается на локальные скрипты:
 - распаковывает release
 - обновляет Python dependencies в production venv через `pip install -r requirements.txt`
 - только потом перезапускает `rating-service`
-- ждет не только `systemctl is-active`, но и успешный ответ `http://127.0.0.1:8000/health`
+- ждет не только `systemctl is-active`, но и успешный ответ healthcheck URL
 - если `/health` не поднимается вовремя, печатает свежие `journalctl` логи сервиса и завершает deploy с ошибкой
 
 Важно:
 - `nginx` конфиги не раскатываются текущим GitHub Actions deploy автоматически
 - изменения в `deploy/nginx/` нужно применять на сервер отдельно через `nginx -t` и `systemctl reload nginx`
+- staging smoke-check использует `basic auth`, поэтому для успешного workflow нужно заполнить и `STAGING_BASIC_AUTH_USER`, и `STAGING_BASIC_AUTH_PASSWORD`
+
+### Staging Protection
+
+Staging сейчас закрыт через `basic auth` на уровне `nginx`.
+
+Ожидаемые credentials:
+- username: задается в `STAGING_BASIC_AUTH_USER`
+- password: задается в `STAGING_BASIC_AUTH_PASSWORD`
+
+Важно:
+- если мобильное приложение тестирует staging API напрямую, оно тоже должно уметь ходить через этот слой защиты
+- если это неудобно для мобильных сборок, следующий практический вариант защиты для staging — перейти с basic auth на IP allowlist
 
 ## API Docs Sync Rule
 

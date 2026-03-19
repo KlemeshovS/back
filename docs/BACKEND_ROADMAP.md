@@ -26,6 +26,7 @@
 - есть unit tests и integration tests
 - CI/CD уже автоматизирован через GitHub Actions
 - production deploy идет через `verify -> deploy`
+- staging deploy flow уже подготовлен через `develop -> verify -> deploy-staging`
 - базовый anti-abuse слой уже есть на уровне `TrustedHostMiddleware`, CORS и `nginx` rate limiting
 
 Это уже не просто MVP. Сейчас следующий фокус должен быть не на базовом CRUD, а на надежности, наблюдаемости и эволюции модели данных.
@@ -273,6 +274,11 @@
 ### Reliability / Delivery
 - done: настроен GitHub Actions pipeline
 - done: автоматизирован deploy после merge в `main`
+- done: staging контур поднят отдельно от production:
+  - `rating-service-staging.service`
+  - `/opt/rating-service-staging`
+  - `app_staging`
+  - отдельный `staging.yml` workflow
 - done: deploy script обновляет dependencies в production venv
 - done: deploy script ждет успешный `/health` перед завершением
 - done: `nginx` rate limiting включен для `api.wobbly.site`
