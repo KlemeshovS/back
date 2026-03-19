@@ -9,6 +9,7 @@ class AdminConsole {
       admins: [],
       audit: [],
       selectedUserId: null,
+      selectedAdminId: null,
     };
   }
 
@@ -22,11 +23,15 @@ class AdminConsole {
   cacheNodes() {
     this.envLinks = document.querySelectorAll("[data-env-link]");
     this.screenLinks = document.querySelectorAll("[data-screen-link]");
+    this.adminsScreenLink = document.querySelector('[data-screen-link="admins"]');
     this.screenTitle = document.getElementById("screen-title");
     this.loginEnvBadge = document.getElementById("login-env-badge");
     this.currentEnvBadge = document.getElementById("current-env-badge");
     this.currentAdminBadge = document.getElementById("current-admin-badge");
     this.currentAdminTopbarBadge = document.getElementById("current-admin-topbar-badge");
+    this.currentAdminAvatar = document.getElementById("current-admin-avatar");
+    this.currentAdminTopbarAvatar = document.getElementById("current-admin-topbar-avatar");
+    this.sidebarAvatar = document.getElementById("sidebar-avatar");
     this.roleBadge = document.getElementById("role-badge");
     this.adminsRoleBadge = document.getElementById("admins-role-badge");
     this.loginView = document.getElementById("login-view");
@@ -58,11 +63,26 @@ class AdminConsole {
     this.adminCreatePanel = document.getElementById("admin-create-panel");
     this.adminLoginInput = document.getElementById("admin-login-input");
     this.adminPasswordInput = document.getElementById("admin-password-input");
+    this.adminEditForm = document.getElementById("admin-edit-form");
+    this.adminEditLogin = document.getElementById("admin-edit-login");
+    this.adminEditPassword = document.getElementById("admin-edit-password");
+    this.adminEditActive = document.getElementById("admin-edit-active");
+    this.adminEditorBadge = document.getElementById("admin-editor-badge");
+    this.adminEditorStatus = document.getElementById("admin-editor-status");
+    this.profileLogin = document.getElementById("profile-login");
+    this.profileRole = document.getElementById("profile-role");
+    this.profileEnvironment = document.getElementById("profile-environment");
+    this.profileAvatar = document.getElementById("profile-avatar");
+    this.profilePasswordForm = document.getElementById("profile-password-form");
+    this.profileCurrentPassword = document.getElementById("profile-current-password");
+    this.profileNewPassword = document.getElementById("profile-new-password");
+    this.profileStatus = document.getElementById("profile-status");
     this.screens = {
       overview: document.getElementById("screen-overview"),
       users: document.getElementById("screen-users"),
       admins: document.getElementById("screen-admins"),
       audit: document.getElementById("screen-audit"),
+      profile: document.getElementById("screen-profile"),
     };
   }
 
@@ -74,6 +94,8 @@ class AdminConsole {
     this.refreshAuditButton.addEventListener("click", () => this.loadAuditLogs());
     this.editorForm.addEventListener("submit", (event) => this.handleUserUpdate(event));
     this.adminCreateForm.addEventListener("submit", (event) => this.handleAdminCreate(event));
+    this.adminEditForm.addEventListener("submit", (event) => this.handleAdminUpdate(event));
+    this.profilePasswordForm.addEventListener("submit", (event) => this.handlePasswordChange(event));
 
     let index = 0;
     while (index < this.screenLinks.length) {
@@ -114,6 +136,29 @@ class AdminConsole {
       }
       index += 1;
     }
+  }
+
+  initialsFor(value) {
+    const safeValue = (value || "AD").trim();
+    if (!safeValue) {
+      return "AD";
+    }
+
+    const compact = safeValue.replace(/[^A-Za-z0-9А-Яа-я]/g, "");
+    return compact.slice(0, 2).toUpperCase() || "AD";
+  }
+
+  renderAdminIdentity(login, role) {
+    const initials = this.initialsFor(login);
+    this.currentAdminBadge.textContent = login;
+    this.currentAdminTopbarBadge.textContent = login;
+    this.currentAdminAvatar.textContent = initials;
+    this.currentAdminTopbarAvatar.textContent = initials;
+    this.profileAvatar.textContent = initials;
+    this.sidebarAvatar.textContent = initials;
+    this.profileLogin.textContent = login;
+    this.profileRole.textContent = "Роль: " + role;
+    this.profileEnvironment.textContent = "Среда: " + this.environmentLabel();
   }
 
   storageKey() {
@@ -194,22 +239,32 @@ class AdminConsole {
     this.state.session.role = me.role;
     window.localStorage.setItem(this.storageKey(), JSON.stringify(this.state.session));
 
-    this.currentAdminBadge.textContent = me.login;
-    this.currentAdminTopbarBadge.textContent = me.login;
+    this.renderAdminIdentity(me.login, me.role);
     this.roleBadge.textContent = me.role;
     this.adminsRoleBadge.textContent = me.role;
 
     if (me.role !== "owner") {
       this.adminCreatePanel.classList.add("section-hidden");
+      this.adminsScreenLink.classList.add("section-hidden");
     } else {
       this.adminCreatePanel.classList.remove("section-hidden");
+      this.adminsScreenLink.classList.remove("section-hidden");
     }
 
     this.renderLoggedIn();
     await this.loadOverview();
     await this.loadUsers();
-    await this.loadAdmins();
+    if (me.role === "owner") {
+      await this.loadAdmins();
+    } else {
+      this.state.admins = [];
+      this.renderAdmins();
+      this.showInfo(this.adminsStatus, "Управление admin-доступами доступно только owner");
+    }
     await this.loadAuditLogs();
+    if (me.role !== "owner" && this.state.activeScreen === "admins") {
+      this.state.activeScreen = "overview";
+    }
     this.showScreen(this.state.activeScreen);
   }
 
@@ -227,6 +282,13 @@ class AdminConsole {
     this.sidebarFooter.classList.add("section-hidden");
     this.currentAdminBadge.textContent = "—";
     this.currentAdminTopbarBadge.textContent = "—";
+    this.currentAdminAvatar.textContent = "—";
+    this.currentAdminTopbarAvatar.textContent = "—";
+    this.profileAvatar.textContent = "—";
+    this.profileLogin.textContent = "—";
+    this.profileRole.textContent = "—";
+    this.profileEnvironment.textContent = "—";
+    this.sidebarAvatar.textContent = "WA";
   }
 
   showScreen(screenName) {
@@ -237,6 +299,7 @@ class AdminConsole {
       users: "Пользователи",
       admins: "Администраторы",
       audit: "Audit log",
+      profile: "Профиль",
     };
 
     this.screenTitle.textContent = screenTitles[screenName];
@@ -398,7 +461,7 @@ class AdminConsole {
           <td>${admin.login}</td>
           <td>${admin.role}</td>
           <td>${admin.isActive ? "yes" : "no"}</td>
-          <td><button type="button" data-admin-id="${admin.id}" data-admin-active="${admin.isActive}">${admin.isActive ? "Disable" : "Enable"}</button></td>
+          <td><button type="button" data-admin-id="${admin.id}" data-admin-active="${admin.isActive}">Настроить</button></td>
         </tr>
       `;
       index += 1;
@@ -414,22 +477,53 @@ class AdminConsole {
 
     while (index < buttons.length) {
       const button = buttons[index];
-      button.addEventListener("click", () => this.toggleAdmin(button));
+      button.addEventListener("click", () => this.selectAdmin(button.dataset.adminId));
       index += 1;
     }
   }
 
-  async toggleAdmin(button) {
-    const adminId = Number(button.dataset.adminId);
-    const isActive = button.dataset.adminActive === "true";
+  selectAdmin(adminIdValue) {
+    const adminId = Number(adminIdValue);
+    const admin = this.findById(this.state.admins, adminId);
+    if (!admin) {
+      return;
+    }
 
-    await this.request("/admin-users/" + adminId, {
+    this.state.selectedAdminId = admin.id;
+    this.adminEditLogin.value = admin.login;
+    this.adminEditPassword.value = "";
+    this.adminEditActive.checked = Boolean(admin.isActive);
+    this.adminEditorBadge.textContent = "#" + admin.id;
+    this.showOk(this.adminEditorStatus, "Admin загружен в форму");
+  }
+
+  handleAdminUpdate(event) {
+    event.preventDefault();
+    if (!this.state.selectedAdminId) {
+      this.showError(this.adminEditorStatus, "Сначала выбери admin из таблицы");
+      return;
+    }
+
+    this.updateAdmin().catch((error) => this.showError(this.adminEditorStatus, error.message));
+  }
+
+  async updateAdmin() {
+    const payload = {
+      isActive: this.adminEditActive.checked,
+      password: this.adminEditPassword.value.trim() || undefined,
+    };
+
+    const response = await this.request("/admin-users/" + this.state.selectedAdminId, {
       method: "PATCH",
-      body: JSON.stringify({ isActive: !isActive }),
+      body: JSON.stringify(payload),
     });
 
-    await this.loadAdmins();
+    this.replaceAdmin(response);
+    this.renderAdmins();
+    this.selectAdmin(response.id);
+    await this.loadOverview();
     await this.loadAuditLogs();
+    this.showOk(this.adminEditorStatus, "Admin сохранен");
   }
 
   handleAdminCreate(event) {
@@ -452,6 +546,26 @@ class AdminConsole {
     await this.loadOverview();
     await this.loadAuditLogs();
     this.showOk(this.adminsStatus, "Новый admin создан");
+  }
+
+  handlePasswordChange(event) {
+    event.preventDefault();
+    this.changeOwnPassword().catch((error) => this.showError(this.profileStatus, error.message));
+  }
+
+  async changeOwnPassword() {
+    await this.request("/me/password", {
+      method: "PATCH",
+      body: JSON.stringify({
+        currentPassword: this.profileCurrentPassword.value,
+        newPassword: this.profileNewPassword.value,
+      }),
+    });
+
+    this.profileCurrentPassword.value = "";
+    this.profileNewPassword.value = "";
+    await this.loadAuditLogs();
+    this.showOk(this.profileStatus, "Пароль обновлен");
   }
 
   async loadAuditLogs() {
@@ -525,6 +639,18 @@ class AdminConsole {
       index += 1;
     }
     this.state.users.unshift(updatedUser);
+  }
+
+  replaceAdmin(updatedAdmin) {
+    let index = 0;
+    while (index < this.state.admins.length) {
+      if (this.state.admins[index].id === updatedAdmin.id) {
+        this.state.admins[index] = updatedAdmin;
+        return;
+      }
+      index += 1;
+    }
+    this.state.admins.unshift(updatedAdmin);
   }
 
   findById(items, id) {

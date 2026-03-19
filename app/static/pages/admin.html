@@ -10,8 +10,10 @@
     <div class="admin-app">
       <aside class="sidebar">
         <div class="sidebar-brand">
+          <div class="brand-avatar" id="sidebar-avatar">OW</div>
           <p class="eyebrow">Wobbly Admin</p>
           <h1>Операционная панель</h1>
+          <p class="muted">Управление пользователями, доступами и средами без ручной работы с БД.</p>
         </div>
 
         <nav class="screen-nav section-hidden" id="screen-nav" aria-label="Admin navigation">
@@ -19,11 +21,17 @@
           <button type="button" data-screen-link="users">Пользователи</button>
           <button type="button" data-screen-link="admins">Администраторы</button>
           <button type="button" data-screen-link="audit">Audit log</button>
+          <button type="button" data-screen-link="profile">Профиль</button>
         </nav>
 
         <div class="sidebar-footer section-hidden" id="sidebar-footer">
-          <p class="muted">Текущий админ</p>
-          <p class="sidebar-value" id="current-admin-badge">—</p>
+          <div class="sidebar-profile">
+            <div class="sidebar-profile-avatar" id="current-admin-avatar">—</div>
+            <div>
+              <p class="muted">Текущий админ</p>
+              <p class="sidebar-value" id="current-admin-badge">—</p>
+            </div>
+          </div>
           <button class="ghost-button" id="logout-button" type="button">Выйти</button>
         </div>
       </aside>
@@ -74,9 +82,16 @@
                 <a href="/production/" data-env-link="production">Production</a>
                 <a href="/staging/" data-env-link="staging">Staging</a>
               </nav>
-              <span class="badge badge-env" id="current-env-badge">Production</span>
-              <span class="badge badge-admin" id="current-admin-topbar-badge">—</span>
-              <span class="badge" id="role-badge">admin</span>
+              <div class="profile-chip">
+                <div class="profile-chip-avatar" id="current-admin-topbar-avatar">—</div>
+                <div class="profile-chip-copy">
+                  <span class="badge badge-env" id="current-env-badge">Production</span>
+                  <div class="profile-chip-line">
+                    <span class="badge badge-admin" id="current-admin-topbar-badge">—</span>
+                    <span class="badge" id="role-badge">admin</span>
+                  </div>
+                </div>
+              </div>
             </div>
           </header>
 
@@ -176,25 +191,54 @@
                 <p class="status" id="admins-status"></p>
               </div>
 
-              <div class="panel" id="admin-create-panel">
-                <div class="panel-head">
-                  <div>
-                    <h3>Создать admin</h3>
-                    <p class="muted">Доступно только owner. Новый admin создается с временным паролем.</p>
+              <div class="stack-layout">
+                <div class="panel" id="admin-edit-panel">
+                  <div class="panel-head">
+                    <div>
+                      <h3>Настройка admin</h3>
+                      <p class="muted">Можно сменить пароль существующего admin и включать или отключать доступ.</p>
+                    </div>
+                    <span class="badge" id="admin-editor-badge">Не выбран</span>
                   </div>
+
+                  <form id="admin-edit-form" class="form-grid">
+                    <label>
+                      <span>Login</span>
+                      <input id="admin-edit-login" type="text" disabled />
+                    </label>
+                    <label>
+                      <span>Новый пароль</span>
+                      <input id="admin-edit-password" type="password" placeholder="Оставь пустым, если менять не нужно" />
+                    </label>
+                    <label class="checkbox-row">
+                      <input id="admin-edit-active" type="checkbox" />
+                      <span>Аккаунт активен</span>
+                    </label>
+                    <button type="submit">Сохранить admin</button>
+                  </form>
+                  <p class="status" id="admin-editor-status"></p>
                 </div>
 
-                <form id="admin-create-form" class="form-grid">
-                  <label>
-                    <span>Login</span>
-                    <input id="admin-login-input" type="text" placeholder="Новый admin login" />
-                  </label>
-                  <label>
-                    <span>Temporary password</span>
-                    <input id="admin-password-input" type="password" placeholder="Временный пароль" />
-                  </label>
-                  <button type="submit">Создать admin</button>
-                </form>
+                <div class="panel" id="admin-create-panel">
+                  <div class="panel-head">
+                    <div>
+                      <h3>Создать admin</h3>
+                      <p class="muted">Доступно только owner. Новый admin создается с временным паролем.</p>
+                    </div>
+                  </div>
+
+                  <form id="admin-create-form" class="form-grid">
+                    <label>
+                      <span>Login</span>
+                      <input id="admin-login-input" type="text" placeholder="Новый admin login" />
+                    </label>
+                    <label>
+                      <span>Temporary password</span>
+                      <input id="admin-password-input" type="password" placeholder="Временный пароль" />
+                    </label>
+                    <button type="submit">Создать admin</button>
+                  </form>
+                </div>
               </div>
             </div>
           </section>
@@ -224,6 +268,50 @@
                 </table>
               </div>
               <p class="status" id="audit-status"></p>
+            </div>
+          </section>
+
+          <section class="screen section-hidden" id="screen-profile">
+            <div class="split-layout profile-layout">
+              <div class="panel">
+                <div class="panel-head">
+                  <div>
+                    <h3>Профиль админа</h3>
+                    <p class="muted">Текущая сессия и базовая информация по аккаунту.</p>
+                  </div>
+                </div>
+
+                <div class="profile-card">
+                  <div class="profile-card-avatar" id="profile-avatar">—</div>
+                  <div class="profile-card-copy">
+                    <strong id="profile-login">—</strong>
+                    <span class="muted" id="profile-role">—</span>
+                    <span class="muted" id="profile-environment">—</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="panel">
+                <div class="panel-head">
+                  <div>
+                    <h3>Сменить пароль</h3>
+                    <p class="muted">Это меняет пароль текущего admin-аккаунта в выбранной среде.</p>
+                  </div>
+                </div>
+
+                <form id="profile-password-form" class="form-grid">
+                  <label>
+                    <span>Текущий пароль</span>
+                    <input id="profile-current-password" type="password" autocomplete="current-password" />
+                  </label>
+                  <label>
+                    <span>Новый пароль</span>
+                    <input id="profile-new-password" type="password" autocomplete="new-password" />
+                  </label>
+                  <button type="submit">Обновить пароль</button>
+                </form>
+                <p class="status" id="profile-status"></p>
+              </div>
             </div>
           </section>
         </section>

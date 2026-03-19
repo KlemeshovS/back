@@ -115,6 +115,34 @@ def test_admin_logout_returns_status(monkeypatch) -> None:
     assert response.json() == {"status": "loggedOut"}
 
 
+def test_admin_can_change_own_password(monkeypatch) -> None:
+    client = build_client()
+    client.app.dependency_overrides[get_current_admin] = lambda: {
+        "id": 1,
+        "login": "owner",
+        "role": "owner",
+        "is_active": True,
+    }
+
+    monkeypatch.setattr(
+        admin_service,
+        "change_admin_password",
+        lambda payload, current_admin: {"status": "passwordUpdated"},
+    )
+
+    response = client.patch(
+        "/admin/me/password",
+        json={
+            "currentPassword": "old_password_1",
+            "newPassword": "new_password_2",
+        },
+        headers={"Authorization": "Bearer owner"},
+    )
+
+    assert response.status_code == 200
+    assert response.json() == {"status": "passwordUpdated"}
+
+
 def test_admin_audit_log_returns_items(monkeypatch) -> None:
     client = build_client()
     client.app.dependency_overrides[get_current_admin] = lambda: {

@@ -22,6 +22,8 @@ from app.domain.schemas import (
     AdminLogoutResponse,
     AdminMeResponse,
     AdminOverviewResponse,
+    AdminPasswordChangeRequest,
+    AdminPasswordChangeResponse,
     AdminRole,
     AdminUserCreateRequest,
     AdminUserListResponse,
@@ -179,6 +181,59 @@ def logout_admin(current_admin: dict[str, Any]) -> AdminLogoutResponse:
         conn.commit()
 
     return AdminLogoutResponse()
+
+
+def change_admin_password(
+    payload: AdminPasswordChangeRequest,
+    current_admin: dict[str, Any],
+) -> AdminPasswordChangeResponse:
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                SELECT password_hash
+                FROM admin_users
+                WHERE id = %s;
+                """,
+                (current_admin["id"],),
+            )
+            admin_row = cur.fetchone()
+
+            if admin_row is None:
+                raise ApiError(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    code=ApiErrorCode.ADMIN_NOT_FOUND,
+                    message="Admin not found",
+                )
+
+            if not verify_password(payload.current_password, admin_row["password_hash"]):
+                raise ApiError(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    code=ApiErrorCode.ADMIN_INVALID_CURRENT_PASSWORD,
+                    message="Current password is invalid",
+                )
+
+            cur.execute(
+                """
+                UPDATE admin_users
+                SET password_hash = %s,
+                    updated_at = NOW()
+                WHERE id = %s;
+                """,
+                (hash_password(payload.new_password), current_admin["id"]),
+            )
+            _insert_audit_log(
+                cur,
+                admin_id=current_admin["id"],
+                admin_login=current_admin["login"],
+                action="admin.password_change",
+                target_type="admin_user",
+                target_id=current_admin["id"],
+                details={"selfService": True},
+            )
+        conn.commit()
+
+    return AdminPasswordChangeResponse()
 
 
 def get_admin_overview() -> AdminOverviewResponse:

@@ -100,6 +100,15 @@ class AdminMeResponse(ApiModel):
     is_active: bool
 
 
+class AdminPasswordChangeRequest(ApiModel):
+    current_password: str = Field(min_length=8, max_length=256)
+    new_password: str = Field(min_length=8, max_length=256)
+
+
+class AdminPasswordChangeResponse(ApiModel):
+    status: str = "passwordUpdated"
+
+
 class AdminOverviewResponse(ApiModel):
     total_users: int
     rating_enabled_users: int

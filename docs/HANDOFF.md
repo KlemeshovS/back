@@ -91,7 +91,10 @@ Compatibility wrappers пока оставлены:
 - `GET /leaderboard/top`
 - `GET /leaderboard/bottom`
 - `POST /admin/auth/login`
+- `POST /admin/auth/logout`
 - `GET /admin/me`
+- `PATCH /admin/me/password`
+- `GET /admin/overview`
 - `GET /admin/users`
 - `GET /admin/users/{id}`
 - `PATCH /admin/users/{id}`
@@ -120,6 +123,15 @@ Admin UI файлы:
 - `app/static/pages/admin.html`
 - `app/static/css/admin.css`
 - `app/static/js/admin.js`
+
+Admin UI сейчас уже умеет:
+- sidebar navigation по экранам
+- topbar environment switcher `production/staging`
+- overview screen
+- users table + form editing
+- admin users table + owner-only create/update
+- audit log screen
+- profile screen со сменой пароля текущего admin
 
 Важно:
 - `/api/docs` собирается клиентским JavaScript

@@ -12,6 +12,8 @@ from app.domain.schemas import (
     AdminLogoutResponse,
     AdminMeResponse,
     AdminOverviewResponse,
+    AdminPasswordChangeRequest,
+    AdminPasswordChangeResponse,
     AdminUserCreateRequest,
     AdminUserListResponse,
     AdminUserResponse,
@@ -44,6 +46,14 @@ def logout_admin(current_admin: dict = current_admin_dependency) -> AdminLogoutR
 @router.get("/me", response_model=AdminMeResponse)
 def get_admin_me(current_admin: dict = current_admin_dependency) -> AdminMeResponse:
     return admin_service.build_admin_me_response(current_admin)
+
+
+@router.patch("/me/password", response_model=AdminPasswordChangeResponse)
+def change_admin_password(
+    payload: AdminPasswordChangeRequest,
+    current_admin: dict = current_admin_dependency,
+) -> AdminPasswordChangeResponse:
+    return admin_service.change_admin_password(payload, current_admin)
 
 
 @router.get("/overview", response_model=AdminOverviewResponse)
