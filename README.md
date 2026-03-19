@@ -63,6 +63,7 @@ Backend, landing page и production docs для `Wobbly`.
 - reverse proxy в production: `nginx`
 - базовый edge-side rate limiting уже включен на `api.wobbly.site`
 - основной путь разработки: feature branch -> merge в `develop` -> staging pipeline
+- `main` не трогаем по умолчанию; merge `develop` -> `main` делаем только по явной команде на production release
 - production release path: merge `develop` -> `main` -> production pipeline
 - staging deploy path: push в `develop` -> GitHub Actions -> verify -> deploy-staging
 - ручной deploy через копирование файлов в `/opt/rating-service` и `systemctl restart rating-service` остается fallback-сценарием
@@ -215,7 +216,7 @@ docker compose up --build
 - anti-abuse plan: `docs/ANTI_ABUSE.md`
 - backend roadmap: `docs/BACKEND_ROADMAP.md`
 - conventions: trunk-based development + Conventional Commits
-- branch flow: `develop` для активной разработки, `main` только для production releases
+- branch flow: `develop` для активной разработки, `main` только для production releases по явному запросу
 - если меняется API, нужно обновлять текстовую docs page на `https://api.wobbly.site/api/docs` в том же изменении
 - CI дополнительно проверяет, что API-изменения не уходят без обновления `/api/docs`
 - linters and tests: `ruff`, `pytest`

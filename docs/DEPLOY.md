@@ -154,7 +154,7 @@ journalctl -u rating-service -n 100 --no-pager
 3. GitHub Actions запускает `.github/workflows/staging.yml`
 4. job `verify` прогоняет проверки
 5. если проверки успешны, job `deploy-staging` выкатывает текущий `develop` в staging
-6. когда нужен production release, `develop` вливается в `main`
+6. когда пользователь явно запрашивает production release, `develop` вливается в `main`
 7. GitHub Actions запускает `.github/workflows/pipeline.yml`
 8. job `deploy` выкатывает текущий `main` на production
 

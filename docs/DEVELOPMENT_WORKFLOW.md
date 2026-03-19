@@ -12,6 +12,7 @@
 - `develop` это основная ветка разработки
 - `develop` всегда должна быть в рабочем состоянии и готова к staging deploy
 - `main` используется только для production release
+- в `main` не вливаем изменения без явной команды пользователя на релиз
 - каждая задача делается в отдельной короткоживущей ветке
 - имя ветки должно отражать `type`, как в Conventional Commits
 - ветка живет недолго и быстро вливается обратно в `develop`
@@ -56,7 +57,7 @@ Commit message оформляем по `Conventional Commits`.
 6. влить изменения обратно в `develop`
 7. дождаться staging pipeline
 8. если staging pipeline зеленый, считать staging deploy завершенным
-9. когда нужно выпускать production, влить `develop` в `main`
+9. когда пользователь явно запросил production release, влить `develop` в `main`
 10. дождаться production pipeline
 11. если production pipeline зеленый, считать релиз завершенным
 12. удалить ветку локально и на remote после merge
@@ -70,6 +71,7 @@ Commit message оформляем по `Conventional Commits`.
 - большие задачи режем на несколько маленьких commits, если это помогает чтению истории
 - `develop` держим как самую актуальную ветку разработки
 - `main` держим как production-ready ветку
+- без явного запроса пользователя `main` не обновляем
 - после merge удаляем ветку локально и в GitHub
 - после merge в `develop` ориентируемся сначала на staging GitHub Actions pipeline
 - после merge в `main` ориентируемся сначала на production GitHub Actions pipeline

@@ -140,7 +140,7 @@ Tooling config:
 3. GitHub Actions запускает `.github/workflows/staging.yml`
 4. `verify` гоняет проверки
 5. `deploy-staging` выкатывает изменения в staging после зеленого `verify`
-6. когда нужен production release, `develop` вливается в `main`
+6. когда пользователь явно запрашивает production release, `develop` вливается в `main`
 7. GitHub Actions запускает `.github/workflows/pipeline.yml`
 8. `deploy` выкатывает на production после зеленого `verify`
 
@@ -151,7 +151,7 @@ Tooling config:
 
 Ветки по окружениям:
 - `develop` — основная разработка и staging
-- `main` — production release branch
+- `main` — production release branch, которую обновляем только по явной команде пользователя
 
 Нюанс docs sync check:
 - в GitHub Actions `verify` использует полный fetch history
