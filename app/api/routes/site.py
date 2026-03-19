@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Request, status
-from fastapi.responses import FileResponse, HTMLResponse
+from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse
 
 router = APIRouter()
 
@@ -9,6 +9,8 @@ def landing_page(request: Request):
     host = request.headers.get("host", "")
     if host.startswith("wobbly.site"):
         return FileResponse(request.app.state.static_dir / "pages" / "landing.html")
+    if host.startswith("admin.wobbly.site"):
+        return RedirectResponse(url="/production/", status_code=status.HTTP_307_TEMPORARY_REDIRECT)
 
     return HTMLResponse(content="<h1>Wobbly API</h1>", status_code=status.HTTP_200_OK)
 
@@ -18,5 +20,17 @@ def privacy_page(request: Request):
     host = request.headers.get("host", "")
     if host.startswith("wobbly.site"):
         return FileResponse(request.app.state.static_dir / "pages" / "privacy.html")
+
+    return HTMLResponse(content="<h1>Not Found</h1>", status_code=status.HTTP_404_NOT_FOUND)
+
+
+@router.get("/production", include_in_schema=False)
+@router.get("/production/", include_in_schema=False)
+@router.get("/staging", include_in_schema=False)
+@router.get("/staging/", include_in_schema=False)
+def admin_panel(request: Request):
+    host = request.headers.get("host", "")
+    if host.startswith("admin.wobbly.site"):
+        return FileResponse(request.app.state.static_dir / "pages" / "admin.html")
 
     return HTMLResponse(content="<h1>Not Found</h1>", status_code=status.HTTP_404_NOT_FOUND)

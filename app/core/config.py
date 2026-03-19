@@ -18,16 +18,18 @@ class Settings(BaseSettings):
     )
     trusted_hosts: str = Field(
         default=(
-            "api.wobbly.site,wobbly.site,localhost,127.0.0.1,85.239.57.243,testserver"
+            "api.wobbly.site,wobbly.site,admin.wobbly.site,localhost,127.0.0.1,85.239.57.243,testserver"
         ),
         alias="TRUSTED_HOSTS",
     )
     cors_allowed_origins: str = Field(
         default=(
-            "https://wobbly.site,https://api.wobbly.site,http://localhost,http://127.0.0.1"
+            "https://wobbly.site,https://api.wobbly.site,https://admin.wobbly.site,http://localhost,http://127.0.0.1"
         ),
         alias="CORS_ALLOWED_ORIGINS",
     )
+    admin_bootstrap_login: str = Field(default="", alias="ADMIN_BOOTSTRAP_LOGIN")
+    admin_bootstrap_password: str = Field(default="", alias="ADMIN_BOOTSTRAP_PASSWORD")
 
     model_config = SettingsConfigDict(
         env_file=".env",
@@ -48,6 +50,5 @@ class Settings(BaseSettings):
     @property
     def cors_allowed_origins_list(self) -> list[str]:
         return self._parse_csv(self.cors_allowed_origins)
-
 
 settings = Settings()

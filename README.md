@@ -4,6 +4,7 @@ Backend, landing page и production docs для `Wobbly`.
 
 Сейчас проект включает:
 - API для anonymous auth, профиля и рейтингов
+- admin API и admin UI foundation
 - landing page на `https://wobbly.site`
 - текстовую docs page на `https://api.wobbly.site/api/docs`
 - production deploy через GitHub Actions
@@ -72,6 +73,10 @@ Backend, landing page и production docs для `Wobbly`.
 - точные команды деплоя описаны в `docs/DEPLOY.md`
 - отдельная сводка для переноса контекста лежит в `docs/HANDOFF.md`
 - staging уже поднят на `https://staging-api.wobbly.site` и закрыт через `X-Staging-Key`
+- админка спроектирована под `https://admin.wobbly.site/production/` и `https://admin.wobbly.site/staging/`
+- первый `owner` bootstrap'ится через env:
+  - `ADMIN_BOOTSTRAP_LOGIN`
+  - `ADMIN_BOOTSTRAP_PASSWORD`
 
 ## API
 
