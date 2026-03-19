@@ -52,11 +52,16 @@ Backend, landing page и production docs для `Wobbly`.
 - production Swagger: `https://api.wobbly.site/api/swagger`
 - production text docs: `https://api.wobbly.site/api/docs`
 - production site: `https://wobbly.site`
+- staging API path on server: `/opt/rating-service-staging`
+- staging service: `rating-service-staging.service`
+- staging database: `app_staging`
+- staging workflow: `.github/workflows/staging.yml` on `develop`
 - продовый сервис: `rating-service.service`
 - продовый путь на сервере: `/opt/rating-service`
 - reverse proxy в production: `nginx`
 - базовый edge-side rate limiting уже включен на `api.wobbly.site`
 - основной путь деплоя: merge в `main` -> GitHub Actions -> verify -> deploy
+- staging deploy path: push в `develop` -> GitHub Actions -> verify -> deploy-staging
 - ручной deploy через копирование файлов в `/opt/rating-service` и `systemctl restart rating-service` остается fallback-сценарием
 
 Это важно:
@@ -64,6 +69,7 @@ Backend, landing page и production docs для `Wobbly`.
 - production topology уже другая, и ее не нужно заново угадывать
 - точные команды деплоя описаны в `docs/DEPLOY.md`
 - отдельная сводка для переноса контекста лежит в `docs/HANDOFF.md`
+- для публичного staging URL еще нужен DNS `staging-api.wobbly.site -> 85.239.57.243`
 
 ## API
 

@@ -9,6 +9,7 @@ DEPLOY_SERVICE="${DEPLOY_SERVICE:?DEPLOY_SERVICE is required}"
 DEPLOY_OWNER="${DEPLOY_OWNER:?DEPLOY_OWNER is required}"
 SSH_KEY_PATH="${SSH_KEY_PATH:?SSH_KEY_PATH is required}"
 DEPLOY_VENV_PATH="${DEPLOY_VENV_PATH:-${DEPLOY_PATH}/.venv}"
+DEPLOY_HEALTHCHECK_URL="${DEPLOY_HEALTHCHECK_URL:-http://127.0.0.1:8000/health}"
 
 DATE_TAG="$(date +%Y%m%d-%H%M%S)"
 ARCHIVE_NAME="release-${DATE_TAG}.tar.gz"
@@ -49,7 +50,7 @@ ssh -o BatchMode=yes -i "$SSH_KEY_PATH" "${DEPLOY_USER}@${DEPLOY_HOST}" "\
   done && \
   systemctl is-active '${DEPLOY_SERVICE}' && \
   for attempt in 1 2 3 4 5 6 7 8 9 10; do \
-    if curl -fsS http://127.0.0.1:8000/health; then \
+    if curl -fsS '${DEPLOY_HEALTHCHECK_URL}'; then \
       exit 0; \
     fi; \
     sleep 2; \
