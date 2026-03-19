@@ -74,10 +74,13 @@ Backend, landing page и production docs для `Wobbly`.
 - точные команды деплоя описаны в `docs/DEPLOY.md`
 - отдельная сводка для переноса контекста лежит в `docs/HANDOFF.md`
 - staging уже поднят на `https://staging-api.wobbly.site` и закрыт через `X-Staging-Key`
-- админка спроектирована под `https://admin.wobbly.site/production/` и `https://admin.wobbly.site/staging/`
-- первый `owner` bootstrap'ится через env:
+- админка уже доступна на:
+  - `https://admin.wobbly.site/production/`
+  - `https://admin.wobbly.site/staging/`
+- первый `owner` bootstrap'ится через env и уже поднят на production и staging:
   - `ADMIN_BOOTSTRAP_LOGIN`
   - `ADMIN_BOOTSTRAP_PASSWORD`
+- bootstrap credentials считаем operational secret и не храним в репозитории
 
 ## API
 

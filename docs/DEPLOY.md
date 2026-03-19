@@ -33,6 +33,16 @@
 - staging public URL: `https://staging-api.wobbly.site`
 - staging certificate уже выпущен через `certbot --nginx`
 
+Admin baseline:
+- admin public URL: `https://admin.wobbly.site`
+- admin UI paths:
+  - `/production/`
+  - `/staging/`
+- admin host proxy идет в production app на `127.0.0.1:8000`
+- admin certificate уже выпущен через `certbot --nginx`
+- owner bootstrap уже применен через env на production и staging
+- bootstrap credentials это operational secret и не хранятся в репозитории
+
 ## Access
 
 SSH-доступ:

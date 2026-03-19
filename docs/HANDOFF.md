@@ -38,6 +38,10 @@ Admin baseline в коде уже есть:
 - первый owner создается через env bootstrap:
   - `ADMIN_BOOTSTRAP_LOGIN`
   - `ADMIN_BOOTSTRAP_PASSWORD`
+- admin host уже поднят на `https://admin.wobbly.site`
+- owner bootstrap уже применен на production и staging
+- staging CORS уже разрешает `https://admin.wobbly.site`
+- bootstrap credentials это operational secret; в репозиторий их не кладем
 
 Важно:
 - production сейчас не живет через `docker compose up`
