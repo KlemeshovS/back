@@ -14,11 +14,6 @@
           <h1>Операционная панель</h1>
         </div>
 
-        <nav class="environment-nav" aria-label="Environment switcher">
-          <a href="/production/" data-env-link="production">Production</a>
-          <a href="/staging/" data-env-link="staging">Staging</a>
-        </nav>
-
         <nav class="screen-nav section-hidden" id="screen-nav" aria-label="Admin navigation">
           <button type="button" data-screen-link="overview">Обзор</button>
           <button type="button" data-screen-link="users">Пользователи</button>
@@ -27,8 +22,6 @@
         </nav>
 
         <div class="sidebar-footer section-hidden" id="sidebar-footer">
-          <p class="muted">Текущая среда</p>
-          <p class="sidebar-value" id="current-env-badge">Production</p>
           <p class="muted">Текущий админ</p>
           <p class="sidebar-value" id="current-admin-badge">—</p>
           <button class="ghost-button" id="logout-button" type="button">Выйти</button>
@@ -77,6 +70,12 @@
               <h2 id="screen-title">Обзор</h2>
             </div>
             <div class="topbar-meta">
+              <nav class="environment-switcher" aria-label="Environment switcher">
+                <a href="/production/" data-env-link="production">Production</a>
+                <a href="/staging/" data-env-link="staging">Staging</a>
+              </nav>
+              <span class="badge badge-env" id="current-env-badge">Production</span>
+              <span class="badge badge-admin" id="current-admin-topbar-badge">—</span>
               <span class="badge" id="role-badge">admin</span>
             </div>
           </header>

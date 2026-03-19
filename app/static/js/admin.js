@@ -26,6 +26,7 @@ class AdminConsole {
     this.loginEnvBadge = document.getElementById("login-env-badge");
     this.currentEnvBadge = document.getElementById("current-env-badge");
     this.currentAdminBadge = document.getElementById("current-admin-badge");
+    this.currentAdminTopbarBadge = document.getElementById("current-admin-topbar-badge");
     this.roleBadge = document.getElementById("role-badge");
     this.adminsRoleBadge = document.getElementById("admins-role-badge");
     this.loginView = document.getElementById("login-view");
@@ -76,7 +77,8 @@ class AdminConsole {
 
     let index = 0;
     while (index < this.screenLinks.length) {
-      this.screenLinks[index].addEventListener("click", () => this.showScreen(this.screenLinks[index].dataset.screenLink));
+      const screenLink = this.screenLinks[index];
+      screenLink.addEventListener("click", () => this.showScreen(screenLink.dataset.screenLink));
       index += 1;
     }
   }
@@ -193,6 +195,7 @@ class AdminConsole {
     window.localStorage.setItem(this.storageKey(), JSON.stringify(this.state.session));
 
     this.currentAdminBadge.textContent = me.login;
+    this.currentAdminTopbarBadge.textContent = me.login;
     this.roleBadge.textContent = me.role;
     this.adminsRoleBadge.textContent = me.role;
 
@@ -223,6 +226,7 @@ class AdminConsole {
     this.screenNav.classList.add("section-hidden");
     this.sidebarFooter.classList.add("section-hidden");
     this.currentAdminBadge.textContent = "—";
+    this.currentAdminTopbarBadge.textContent = "—";
   }
 
   showScreen(screenName) {
@@ -327,7 +331,8 @@ class AdminConsole {
     let index = 0;
 
     while (index < buttons.length) {
-      buttons[index].addEventListener("click", () => this.selectUser(buttons[index].dataset.userId));
+      const button = buttons[index];
+      button.addEventListener("click", () => this.selectUser(button.dataset.userId));
       index += 1;
     }
   }
@@ -408,7 +413,8 @@ class AdminConsole {
     let index = 0;
 
     while (index < buttons.length) {
-      buttons[index].addEventListener("click", () => this.toggleAdmin(buttons[index]));
+      const button = buttons[index];
+      button.addEventListener("click", () => this.toggleAdmin(button));
       index += 1;
     }
   }

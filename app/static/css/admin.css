@@ -63,13 +63,13 @@ body {
   font-size: 12px;
 }
 
-.environment-nav,
+.environment-switcher,
 .screen-nav {
   display: grid;
   gap: 10px;
 }
 
-.environment-nav a,
+.environment-switcher a,
 .screen-nav button,
 button {
   appearance: none;
@@ -86,13 +86,13 @@ button {
   transition: transform 160ms ease, background 160ms ease, border-color 160ms ease;
 }
 
-.environment-nav a.active,
+.environment-switcher a.active,
 .screen-nav button.active,
 button:not(.ghost-button) {
   background: var(--accent);
 }
 
-.environment-nav a:hover,
+.environment-switcher a:hover,
 .screen-nav button:hover,
 button:hover {
   transform: translateY(-1px);
@@ -153,6 +153,7 @@ button:hover {
   display: flex;
   align-items: center;
   gap: 12px;
+  flex-wrap: wrap;
 }
 
 .badge {
@@ -164,6 +165,37 @@ button:hover {
   background: rgba(255, 255, 255, 0.08);
   color: var(--muted);
   font-size: 14px;
+}
+
+.environment-switcher {
+  display: inline-grid;
+  grid-auto-flow: column;
+  gap: 6px;
+  padding: 5px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.environment-switcher a {
+  min-width: 116px;
+  padding: 10px 14px;
+  border-radius: 999px;
+  text-align: center;
+  font-size: 14px;
+}
+
+.environment-switcher a:not(.active) {
+  background: transparent;
+}
+
+.badge-env {
+  color: var(--text);
+}
+
+.badge-admin {
+  min-width: 72px;
+  justify-content: center;
 }
 
 .panel-head {
@@ -318,6 +350,24 @@ tbody tr:hover {
   .split-layout,
   .admins-layout {
     grid-template-columns: 1fr;
+  }
+
+  .dashboard-topbar {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .topbar-meta {
+    width: 100%;
+  }
+
+  .environment-switcher {
+    width: 100%;
+    grid-auto-flow: row;
+  }
+
+  .environment-switcher a {
+    min-width: 0;
   }
 }
 
