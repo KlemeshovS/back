@@ -89,11 +89,23 @@ class AdminAuthResponse(ApiModel):
     role: AdminRole
 
 
+class AdminLogoutResponse(ApiModel):
+    status: str = "loggedOut"
+
+
 class AdminMeResponse(ApiModel):
     id: int
     login: str
     role: AdminRole
     is_active: bool
+
+
+class AdminOverviewResponse(ApiModel):
+    total_users: int
+    rating_enabled_users: int
+    total_admins: int
+    active_admins: int
+    audit_log_entries: int
 
 
 class ManagedUserResponse(ApiModel):
@@ -144,3 +156,19 @@ class AdminUserCreateRequest(ApiModel):
 class AdminUserUpdateRequest(ApiModel):
     is_active: Optional[bool] = None
     password: Optional[str] = Field(default=None, min_length=8, max_length=256)
+
+
+class AdminAuditLogEntryResponse(ApiModel):
+    id: int
+    admin_id: int
+    admin_login: str
+    action: str
+    target_type: str
+    target_id: Optional[int] = None
+    details: dict
+    created_at: datetime
+
+
+class AdminAuditLogListResponse(ApiModel):
+    items: list[AdminAuditLogEntryResponse]
+    total: int

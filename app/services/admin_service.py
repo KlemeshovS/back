@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from typing import Any, Optional
 
 from fastapi import status
@@ -14,9 +15,13 @@ from app.core.admin_auth import (
 from app.core.errors import ApiError, ApiErrorCode
 from app.db.database import get_connection
 from app.domain.schemas import (
+    AdminAuditLogEntryResponse,
+    AdminAuditLogListResponse,
     AdminAuthResponse,
     AdminLoginRequest,
+    AdminLogoutResponse,
     AdminMeResponse,
+    AdminOverviewResponse,
     AdminRole,
     AdminUserCreateRequest,
     AdminUserListResponse,
@@ -93,6 +98,15 @@ def authenticate_admin(payload: AdminLoginRequest) -> AdminAuthResponse:
                 """,
                 (token_hash, admin["id"]),
             )
+            _insert_audit_log(
+                cur,
+                admin_id=admin["id"],
+                admin_login=admin["login"],
+                action="admin.login",
+                target_type="admin_user",
+                target_id=admin["id"],
+                details={"role": admin["role"]},
+            )
         conn.commit()
 
     return AdminAuthResponse(
@@ -138,6 +152,60 @@ def build_admin_me_response(admin: dict[str, Any]) -> AdminMeResponse:
         login=admin["login"],
         role=admin["role"],
         is_active=admin["is_active"],
+    )
+
+
+def logout_admin(current_admin: dict[str, Any]) -> AdminLogoutResponse:
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                UPDATE admin_users
+                SET auth_token_hash = NULL,
+                    updated_at = NOW()
+                WHERE id = %s;
+                """,
+                (current_admin["id"],),
+            )
+            _insert_audit_log(
+                cur,
+                admin_id=current_admin["id"],
+                admin_login=current_admin["login"],
+                action="admin.logout",
+                target_type="admin_user",
+                target_id=current_admin["id"],
+                details={"role": current_admin["role"]},
+            )
+        conn.commit()
+
+    return AdminLogoutResponse()
+
+
+def get_admin_overview() -> AdminOverviewResponse:
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                SELECT
+                    (SELECT COUNT(*) FROM users) AS total_users,
+                    (
+                        SELECT COUNT(*)
+                        FROM users
+                        WHERE is_rating_enabled = TRUE
+                    ) AS rating_enabled_users,
+                    (SELECT COUNT(*) FROM admin_users) AS total_admins,
+                    (SELECT COUNT(*) FROM admin_users WHERE is_active = TRUE) AS active_admins,
+                    (SELECT COUNT(*) FROM admin_audit_log) AS audit_log_entries;
+                """
+            )
+            row = cur.fetchone()
+
+    return AdminOverviewResponse(
+        total_users=row["total_users"],
+        rating_enabled_users=row["rating_enabled_users"],
+        total_admins=row["total_admins"],
+        active_admins=row["active_admins"],
+        audit_log_entries=row["audit_log_entries"],
     )
 
 
@@ -230,7 +298,11 @@ def get_managed_user(user_id: int) -> ManagedUserResponse:
     return _build_managed_user(user)
 
 
-def update_managed_user(user_id: int, payload: ManagedUserUpdateRequest) -> ManagedUserResponse:
+def update_managed_user(
+    user_id: int,
+    payload: ManagedUserUpdateRequest,
+    current_admin: dict[str, Any],
+) -> ManagedUserResponse:
     with get_connection() as conn:
         with conn.cursor() as cur:
             cur.execute(
@@ -291,6 +363,26 @@ def update_managed_user(user_id: int, payload: ManagedUserUpdateRequest) -> Mana
                     code=ApiErrorCode.USERNAME_ALREADY_EXISTS,
                     message="Username already exists",
                 ) from exc
+            _insert_audit_log(
+                cur,
+                admin_id=current_admin["id"],
+                admin_login=current_admin["login"],
+                action="user.update",
+                target_type="user",
+                target_id=user_id,
+                details={
+                    "before": {
+                        "username": existing_user["username"],
+                        "score": existing_user["score"],
+                        "participateInRating": existing_user["is_rating_enabled"],
+                    },
+                    "after": {
+                        "username": updated_user["username"],
+                        "score": updated_user["score"],
+                        "participateInRating": updated_user["is_rating_enabled"],
+                    },
+                },
+            )
         conn.commit()
 
     return _build_managed_user(updated_user)
@@ -314,7 +406,10 @@ def list_admin_users() -> AdminUserListResponse:
     )
 
 
-def create_admin_user(payload: AdminUserCreateRequest) -> AdminUserResponse:
+def create_admin_user(
+    payload: AdminUserCreateRequest,
+    current_admin: dict[str, Any],
+) -> AdminUserResponse:
     try:
         with get_connection() as conn:
             with conn.cursor() as cur:
@@ -331,6 +426,19 @@ def create_admin_user(payload: AdminUserCreateRequest) -> AdminUserResponse:
                     ),
                 )
                 admin = cur.fetchone()
+                _insert_audit_log(
+                    cur,
+                    admin_id=current_admin["id"],
+                    admin_login=current_admin["login"],
+                    action="admin_user.create",
+                    target_type="admin_user",
+                    target_id=admin["id"],
+                    details={
+                        "login": admin["login"],
+                        "role": admin["role"],
+                        "isActive": admin["is_active"],
+                    },
+                )
             conn.commit()
     except UniqueViolation as exc:
         raise ApiError(
@@ -393,9 +501,56 @@ def update_admin_user(
                 (*values, admin_id),
             )
             updated_admin = cur.fetchone()
+            _insert_audit_log(
+                cur,
+                admin_id=current_admin["id"],
+                admin_login=current_admin["login"],
+                action="admin_user.update",
+                target_type="admin_user",
+                target_id=admin_id,
+                details={
+                    "before": {
+                        "isActive": existing_admin["is_active"],
+                    },
+                    "after": {
+                        "isActive": updated_admin["is_active"],
+                        "passwordChanged": bool(payload.password),
+                    },
+                },
+            )
         conn.commit()
 
     return _build_admin_user(updated_admin)
+
+
+def list_audit_logs(limit: int, offset: int) -> AdminAuditLogListResponse:
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute("SELECT COUNT(*) AS total FROM admin_audit_log;")
+            total = cur.fetchone()["total"]
+            cur.execute(
+                """
+                SELECT
+                    id,
+                    admin_id,
+                    admin_login,
+                    action,
+                    target_type,
+                    target_id,
+                    details,
+                    created_at
+                FROM admin_audit_log
+                ORDER BY id DESC
+                LIMIT %s OFFSET %s;
+                """,
+                (limit, offset),
+            )
+            rows = cur.fetchall()
+
+    return AdminAuditLogListResponse(
+        items=[_build_audit_log_entry(row) for row in rows],
+        total=total,
+    )
 
 
 def _build_managed_user(row: dict[str, Any]) -> ManagedUserResponse:
@@ -418,4 +573,50 @@ def _build_admin_user(row: dict[str, Any]) -> AdminUserResponse:
         is_active=row["is_active"],
         created_at=row["created_at"],
         updated_at=row["updated_at"],
+    )
+
+
+def _build_audit_log_entry(row: dict[str, Any]) -> AdminAuditLogEntryResponse:
+    return AdminAuditLogEntryResponse(
+        id=row["id"],
+        admin_id=row["admin_id"],
+        admin_login=row["admin_login"],
+        action=row["action"],
+        target_type=row["target_type"],
+        target_id=row["target_id"],
+        details=row["details"] or {},
+        created_at=row["created_at"],
+    )
+
+
+def _insert_audit_log(
+    cur,
+    *,
+    admin_id: int,
+    admin_login: str,
+    action: str,
+    target_type: str,
+    target_id: Optional[int],
+    details: dict[str, Any],
+) -> None:
+    cur.execute(
+        """
+        INSERT INTO admin_audit_log (
+            admin_id,
+            admin_login,
+            action,
+            target_type,
+            target_id,
+            details
+        )
+        VALUES (%s, %s, %s, %s, %s, %s::jsonb);
+        """,
+        (
+            admin_id,
+            admin_login,
+            action,
+            target_type,
+            target_id,
+            json.dumps(details),
+        ),
     )

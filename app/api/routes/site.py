@@ -34,3 +34,17 @@ def admin_panel(request: Request):
         return FileResponse(request.app.state.static_dir / "pages" / "admin.html")
 
     return HTMLResponse(content="<h1>Not Found</h1>", status_code=status.HTTP_404_NOT_FOUND)
+
+
+@router.get("/production/assets/{asset_path:path}", include_in_schema=False)
+@router.get("/staging/assets/{asset_path:path}", include_in_schema=False)
+def admin_assets(request: Request, asset_path: str):
+    host = request.headers.get("host", "")
+    if not host.startswith("admin.wobbly.site"):
+        return HTMLResponse(content="<h1>Not Found</h1>", status_code=status.HTTP_404_NOT_FOUND)
+
+    asset_file = request.app.state.static_dir / asset_path
+    if asset_file.is_file():
+        return FileResponse(asset_file)
+
+    return HTMLResponse(content="<h1>Not Found</h1>", status_code=status.HTTP_404_NOT_FOUND)

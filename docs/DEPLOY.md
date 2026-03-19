@@ -38,7 +38,11 @@ Admin baseline:
 - admin UI paths:
   - `/production/`
   - `/staging/`
-- admin host proxy идет в production app на `127.0.0.1:8000`
+- `admin.wobbly.site/production/` идет в production app на `127.0.0.1:8000`
+- `admin.wobbly.site/staging/` идет в staging app на `127.0.0.1:8001`
+- admin same-origin API:
+  - `/production/api/...` -> production `/admin/...`
+  - `/staging/api/...` -> staging `/admin/...`
 - admin certificate уже выпущен через `certbot --nginx`
 - owner bootstrap уже применен через env на production и staging
 - bootstrap credentials это operational secret и не хранятся в репозитории

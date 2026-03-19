@@ -68,7 +68,7 @@ def test_admin_can_patch_managed_user(monkeypatch) -> None:
     monkeypatch.setattr(
         admin_service,
         "update_managed_user",
-        lambda user_id, payload: {
+        lambda user_id, payload, current_admin: {
             "id": user_id,
             "username": payload.username,
             "score": payload.score,
@@ -94,6 +94,91 @@ def test_admin_can_patch_managed_user(monkeypatch) -> None:
     assert response.json()["participateInRating"] is True
 
 
+def test_admin_logout_returns_status(monkeypatch) -> None:
+    client = build_client()
+    client.app.dependency_overrides[get_current_admin] = lambda: {
+        "id": 1,
+        "login": "owner",
+        "role": "owner",
+        "is_active": True,
+    }
+
+    monkeypatch.setattr(
+        admin_service,
+        "logout_admin",
+        lambda current_admin: {"status": "loggedOut"},
+    )
+
+    response = client.post("/admin/auth/logout", headers={"Authorization": "Bearer owner"})
+
+    assert response.status_code == 200
+    assert response.json() == {"status": "loggedOut"}
+
+
+def test_admin_audit_log_returns_items(monkeypatch) -> None:
+    client = build_client()
+    client.app.dependency_overrides[get_current_admin] = lambda: {
+        "id": 1,
+        "login": "owner",
+        "role": "owner",
+        "is_active": True,
+    }
+
+    monkeypatch.setattr(
+        admin_service,
+        "list_audit_logs",
+        lambda limit, offset: {
+            "items": [
+                {
+                    "id": 1,
+                    "admin_id": 1,
+                    "admin_login": "owner",
+                    "action": "user.update",
+                    "target_type": "user",
+                    "target_id": 14,
+                    "details": {"after": {"score": 10}},
+                    "created_at": "2026-03-20T10:00:00Z",
+                }
+            ],
+            "total": 1,
+        },
+    )
+
+    response = client.get("/admin/audit-log", headers={"Authorization": "Bearer owner"})
+
+    assert response.status_code == 200
+    assert response.json()["items"][0]["adminLogin"] == "owner"
+    assert response.json()["items"][0]["details"]["after"]["score"] == 10
+
+
+def test_admin_overview_returns_summary(monkeypatch) -> None:
+    client = build_client()
+    client.app.dependency_overrides[get_current_admin] = lambda: {
+        "id": 1,
+        "login": "owner",
+        "role": "owner",
+        "is_active": True,
+    }
+
+    monkeypatch.setattr(
+        admin_service,
+        "get_admin_overview",
+        lambda: {
+            "total_users": 20,
+            "rating_enabled_users": 3,
+            "total_admins": 2,
+            "active_admins": 1,
+            "audit_log_entries": 14,
+        },
+    )
+
+    response = client.get("/admin/overview", headers={"Authorization": "Bearer owner"})
+
+    assert response.status_code == 200
+    assert response.json()["totalUsers"] == 20
+    assert response.json()["auditLogEntries"] == 14
+
+
 def test_admin_host_serves_admin_page() -> None:
     client = build_client()
 
@@ -101,3 +186,15 @@ def test_admin_host_serves_admin_page() -> None:
 
     assert response.status_code == 200
     assert "Wobbly Admin" in response.text
+
+
+def test_admin_host_serves_scoped_admin_asset() -> None:
+    client = build_client()
+
+    response = client.get(
+        "/staging/assets/js/admin.js",
+        headers={"host": "admin.wobbly.site"},
+    )
+
+    assert response.status_code == 200
+    assert "class AdminConsole" in response.text

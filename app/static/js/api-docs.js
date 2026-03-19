@@ -58,10 +58,10 @@ class DocsPage {
             paragraphs: [
               "Для админки теперь есть отдельный набор endpoint'ов под /admin.",
               "Admin auth не заменяет обычный user auth. Это отдельный слой для панели управления.",
-              "Основные методы: POST /admin/auth/login, GET /admin/me, GET/PATCH /admin/users, GET/POST/PATCH /admin/admin-users.",
+              "Основные методы: POST /admin/auth/login, POST /admin/auth/logout, GET /admin/me, GET /admin/overview, GET/PATCH /admin/users, GET /admin/audit-log, GET/POST/PATCH /admin/admin-users.",
             ],
             muted:
-              "UI админки задуман для admin.wobbly.site/production/ и admin.wobbly.site/staging/. Для staging-запросов используется X-Staging-Key.",
+              "UI админки работает через admin.wobbly.site/production/ и admin.wobbly.site/staging/. В браузере теперь используется same-origin admin API: /production/api/... и /staging/api/....",
           },
         ],
       },
