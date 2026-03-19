@@ -92,19 +92,6 @@ body {
   font-size: 18px;
 }
 
-.sidebar-profile {
-  display: grid;
-  grid-template-columns: 52px 1fr;
-  gap: 12px;
-  align-items: center;
-}
-
-.sidebar-profile-avatar {
-  width: 52px;
-  height: 52px;
-  font-size: 16px;
-}
-
 .environment-switcher,
 .screen-nav {
   display: grid;
@@ -112,7 +99,6 @@ body {
 }
 
 .environment-switcher a,
-.screen-nav button,
 button {
   appearance: none;
   border: 0;
@@ -130,7 +116,7 @@ button {
 
 .environment-switcher a.active,
 .screen-nav button.active,
-button:not(.ghost-button) {
+.primary-button {
   background: var(--accent);
 }
 
@@ -140,14 +126,18 @@ button:hover {
   transform: translateY(-1px);
 }
 
+.nav-button {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid transparent;
+}
+
+.nav-button.active {
+  box-shadow: 0 12px 30px rgba(111, 92, 255, 0.26);
+}
+
 .sidebar-footer {
   margin-top: auto;
-  display: grid;
-  gap: 8px;
-  padding: 18px;
-  border-radius: 20px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  display: block;
 }
 
 .sidebar-value,
@@ -241,6 +231,10 @@ button:hover {
 .badge-admin {
   min-width: 0;
   justify-content: center;
+}
+
+.badge-admin-name {
+  color: var(--text);
 }
 
 .profile-chip {
@@ -472,6 +466,7 @@ tbody tr:hover {
 
   .topbar-meta {
     width: 100%;
+    justify-content: stretch;
   }
 
   .environment-switcher {

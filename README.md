@@ -87,6 +87,8 @@ Backend, landing page и production docs для `Wobbly`.
   - admins table + owner controls
   - audit log
   - profile screen with self password change
+  - role-aware behavior for owner/admin
+- в локальном рабочем дереве могут быть незакоммиченные admin UI правки, поэтому при handoff сначала полезно смотреть `git status --short --branch`
 - первый `owner` bootstrap'ится через env и уже поднят на production и staging:
   - `ADMIN_BOOTSTRAP_LOGIN`
   - `ADMIN_BOOTSTRAP_PASSWORD`
@@ -230,6 +232,12 @@ docker compose up --build
 - backend roadmap: `docs/BACKEND_ROADMAP.md`
 - conventions: trunk-based development + Conventional Commits
 - branch flow: `develop` для активной разработки, `main` только для production releases по явному запросу
+- если задача про admin console, первыми смотреть:
+  - `app/static/pages/admin.html`
+  - `app/static/css/admin.css`
+  - `app/static/js/admin.js`
+  - `app/api/routes/admin.py`
+  - `app/services/admin_service.py`
 - если меняется API, нужно обновлять текстовую docs page на `https://api.wobbly.site/api/docs` в том же изменении
 - CI дополнительно проверяет, что API-изменения не уходят без обновления `/api/docs`
 - linters and tests: `ruff`, `pytest`

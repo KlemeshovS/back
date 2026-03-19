@@ -46,6 +46,10 @@ Admin baseline:
 - admin certificate уже выпущен через `certbot --nginx`
 - owner bootstrap уже применен через env на production и staging
 - bootstrap credentials это operational secret и не хранятся в репозитории
+- admin UI в production и staging теперь может отличаться по функционалу и внешнему виду, потому что:
+  - `admin.wobbly.site/production/` следует `main`
+  - `admin.wobbly.site/staging/` следует `develop`
+- если UI баг виден только на staging admin, сначала смотреть `develop`, а не `main`
 
 ## Access
 
@@ -258,6 +262,7 @@ Pipeline опирается на локальные скрипты:
 - `nginx` конфиги не раскатываются текущим GitHub Actions deploy автоматически
 - изменения в `deploy/nginx/` нужно применять на сервер отдельно через `nginx -t` и `systemctl reload nginx`
 - staging smoke-check использует `X-Staging-Key`, поэтому для успешного workflow нужно заполнить `STAGING_ACCESS_KEY`
+- admin host routing на `admin.wobbly.site` тоже не раскатывается автоматически через pipeline и остается отдельной server-side обязанностью
 
 ### Staging Protection
 

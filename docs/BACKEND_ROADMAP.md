@@ -18,6 +18,12 @@
 - работать на `https://api.wobbly.site`
 - публиковать Swagger на `https://api.wobbly.site/api/swagger`
 - публиковать человекочитаемую docs page на `https://api.wobbly.site/api/docs`
+- обслуживать отдельную admin surface:
+  - `https://admin.wobbly.site/production/`
+  - `https://admin.wobbly.site/staging/`
+- иметь admin auth и роли `owner/admin`
+- поддерживать audit log админских действий
+- давать self-service смену пароля текущему admin
 
 Инженерная база уже тоже есть:
 - проект разнесен на `app/api`, `app/services`, `app/core`, `app/db`, `app/domain`
@@ -216,6 +222,18 @@
 - tooling уже есть
 - теперь стоит сделать его проще в использовании для следующего разработчика
 
+### 15. Continue admin console polish
+
+Что сделать:
+- добавить change role в owner-only admin management
+- улучшить UX screens `Администраторы` / `Профиль`, чтобы не было сценарных дублей
+- добавить pagination/filters в audit log
+- добавить richer empty/loading/error states
+
+Почему это важно:
+- backend foundation уже есть
+- дальше основная ценность в удобстве и надежности admin operations
+
 ## Suggested Execution Order
 
 ### Phase 1
@@ -238,6 +256,7 @@
 ### Phase 4
 - API versioning
 - developer ergonomics improvements
+- admin console polish
 
 ## Recommended Next Task
 

@@ -11,6 +11,7 @@
 - API: `https://api.wobbly.site`
 - Swagger: `https://api.wobbly.site/api/swagger`
 - text docs: `https://api.wobbly.site/api/docs`
+- expected active development branch: `develop`
 
 ## Current Production Truth
 
@@ -132,6 +133,25 @@ Admin UI сейчас уже умеет:
 - admin users table + owner-only create/update
 - audit log screen
 - profile screen со сменой пароля текущего admin
+- role-aware поведение:
+  - owner видит экран и управление `Администраторы`
+  - обычный `admin` не должен видеть owner-only controls
+- операционное правило UI:
+  - свой пароль меняем только в разделе `Профиль`
+  - экран `Администраторы` нужен для управления другими admin-аккаунтами
+
+Текущее локальное состояние рабочей директории:
+- current branch: `develop`
+- есть незакоммиченные UI-правки в:
+  - `app/static/pages/admin.html`
+  - `app/static/css/admin.css`
+  - `app/static/js/admin.js`
+- смысл этих правок:
+  - убрать дублирующий copy в sidebar
+  - убрать дублирующий профильный блок в sidebar
+  - сделать sidebar navigation с явным active state
+  - убрать self-password сценарий из экрана `Администраторы`
+- если новый чат продолжает именно эту задачу, сначала смотреть `git status --short --branch` и эти 3 файла
 
 Важно:
 - `/api/docs` собирается клиентским JavaScript
@@ -251,7 +271,13 @@ Tooling config:
 1. `git status --short --branch`
 2. если задача про production: прочитать `docs/DEPLOY.md`
 3. если задача про API: прочитать `docs/MOBILE_API.md` и посмотреть `app/static/js/api-docs.js`
-4. если задача про архитектуру: смотреть `app/api/`, `app/services/`, `app/core/`, `app/domain/`, `app/db/`
+4. если задача про админку: сначала смотреть:
+   - `app/static/pages/admin.html`
+   - `app/static/css/admin.css`
+   - `app/static/js/admin.js`
+   - `app/api/routes/admin.py`
+   - `app/services/admin_service.py`
+5. если задача про архитектуру: смотреть `app/api/`, `app/services/`, `app/core/`, `app/domain/`, `app/db/`
 
 ## Current Next Improvements
 

@@ -75,6 +75,7 @@ Commit message оформляем по `Conventional Commits`.
 - после merge удаляем ветку локально и в GitHub
 - после merge в `develop` ориентируемся сначала на staging GitHub Actions pipeline
 - после merge в `main` ориентируемся сначала на production GitHub Actions pipeline
+- staging admin UI считаем частью `develop`, production admin UI считаем частью `main`
 - если меняется API-контракт или поведение endpoint'ов, в том же изменении нужно обновлять `https://api.wobbly.site/api/docs`
 - по мере роста API текстовую docs page нужно упрощать и перестраивать так, чтобы она оставалась удобной для чтения
 - API-изменение без обновления docs считается незавершенным
@@ -122,6 +123,7 @@ Commit message оформляем по `Conventional Commits`.
 - main site host: `wobbly.site`
 - API host: `api.wobbly.site`
 - staging API host: `staging-api.wobbly.site`
+- admin host: `admin.wobbly.site`
 - deploy access: `root@api.wobbly.site` через `deploy_key`
 - primary deploy path сейчас это GitHub Actions pipeline
 - `develop` деплоится в staging
@@ -139,6 +141,12 @@ Commit message оформляем по `Conventional Commits`.
 - business logic должна идти в `app/services/`
 - schemas должны идти в `app/domain/`
 - core utilities должны идти в `app/core/`
+- admin UI задачи должны в первую очередь смотреть в:
+  - `app/static/pages/admin.html`
+  - `app/static/css/admin.css`
+  - `app/static/js/admin.js`
+  - `app/api/routes/admin.py`
+  - `app/services/admin_service.py`
 
 Если новая задача снова раздувает `app/main.py`, это признак, что изменение кладется не туда.
 

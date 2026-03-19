@@ -27,9 +27,7 @@ class AdminConsole {
     this.screenTitle = document.getElementById("screen-title");
     this.loginEnvBadge = document.getElementById("login-env-badge");
     this.currentEnvBadge = document.getElementById("current-env-badge");
-    this.currentAdminBadge = document.getElementById("current-admin-badge");
     this.currentAdminTopbarBadge = document.getElementById("current-admin-topbar-badge");
-    this.currentAdminAvatar = document.getElementById("current-admin-avatar");
     this.currentAdminTopbarAvatar = document.getElementById("current-admin-topbar-avatar");
     this.sidebarAvatar = document.getElementById("sidebar-avatar");
     this.roleBadge = document.getElementById("role-badge");
@@ -66,6 +64,8 @@ class AdminConsole {
     this.adminEditForm = document.getElementById("admin-edit-form");
     this.adminEditLogin = document.getElementById("admin-edit-login");
     this.adminEditPassword = document.getElementById("admin-edit-password");
+    this.adminEditPasswordRow = document.getElementById("admin-edit-password-row");
+    this.adminEditSelfNote = document.getElementById("admin-edit-self-note");
     this.adminEditActive = document.getElementById("admin-edit-active");
     this.adminEditorBadge = document.getElementById("admin-editor-badge");
     this.adminEditorStatus = document.getElementById("admin-editor-status");
@@ -150,9 +150,7 @@ class AdminConsole {
 
   renderAdminIdentity(login, role) {
     const initials = this.initialsFor(login);
-    this.currentAdminBadge.textContent = login;
     this.currentAdminTopbarBadge.textContent = login;
-    this.currentAdminAvatar.textContent = initials;
     this.currentAdminTopbarAvatar.textContent = initials;
     this.profileAvatar.textContent = initials;
     this.sidebarAvatar.textContent = initials;
@@ -280,9 +278,7 @@ class AdminConsole {
     this.dashboardView.classList.add("section-hidden");
     this.screenNav.classList.add("section-hidden");
     this.sidebarFooter.classList.add("section-hidden");
-    this.currentAdminBadge.textContent = "—";
     this.currentAdminTopbarBadge.textContent = "—";
-    this.currentAdminAvatar.textContent = "—";
     this.currentAdminTopbarAvatar.textContent = "—";
     this.profileAvatar.textContent = "—";
     this.profileLogin.textContent = "—";
@@ -494,6 +490,13 @@ class AdminConsole {
     this.adminEditPassword.value = "";
     this.adminEditActive.checked = Boolean(admin.isActive);
     this.adminEditorBadge.textContent = "#" + admin.id;
+    if (this.state.session && admin.login === this.state.session.login) {
+      this.adminEditPasswordRow.classList.add("section-hidden");
+      this.adminEditSelfNote.classList.remove("section-hidden");
+    } else {
+      this.adminEditPasswordRow.classList.remove("section-hidden");
+      this.adminEditSelfNote.classList.add("section-hidden");
+    }
     this.showOk(this.adminEditorStatus, "Admin загружен в форму");
   }
 
