@@ -2,12 +2,14 @@ from __future__ import annotations
 
 from typing import Optional
 
-from fastapi import Header, Request, status
+from fastapi import Depends, Header, Request, status
 
+from app.core.admin_auth import hash_admin_access_token
 from app.core.auth import hash_access_token
 from app.core.errors import ApiError, ApiErrorCode
 from app.core.rate_limit import rate_limiter
 from app.db.database import get_connection
+from app.services import admin_service
 
 
 def get_client_ip(request: Request) -> str:
@@ -80,3 +82,23 @@ def get_current_user(authorization: Optional[str] = Header(default=None)) -> dic
         )
 
     return user
+
+
+def get_current_admin(authorization: Optional[str] = Header(default=None)) -> dict:
+    token = get_bearer_token(authorization)
+    token_hash = hash_admin_access_token(token)
+    return admin_service.get_admin_by_token_hash(token_hash)
+
+
+current_admin_dependency = Depends(get_current_admin)
+
+
+def require_owner(current_admin: dict = current_admin_dependency) -> dict:
+    if current_admin["role"] != "owner":
+        raise ApiError(
+            status_code=status.HTTP_403_FORBIDDEN,
+            code=ApiErrorCode.FORBIDDEN,
+            message="Not enough permissions",
+        )
+
+    return current_admin

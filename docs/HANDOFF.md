@@ -32,6 +32,13 @@ Staging baseline тоже уже поднят:
 - staging public URL: `https://staging-api.wobbly.site`
 - staging HTTPS уже поднят через `certbot --nginx`
 
+Admin baseline в коде уже есть:
+- admin UI routes: `/production/` и `/staging/` на `admin.wobbly.site`
+- admin API routes: `/admin/...`
+- первый owner создается через env bootstrap:
+  - `ADMIN_BOOTSTRAP_LOGIN`
+  - `ADMIN_BOOTSTRAP_PASSWORD`
+
 Важно:
 - production сейчас не живет через `docker compose up`
 - production сейчас не живет как git checkout на сервере
@@ -74,6 +81,14 @@ Compatibility wrappers пока оставлены:
 - `POST /me/score`
 - `GET /leaderboard/top`
 - `GET /leaderboard/bottom`
+- `POST /admin/auth/login`
+- `GET /admin/me`
+- `GET /admin/users`
+- `GET /admin/users/{id}`
+- `PATCH /admin/users/{id}`
+- `GET /admin/admin-users`
+- `POST /admin/admin-users`
+- `PATCH /admin/admin-users/{id}`
 
 Текущее поведение leaderboard:
 - `top` возвращает только пользователей с `score >= 0`
@@ -91,6 +106,11 @@ Compatibility wrappers пока оставлены:
 
 Источник правды для человекочитаемой API docs page:
 - `app/static/js/api-docs.js`
+
+Admin UI файлы:
+- `app/static/pages/admin.html`
+- `app/static/css/admin.css`
+- `app/static/js/admin.js`
 
 Важно:
 - `/api/docs` собирается клиентским JavaScript
