@@ -27,7 +27,7 @@ Staging baseline тоже уже поднят:
 - staging path: `/opt/rating-service-staging`
 - staging service: `rating-service-staging.service`
 - staging DB: `app_staging`
-- staging nginx basic auth уже настроен
+- staging nginx protection идет через `X-Staging-Key`
 - staging workflow лежит в `.github/workflows/staging.yml`
 - staging public URL: `https://staging-api.wobbly.site`
 - staging HTTPS уже поднят через `certbot --nginx`
@@ -165,8 +165,7 @@ Tooling config:
 - `STAGING_DEPLOY_HEALTHCHECK_URL`
 - `STAGING_DEPLOY_SSH_KEY`
 - `STAGING_PUBLIC_BASE_URL`
-- `STAGING_BASIC_AUTH_USER`
-- `STAGING_BASIC_AUTH_PASSWORD`
+- `STAGING_ACCESS_KEY`
 
 Текущее ожидаемое наполнение staging secrets:
 - `STAGING_DEPLOY_HOST=api.wobbly.site`
@@ -177,6 +176,7 @@ Tooling config:
 - `STAGING_DEPLOY_VENV_PATH=/opt/rating-service-staging/.venv`
 - `STAGING_DEPLOY_HEALTHCHECK_URL=http://127.0.0.1:8001/health`
 - `STAGING_PUBLIC_BASE_URL=https://staging-api.wobbly.site`
+- `STAGING_ACCESS_KEY=<shared secret value>`
 
 Типовая проблема:
 - `Load key ... error in libcrypto`
@@ -214,5 +214,3 @@ Tooling config:
 - Sentry or similar error monitoring
 - server monitoring for CPU/RAM/disk
 - fail2ban for repeated 401/429 abuse
-- DNS + HTTPS для `staging-api.wobbly.site`
-- определить, остается ли staging под `basic auth` или переводим его на IP allowlist для мобильных тестов

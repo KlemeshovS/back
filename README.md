@@ -70,7 +70,7 @@ Backend, landing page и production docs для `Wobbly`.
 - production topology уже другая, и ее не нужно заново угадывать
 - точные команды деплоя описаны в `docs/DEPLOY.md`
 - отдельная сводка для переноса контекста лежит в `docs/HANDOFF.md`
-- staging уже поднят на `https://staging-api.wobbly.site` и закрыт через basic auth
+- staging уже поднят на `https://staging-api.wobbly.site` и закрыт через `X-Staging-Key`
 
 ## API
 

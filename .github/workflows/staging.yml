@@ -81,6 +81,6 @@ jobs:
 
       - name: Smoke check staging URLs
         run: |
-          curl -fsS -u "${{ secrets.STAGING_BASIC_AUTH_USER }}:${{ secrets.STAGING_BASIC_AUTH_PASSWORD }}" "${{ secrets.STAGING_PUBLIC_BASE_URL }}/health"
-          curl -fsS -u "${{ secrets.STAGING_BASIC_AUTH_USER }}:${{ secrets.STAGING_BASIC_AUTH_PASSWORD }}" "${{ secrets.STAGING_PUBLIC_BASE_URL }}/api/docs" >/dev/null
-          curl -fsS -u "${{ secrets.STAGING_BASIC_AUTH_USER }}:${{ secrets.STAGING_BASIC_AUTH_PASSWORD }}" "${{ secrets.STAGING_PUBLIC_BASE_URL }}/api/swagger" >/dev/null
+          curl -fsS -H "X-Staging-Key: ${{ secrets.STAGING_ACCESS_KEY }}" "${{ secrets.STAGING_PUBLIC_BASE_URL }}/health"
+          curl -fsS -H "X-Staging-Key: ${{ secrets.STAGING_ACCESS_KEY }}" "${{ secrets.STAGING_PUBLIC_BASE_URL }}/api/docs" >/dev/null
+          curl -fsS -H "X-Staging-Key: ${{ secrets.STAGING_ACCESS_KEY }}" "${{ secrets.STAGING_PUBLIC_BASE_URL }}/api/swagger" >/dev/null
