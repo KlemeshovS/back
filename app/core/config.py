@@ -18,7 +18,7 @@ class Settings(BaseSettings):
     )
     trusted_hosts: str = Field(
         default=(
-            "api.wobbly.site,wobbly.site,admin.wobbly.site,localhost,127.0.0.1,85.239.57.243,testserver"
+            "api.wobbly.site,staging-api.wobbly.site,wobbly.site,admin.wobbly.site,localhost,127.0.0.1,85.239.57.243,testserver"
         ),
         alias="TRUSTED_HOSTS",
     )
