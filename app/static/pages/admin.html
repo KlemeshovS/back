@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Wobbly Admin</title>
+    <link rel="stylesheet" href="/static/css/admin.css" />
+  </head>
+  <body>
+    <div class="admin-shell">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">Wobbly Admin</p>
+          <h1>Управление пользователями и доступами</h1>
+        </div>
+        <nav class="env-switch" aria-label="Environment switcher">
+          <a href="/production/" data-env-link="production">Production</a>
+          <a href="/staging/" data-env-link="staging">Staging</a>
+        </nav>
+      </header>
+
+      <main class="layout">
+        <section class="card login-card">
+          <div class="card-head">
+            <h2>Вход в админку</h2>
+            <span class="badge" id="current-env-badge">Production</span>
+          </div>
+          <form id="login-form" class="stack">
+            <label>
+              <span>Login</span>
+              <input id="login-input" type="text" autocomplete="username" required />
+            </label>
+            <label>
+              <span>Password</span>
+              <input id="password-input" type="password" autocomplete="current-password" required />
+            </label>
+            <button type="submit">Войти</button>
+          </form>
+          <p class="status" id="login-status"></p>
+        </section>
+
+        <section class="card section-hidden" id="users-card">
+          <div class="card-head">
+            <div>
+              <h2>Пользователи</h2>
+              <p class="muted">Поиск, редактирование username, score и участия в рейтинге.</p>
+            </div>
+            <button id="refresh-users-button" class="ghost-button" type="button">Обновить</button>
+          </div>
+
+          <form id="search-form" class="toolbar">
+            <input id="search-input" type="search" placeholder="Поиск по username" />
+            <button type="submit">Искать</button>
+          </form>
+
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Username</th>
+                  <th>Score</th>
+                  <th>Rating</th>
+                  <th>Updated</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="users-table-body"></tbody>
+            </table>
+          </div>
+          <p class="status" id="users-status"></p>
+        </section>
+
+        <section class="card section-hidden" id="editor-card">
+          <div class="card-head">
+            <h2>Редактирование пользователя</h2>
+            <span class="badge" id="editor-user-badge">Не выбран</span>
+          </div>
+          <form id="editor-form" class="stack">
+            <label>
+              <span>Username</span>
+              <input id="editor-username" type="text" />
+            </label>
+            <label>
+              <span>Score</span>
+              <input id="editor-score" type="number" />
+            </label>
+            <label class="checkbox-row">
+              <input id="editor-rating" type="checkbox" />
+              <span>Участвует в рейтинге</span>
+            </label>
+            <button type="submit">Сохранить</button>
+          </form>
+          <p class="status" id="editor-status"></p>
+        </section>
+
+        <section class="card section-hidden" id="admins-card">
+          <div class="card-head">
+            <div>
+              <h2>Администраторы</h2>
+              <p class="muted">Только для owner. Создание и отключение админов.</p>
+            </div>
+            <span class="badge" id="role-badge">admin</span>
+          </div>
+
+          <form id="admin-create-form" class="toolbar owner-only">
+            <input id="admin-login-input" type="text" placeholder="Новый admin login" />
+            <input id="admin-password-input" type="password" placeholder="Временный пароль" />
+            <button type="submit">Создать admin</button>
+          </form>
+
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Login</th>
+                  <th>Role</th>
+                  <th>Active</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="admins-table-body"></tbody>
+            </table>
+          </div>
+          <p class="status" id="admins-status"></p>
+        </section>
+      </main>
+    </div>
+
+    <script src="/static/js/admin.js" defer></script>
+  </body>
+</html>

@@ -29,7 +29,7 @@
 - staging DB: `app_staging`
 - staging port: `8001`
 - staging nginx site: `/etc/nginx/sites-available/staging-api.wobbly.site`
-- staging basic auth file: `/etc/nginx/.htpasswd-staging-api`
+- staging edge protection: `X-Staging-Key` header in `nginx`
 - staging public URL: `https://staging-api.wobbly.site`
 - staging certificate уже выпущен через `certbot --nginx`
 
@@ -150,10 +150,13 @@ journalctl -u rating-service -n 100 --no-pager
 
 Теперь стандартный flow такой:
 1. разработка идет в короткой ветке
-2. ветка вливается в `main`
-3. GitHub Actions запускает `.github/workflows/pipeline.yml`
+2. ветка вливается в `develop`
+3. GitHub Actions запускает `.github/workflows/staging.yml`
 4. job `verify` прогоняет проверки
-5. если проверки успешны, job `deploy` выкатывает текущий `main` на production
+5. если проверки успешны, job `deploy-staging` выкатывает текущий `develop` в staging
+6. когда нужен production release, `develop` вливается в `main`
+7. GitHub Actions запускает `.github/workflows/pipeline.yml`
+8. job `deploy` выкатывает текущий `main` на production
 
 Текущее состояние:
 - workflow уже лежит в репозитории: `.github/workflows/pipeline.yml`
@@ -199,8 +202,7 @@ journalctl -u rating-service -n 100 --no-pager
 - `STAGING_DEPLOY_HEALTHCHECK_URL`
 - `STAGING_DEPLOY_SSH_KEY`
 - `STAGING_PUBLIC_BASE_URL`
-- `STAGING_BASIC_AUTH_USER`
-- `STAGING_BASIC_AUTH_PASSWORD`
+- `STAGING_ACCESS_KEY`
 
 Для текущего production значения такие:
 - `DEPLOY_HOST=api.wobbly.site`
@@ -222,6 +224,7 @@ journalctl -u rating-service -n 100 --no-pager
 - `STAGING_DEPLOY_VENV_PATH=/opt/rating-service-staging/.venv`
 - `STAGING_DEPLOY_HEALTHCHECK_URL=http://127.0.0.1:8001/health`
 - `STAGING_PUBLIC_BASE_URL=https://staging-api.wobbly.site`
+- `STAGING_ACCESS_KEY=<shared secret value>`
 
 ### Local Scripts Used By CI/CD
 
@@ -240,19 +243,21 @@ Pipeline опирается на локальные скрипты:
 Важно:
 - `nginx` конфиги не раскатываются текущим GitHub Actions deploy автоматически
 - изменения в `deploy/nginx/` нужно применять на сервер отдельно через `nginx -t` и `systemctl reload nginx`
-- staging smoke-check использует `basic auth`, поэтому для успешного workflow нужно заполнить и `STAGING_BASIC_AUTH_USER`, и `STAGING_BASIC_AUTH_PASSWORD`
+- staging smoke-check использует `X-Staging-Key`, поэтому для успешного workflow нужно заполнить `STAGING_ACCESS_KEY`
 
 ### Staging Protection
 
-Staging сейчас закрыт через `basic auth` на уровне `nginx`.
+Staging сейчас закрыт через обязательный заголовок `X-Staging-Key` на уровне `nginx`.
 
-Ожидаемые credentials:
-- username: задается в `STAGING_BASIC_AUTH_USER`
-- password: задается в `STAGING_BASIC_AUTH_PASSWORD`
+Ожидаемый запрос:
+
+```http
+X-Staging-Key: <secret>
+```
 
 Важно:
-- если мобильное приложение тестирует staging API напрямую, оно тоже должно уметь ходить через этот слой защиты
-- если это неудобно для мобильных сборок, следующий практический вариант защиты для staging — перейти с basic auth на IP allowlist
+- если мобильное приложение тестирует staging API напрямую, staging-сборка должна добавлять этот заголовок во все запросы
+- это проще, чем `basic auth`, потому что не конфликтует с `Authorization: Bearer ...`
 
 ## API Docs Sync Rule
 

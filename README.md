@@ -4,6 +4,7 @@ Backend, landing page и production docs для `Wobbly`.
 
 Сейчас проект включает:
 - API для anonymous auth, профиля и рейтингов
+- admin API и admin UI foundation
 - landing page на `https://wobbly.site`
 - текстовую docs page на `https://api.wobbly.site/api/docs`
 - production deploy через GitHub Actions
@@ -61,7 +62,8 @@ Backend, landing page и production docs для `Wobbly`.
 - продовый путь на сервере: `/opt/rating-service`
 - reverse proxy в production: `nginx`
 - базовый edge-side rate limiting уже включен на `api.wobbly.site`
-- основной путь деплоя: merge в `main` -> GitHub Actions -> verify -> deploy
+- основной путь разработки: feature branch -> merge в `develop` -> staging pipeline
+- production release path: merge `develop` -> `main` -> production pipeline
 - staging deploy path: push в `develop` -> GitHub Actions -> verify -> deploy-staging
 - ручной deploy через копирование файлов в `/opt/rating-service` и `systemctl restart rating-service` остается fallback-сценарием
 
@@ -70,7 +72,11 @@ Backend, landing page и production docs для `Wobbly`.
 - production topology уже другая, и ее не нужно заново угадывать
 - точные команды деплоя описаны в `docs/DEPLOY.md`
 - отдельная сводка для переноса контекста лежит в `docs/HANDOFF.md`
-- staging уже поднят на `https://staging-api.wobbly.site` и закрыт через basic auth
+- staging уже поднят на `https://staging-api.wobbly.site` и закрыт через `X-Staging-Key`
+- админка спроектирована под `https://admin.wobbly.site/production/` и `https://admin.wobbly.site/staging/`
+- первый `owner` bootstrap'ится через env:
+  - `ADMIN_BOOTSTRAP_LOGIN`
+  - `ADMIN_BOOTSTRAP_PASSWORD`
 
 ## API
 
@@ -204,10 +210,12 @@ docker compose up --build
 
 - workflow: `docs/DEVELOPMENT_WORKFLOW.md`
 - production/deploy: `docs/DEPLOY.md`
+- database access: `docs/DB_ACCESS.md`
 - handoff summary: `docs/HANDOFF.md`
 - anti-abuse plan: `docs/ANTI_ABUSE.md`
 - backend roadmap: `docs/BACKEND_ROADMAP.md`
 - conventions: trunk-based development + Conventional Commits
+- branch flow: `develop` для активной разработки, `main` только для production releases
 - если меняется API, нужно обновлять текстовую docs page на `https://api.wobbly.site/api/docs` в том же изменении
 - CI дополнительно проверяет, что API-изменения не уходят без обновления `/api/docs`
 - linters and tests: `ruff`, `pytest`

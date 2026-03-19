@@ -27,10 +27,17 @@ Staging baseline тоже уже поднят:
 - staging path: `/opt/rating-service-staging`
 - staging service: `rating-service-staging.service`
 - staging DB: `app_staging`
-- staging nginx basic auth уже настроен
+- staging nginx protection идет через `X-Staging-Key`
 - staging workflow лежит в `.github/workflows/staging.yml`
 - staging public URL: `https://staging-api.wobbly.site`
 - staging HTTPS уже поднят через `certbot --nginx`
+
+Admin baseline в коде уже есть:
+- admin UI routes: `/production/` и `/staging/` на `admin.wobbly.site`
+- admin API routes: `/admin/...`
+- первый owner создается через env bootstrap:
+  - `ADMIN_BOOTSTRAP_LOGIN`
+  - `ADMIN_BOOTSTRAP_PASSWORD`
 
 Важно:
 - production сейчас не живет через `docker compose up`
@@ -74,6 +81,14 @@ Compatibility wrappers пока оставлены:
 - `POST /me/score`
 - `GET /leaderboard/top`
 - `GET /leaderboard/bottom`
+- `POST /admin/auth/login`
+- `GET /admin/me`
+- `GET /admin/users`
+- `GET /admin/users/{id}`
+- `PATCH /admin/users/{id}`
+- `GET /admin/admin-users`
+- `POST /admin/admin-users`
+- `PATCH /admin/admin-users/{id}`
 
 Текущее поведение leaderboard:
 - `top` возвращает только пользователей с `score >= 0`
@@ -91,6 +106,11 @@ Compatibility wrappers пока оставлены:
 
 Источник правды для человекочитаемой API docs page:
 - `app/static/js/api-docs.js`
+
+Admin UI файлы:
+- `app/static/pages/admin.html`
+- `app/static/css/admin.css`
+- `app/static/js/admin.js`
 
 Важно:
 - `/api/docs` собирается клиентским JavaScript
@@ -116,15 +136,22 @@ Tooling config:
 
 Основной flow:
 1. разработка идет в короткой ветке
-2. merge в `main`
-3. GitHub Actions запускает `.github/workflows/pipeline.yml`
+2. merge в `develop`
+3. GitHub Actions запускает `.github/workflows/staging.yml`
 4. `verify` гоняет проверки
-5. `deploy` выкатывает на production после зеленого `verify`
+5. `deploy-staging` выкатывает изменения в staging после зеленого `verify`
+6. когда нужен production release, `develop` вливается в `main`
+7. GitHub Actions запускает `.github/workflows/pipeline.yml`
+8. `deploy` выкатывает на production после зеленого `verify`
 
 Локальные скрипты, на которые опирается pipeline:
 - `scripts/ci_check.sh`
 - `scripts/check_api_docs_sync.sh`
 - `scripts/deploy_release.sh`
+
+Ветки по окружениям:
+- `develop` — основная разработка и staging
+- `main` — production release branch
 
 Нюанс docs sync check:
 - в GitHub Actions `verify` использует полный fetch history
@@ -165,8 +192,7 @@ Tooling config:
 - `STAGING_DEPLOY_HEALTHCHECK_URL`
 - `STAGING_DEPLOY_SSH_KEY`
 - `STAGING_PUBLIC_BASE_URL`
-- `STAGING_BASIC_AUTH_USER`
-- `STAGING_BASIC_AUTH_PASSWORD`
+- `STAGING_ACCESS_KEY`
 
 Текущее ожидаемое наполнение staging secrets:
 - `STAGING_DEPLOY_HOST=api.wobbly.site`
@@ -177,6 +203,7 @@ Tooling config:
 - `STAGING_DEPLOY_VENV_PATH=/opt/rating-service-staging/.venv`
 - `STAGING_DEPLOY_HEALTHCHECK_URL=http://127.0.0.1:8001/health`
 - `STAGING_PUBLIC_BASE_URL=https://staging-api.wobbly.site`
+- `STAGING_ACCESS_KEY=<shared secret value>`
 
 Типовая проблема:
 - `Load key ... error in libcrypto`
@@ -191,10 +218,11 @@ Tooling config:
 1. `docs/HANDOFF.md`
 2. `README.md`
 3. `docs/DEPLOY.md`
-4. `docs/DEVELOPMENT_WORKFLOW.md`
-5. `docs/MOBILE_API.md`
-6. `docs/BACKEND_ROADMAP.md`
-7. если задача про защиту API: `docs/ANTI_ABUSE.md`
+4. `docs/DB_ACCESS.md`
+5. `docs/DEVELOPMENT_WORKFLOW.md`
+6. `docs/MOBILE_API.md`
+7. `docs/BACKEND_ROADMAP.md`
+8. если задача про защиту API: `docs/ANTI_ABUSE.md`
 
 ## Recommended First Commands
 
@@ -214,5 +242,3 @@ Tooling config:
 - Sentry or similar error monitoring
 - server monitoring for CPU/RAM/disk
 - fail2ban for repeated 401/429 abuse
-- DNS + HTTPS для `staging-api.wobbly.site`
-- определить, остается ли staging под `basic auth` или переводим его на IP allowlist для мобильных тестов

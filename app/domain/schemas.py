@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from datetime import datetime
+from enum import Enum
 from typing import Optional
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -18,6 +20,11 @@ class ApiModel(BaseModel):
 
 USERNAME_PATTERN = r"^[A-Za-z0-9_.-]+$"
 Username = str
+
+
+class AdminRole(str, Enum):
+    OWNER = "owner"
+    ADMIN = "admin"
 
 
 class AnonymousAuthResponse(ApiModel):
@@ -69,3 +76,71 @@ class LeaderboardResponse(ApiModel):
 class ErrorResponse(ApiModel):
     code: str
     message: str
+
+
+class AdminLoginRequest(ApiModel):
+    login: str = Field(min_length=3, max_length=64)
+    password: str = Field(min_length=8, max_length=256)
+
+
+class AdminAuthResponse(ApiModel):
+    access_token: str
+    token_type: str = "bearer"
+    role: AdminRole
+
+
+class AdminMeResponse(ApiModel):
+    id: int
+    login: str
+    role: AdminRole
+    is_active: bool
+
+
+class ManagedUserResponse(ApiModel):
+    id: int
+    username: Optional[str] = None
+    score: int
+    participate_in_rating: bool
+    created_at: datetime
+    updated_at: datetime
+    last_seen_at: datetime
+
+
+class ManagedUserListResponse(ApiModel):
+    items: list[ManagedUserResponse]
+    total: int
+
+
+class ManagedUserUpdateRequest(ApiModel):
+    username: Optional[str] = Field(
+        default=None,
+        min_length=3,
+        max_length=64,
+        pattern=USERNAME_PATTERN,
+    )
+    score: Optional[int] = Field(default=None, ge=-2_147_483_648, le=2_147_483_647)
+    participate_in_rating: Optional[bool] = None
+
+
+class AdminUserResponse(ApiModel):
+    id: int
+    login: str
+    role: AdminRole
+    is_active: bool
+    created_at: datetime
+    updated_at: datetime
+
+
+class AdminUserListResponse(ApiModel):
+    items: list[AdminUserResponse]
+    total: int
+
+
+class AdminUserCreateRequest(ApiModel):
+    login: str = Field(min_length=3, max_length=64)
+    password: str = Field(min_length=8, max_length=256)
+
+
+class AdminUserUpdateRequest(ApiModel):
+    is_active: Optional[bool] = None
+    password: Optional[str] = Field(default=None, min_length=8, max_length=256)

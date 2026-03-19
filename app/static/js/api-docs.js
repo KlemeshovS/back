@@ -51,6 +51,21 @@ class DocsPage {
         ],
       },
       {
+        id: "admin-api",
+        title: "Admin API",
+        cards: [
+          {
+            paragraphs: [
+              "Для админки теперь есть отдельный набор endpoint'ов под /admin.",
+              "Admin auth не заменяет обычный user auth. Это отдельный слой для панели управления.",
+              "Основные методы: POST /admin/auth/login, GET /admin/me, GET/PATCH /admin/users, GET/POST/PATCH /admin/admin-users.",
+            ],
+            muted:
+              "UI админки задуман для admin.wobbly.site/production/ и admin.wobbly.site/staging/. Для staging-запросов используется X-Staging-Key.",
+          },
+        ],
+      },
+      {
         id: "errors-contract",
         title: "Единый Формат Ошибок",
         cards: [

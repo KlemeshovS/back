@@ -13,7 +13,7 @@ from app.api.error_handlers import (
     unhandled_exception_handler,
     validation_exception_handler,
 )
-from app.api.routes import auth, docs, health, leaderboard, profile, site
+from app.api.routes import admin, auth, docs, health, leaderboard, profile, site
 from app.core.config import settings
 from app.core.errors import ApiError
 from app.db.database import init_db
@@ -47,7 +47,7 @@ def create_app(init_database: bool = True) -> FastAPI:
         allow_origins=settings.cors_allowed_origins_list,
         allow_credentials=True,
         allow_methods=["GET", "POST", "PATCH", "OPTIONS"],
-        allow_headers=["Authorization", "Content-Type"],
+        allow_headers=["Authorization", "Content-Type", "X-Staging-Key"],
     )
 
     static_dir = Path(__file__).resolve().parents[1] / "static"
@@ -61,6 +61,7 @@ def create_app(init_database: bool = True) -> FastAPI:
     app.include_router(site.router)
     app.include_router(health.router)
     app.include_router(docs.router)
+    app.include_router(admin.router)
     app.include_router(auth.router)
     app.include_router(profile.router)
     app.include_router(leaderboard.router)
