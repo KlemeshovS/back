@@ -198,10 +198,11 @@ Tooling config:
 1. `docs/HANDOFF.md`
 2. `README.md`
 3. `docs/DEPLOY.md`
-4. `docs/DEVELOPMENT_WORKFLOW.md`
-5. `docs/MOBILE_API.md`
-6. `docs/BACKEND_ROADMAP.md`
-7. если задача про защиту API: `docs/ANTI_ABUSE.md`
+4. `docs/DB_ACCESS.md`
+5. `docs/DEVELOPMENT_WORKFLOW.md`
+6. `docs/MOBILE_API.md`
+7. `docs/BACKEND_ROADMAP.md`
+8. если задача про защиту API: `docs/ANTI_ABUSE.md`
 
 ## Recommended First Commands
 

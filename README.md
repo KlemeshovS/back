@@ -205,6 +205,7 @@ docker compose up --build
 
 - workflow: `docs/DEVELOPMENT_WORKFLOW.md`
 - production/deploy: `docs/DEPLOY.md`
+- database access: `docs/DB_ACCESS.md`
 - handoff summary: `docs/HANDOFF.md`
 - anti-abuse plan: `docs/ANTI_ABUSE.md`
 - backend roadmap: `docs/BACKEND_ROADMAP.md`
