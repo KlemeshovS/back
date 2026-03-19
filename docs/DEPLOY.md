@@ -30,7 +30,8 @@
 - staging port: `8001`
 - staging nginx site: `/etc/nginx/sites-available/staging-api.wobbly.site`
 - staging basic auth file: `/etc/nginx/.htpasswd-staging-api`
-- staging public DNS еще нужно направить на `85.239.57.243`
+- staging public URL: `https://staging-api.wobbly.site`
+- staging certificate уже выпущен через `certbot --nginx`
 
 ## Access
 
@@ -220,9 +221,7 @@ journalctl -u rating-service -n 100 --no-pager
 - `STAGING_DEPLOY_OWNER=ratingapp:ratingapp`
 - `STAGING_DEPLOY_VENV_PATH=/opt/rating-service-staging/.venv`
 - `STAGING_DEPLOY_HEALTHCHECK_URL=http://127.0.0.1:8001/health`
-- `STAGING_PUBLIC_BASE_URL=http://staging-api.wobbly.site`
-
-До выпуска TLS staging smoke-check лучше ориентировать на `http://staging-api.wobbly.site`.
+- `STAGING_PUBLIC_BASE_URL=https://staging-api.wobbly.site`
 
 ### Local Scripts Used By CI/CD
 
