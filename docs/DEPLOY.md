@@ -150,10 +150,13 @@ journalctl -u rating-service -n 100 --no-pager
 
 Теперь стандартный flow такой:
 1. разработка идет в короткой ветке
-2. ветка вливается в `main`
-3. GitHub Actions запускает `.github/workflows/pipeline.yml`
+2. ветка вливается в `develop`
+3. GitHub Actions запускает `.github/workflows/staging.yml`
 4. job `verify` прогоняет проверки
-5. если проверки успешны, job `deploy` выкатывает текущий `main` на production
+5. если проверки успешны, job `deploy-staging` выкатывает текущий `develop` в staging
+6. когда нужен production release, `develop` вливается в `main`
+7. GitHub Actions запускает `.github/workflows/pipeline.yml`
+8. job `deploy` выкатывает текущий `main` на production
 
 Текущее состояние:
 - workflow уже лежит в репозитории: `.github/workflows/pipeline.yml`

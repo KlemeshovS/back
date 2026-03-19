@@ -1,18 +1,20 @@
 # Development Workflow
 
 Основа процесса:
-- `trunk-based development`
+- `develop -> main release flow`
 - `Conventional Commits 1.0.0`
 
 ## Branching
 
-Мы работаем по `trunk-based development`.
+Мы работаем через основную ветку разработки `develop` и отдельную релизную ветку `main`.
 
 Правила:
-- `main` это trunk и всегда должен быть в рабочем состоянии
+- `develop` это основная ветка разработки
+- `develop` всегда должна быть в рабочем состоянии и готова к staging deploy
+- `main` используется только для production release
 - каждая задача делается в отдельной короткоживущей ветке
 - имя ветки должно отражать `type`, как в Conventional Commits
-- ветка живет недолго и быстро вливается обратно в `main`
+- ветка живет недолго и быстро вливается обратно в `develop`
 
 Примеры:
 - `feat/api-key-auth`
@@ -46,15 +48,18 @@ Commit message оформляем по `Conventional Commits`.
 ## Delivery Flow
 
 Обычный процесс работы:
-1. создать ветку от `main`
+1. создать ветку от `develop`
 2. сделать небольшое изменение
 3. прогнать локальную проверку
 4. сделать commit в формате Conventional Commits
 5. запушить ветку
-6. влить изменения обратно в `main`
-7. дождаться GitHub Actions pipeline
-8. если pipeline зеленый, считать deploy завершенным
-9. удалить ветку локально и на remote после merge
+6. влить изменения обратно в `develop`
+7. дождаться staging pipeline
+8. если staging pipeline зеленый, считать staging deploy завершенным
+9. когда нужно выпускать production, влить `develop` в `main`
+10. дождаться production pipeline
+11. если production pipeline зеленый, считать релиз завершенным
+12. удалить ветку локально и на remote после merge
 
 ## Our Team Rule
 
@@ -63,9 +68,11 @@ Commit message оформляем по `Conventional Commits`.
 - commit message всегда следует Conventional Commits
 - локальные hooks должны быть включены через `./scripts/install_git_hooks.sh`
 - большие задачи режем на несколько маленьких commits, если это помогает чтению истории
-- `main` держим как самую актуальную и стабильную ветку
+- `develop` держим как самую актуальную ветку разработки
+- `main` держим как production-ready ветку
 - после merge удаляем ветку локально и в GitHub
-- после merge в `main` ориентируемся сначала на GitHub Actions pipeline, а не на ручной деплой
+- после merge в `develop` ориентируемся сначала на staging GitHub Actions pipeline
+- после merge в `main` ориентируемся сначала на production GitHub Actions pipeline
 - если меняется API-контракт или поведение endpoint'ов, в том же изменении нужно обновлять `https://api.wobbly.site/api/docs`
 - по мере роста API текстовую docs page нужно упрощать и перестраивать так, чтобы она оставалась удобной для чтения
 - API-изменение без обновления docs считается незавершенным
@@ -107,11 +114,16 @@ Commit message оформляем по `Conventional Commits`.
 Для этого проекта считаем зафиксированными такие факты:
 - live app path: `/opt/rating-service`
 - live service: `rating-service.service`
+- staging app path: `/opt/rating-service-staging`
+- staging service: `rating-service-staging.service`
 - reverse proxy: `nginx`
 - main site host: `wobbly.site`
 - API host: `api.wobbly.site`
+- staging API host: `staging-api.wobbly.site`
 - deploy access: `root@api.wobbly.site` через `deploy_key`
 - primary deploy path сейчас это GitHub Actions pipeline
+- `develop` деплоится в staging
+- `main` деплоится в production
 - ручной fallback deploy это `scp`/копирование файлов + `systemctl restart rating-service`
 
 Если эти факты не опровергнуты явным изменением в репозитории или на сервере, не надо их перепроверять с нуля.

@@ -116,15 +116,22 @@ Tooling config:
 
 Основной flow:
 1. разработка идет в короткой ветке
-2. merge в `main`
-3. GitHub Actions запускает `.github/workflows/pipeline.yml`
+2. merge в `develop`
+3. GitHub Actions запускает `.github/workflows/staging.yml`
 4. `verify` гоняет проверки
-5. `deploy` выкатывает на production после зеленого `verify`
+5. `deploy-staging` выкатывает изменения в staging после зеленого `verify`
+6. когда нужен production release, `develop` вливается в `main`
+7. GitHub Actions запускает `.github/workflows/pipeline.yml`
+8. `deploy` выкатывает на production после зеленого `verify`
 
 Локальные скрипты, на которые опирается pipeline:
 - `scripts/ci_check.sh`
 - `scripts/check_api_docs_sync.sh`
 - `scripts/deploy_release.sh`
+
+Ветки по окружениям:
+- `develop` — основная разработка и staging
+- `main` — production release branch
 
 Нюанс docs sync check:
 - в GitHub Actions `verify` использует полный fetch history
