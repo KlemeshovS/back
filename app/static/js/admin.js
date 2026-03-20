@@ -36,6 +36,8 @@ class AdminConsole {
     this.sidebarFooter = document.getElementById("sidebar-footer");
     this.logoutButton = document.getElementById("logout-button");
     this.loginForm = document.getElementById("login-form");
+    this.loginPasswordInput = document.getElementById("password-input");
+    this.loginPasswordToggle = document.getElementById("login-password-toggle");
     this.loginStatus = document.getElementById("login-status");
     this.usersStatus = document.getElementById("users-status");
     this.editorStatus = document.getElementById("editor-status");
@@ -75,10 +77,6 @@ class AdminConsole {
     this.profileRole = document.getElementById("profile-role");
     this.profileEnvironment = document.getElementById("profile-environment");
     this.profileAvatar = document.getElementById("profile-avatar");
-    this.profilePasswordForm = document.getElementById("profile-password-form");
-    this.profileCurrentPassword = document.getElementById("profile-current-password");
-    this.profileNewPassword = document.getElementById("profile-new-password");
-    this.profileStatus = document.getElementById("profile-status");
     this.screens = {
       overview: document.getElementById("screen-overview"),
       users: document.getElementById("screen-users"),
@@ -90,6 +88,7 @@ class AdminConsole {
 
   bindEvents() {
     this.loginForm.addEventListener("submit", (event) => this.handleLogin(event));
+    this.loginPasswordToggle.addEventListener("click", () => this.toggleLoginPasswordVisibility());
     this.logoutButton.addEventListener("click", () => this.handleLogout());
     this.searchForm.addEventListener("submit", (event) => this.handleUserSearch(event));
     this.refreshUsersButton.addEventListener("click", () => this.loadUsers());
@@ -97,7 +96,6 @@ class AdminConsole {
     this.editorForm.addEventListener("submit", (event) => this.handleUserUpdate(event));
     this.adminCreateForm.addEventListener("submit", (event) => this.handleAdminCreate(event));
     this.adminEditForm.addEventListener("submit", (event) => this.handleAdminUpdate(event));
-    this.profilePasswordForm.addEventListener("submit", (event) => this.handlePasswordChange(event));
     this.openAdminCreateModalButton.addEventListener("click", () => this.openAdminCreateModal());
     document.addEventListener("click", (event) => this.handleGlobalClick(event));
     document.addEventListener("keydown", (event) => this.handleKeyDown(event));
@@ -189,6 +187,16 @@ class AdminConsole {
     event.preventDefault();
     this.showInfo(this.loginStatus, "Входим...");
     this.login().catch((error) => this.showError(this.loginStatus, error.message));
+  }
+
+  toggleLoginPasswordVisibility() {
+    if (this.loginPasswordInput.type === "password") {
+      this.loginPasswordInput.type = "text";
+      this.loginPasswordToggle.setAttribute("aria-label", "Скрыть пароль");
+    } else {
+      this.loginPasswordInput.type = "password";
+      this.loginPasswordToggle.setAttribute("aria-label", "Показать пароль");
+    }
   }
 
   async login() {
@@ -284,6 +292,8 @@ class AdminConsole {
     this.profileRole.textContent = "—";
     this.profileEnvironment.textContent = "—";
     this.sidebarAvatar.textContent = "WA";
+    this.loginPasswordInput.type = "password";
+    this.loginPasswordToggle.setAttribute("aria-label", "Показать пароль");
   }
 
   showScreen(screenName) {
@@ -776,26 +786,6 @@ class AdminConsole {
     } catch (error) {
       this.showError(this.adminsStatus, error.message);
     }
-  }
-
-  handlePasswordChange(event) {
-    event.preventDefault();
-    this.changeOwnPassword().catch((error) => this.showError(this.profileStatus, error.message));
-  }
-
-  async changeOwnPassword() {
-    await this.request("/me/password", {
-      method: "PATCH",
-      body: JSON.stringify({
-        currentPassword: this.profileCurrentPassword.value,
-        newPassword: this.profileNewPassword.value,
-      }),
-    });
-
-    this.profileCurrentPassword.value = "";
-    this.profileNewPassword.value = "";
-    await this.loadAuditLogs();
-    this.showOk(this.profileStatus, "Пароль обновлен");
   }
 
   async loadAuditLogs() {

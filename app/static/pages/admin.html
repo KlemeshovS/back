@@ -42,7 +42,12 @@
               </label>
               <label>
                 <span>Password</span>
-                <input id="password-input" type="password" autocomplete="current-password" required />
+                <div class="password-field">
+                  <input id="password-input" type="password" autocomplete="current-password" required />
+                  <button class="password-toggle" id="login-password-toggle" type="button" aria-label="Показать пароль">
+                    <span aria-hidden="true">👁</span>
+                  </button>
+                </div>
               </label>
               <button type="submit">Войти</button>
             </form>
@@ -179,45 +184,21 @@
           </section>
 
           <section class="screen section-hidden" id="screen-profile">
-            <div class="split-layout profile-layout">
-              <div class="panel">
-                <div class="panel-head">
-                  <div>
-                    <h3>Профиль админа</h3>
-                    <p class="muted">Текущая сессия и базовая информация по аккаунту.</p>
-                  </div>
-                </div>
-
-                <div class="profile-card">
-                  <div class="profile-card-avatar" id="profile-avatar">—</div>
-                  <div class="profile-card-copy">
-                    <strong id="profile-login">—</strong>
-                    <span class="muted" id="profile-role">—</span>
-                    <span class="muted" id="profile-environment">—</span>
-                  </div>
+            <div class="panel">
+              <div class="panel-head">
+                <div>
+                  <h3>Профиль админа</h3>
+                  <p class="muted">Текущая сессия и базовая информация по аккаунту.</p>
                 </div>
               </div>
 
-              <div class="panel">
-                <div class="panel-head">
-                  <div>
-                    <h3>Сменить пароль</h3>
-                    <p class="muted">Это меняет пароль текущего admin-аккаунта в выбранной среде.</p>
-                  </div>
+              <div class="profile-card">
+                <div class="profile-card-avatar" id="profile-avatar">—</div>
+                <div class="profile-card-copy">
+                  <strong id="profile-login">—</strong>
+                  <span class="muted" id="profile-role">—</span>
+                  <span class="muted" id="profile-environment">—</span>
                 </div>
-
-                <form id="profile-password-form" class="form-grid">
-                  <label>
-                    <span>Текущий пароль</span>
-                    <input id="profile-current-password" type="password" autocomplete="current-password" />
-                  </label>
-                  <label>
-                    <span>Новый пароль</span>
-                    <input id="profile-new-password" type="password" autocomplete="new-password" />
-                  </label>
-                  <button class="primary-button" type="submit">Обновить пароль</button>
-                </form>
-                <p class="status" id="profile-status"></p>
               </div>
             </div>
           </section>
