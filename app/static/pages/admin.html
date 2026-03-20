@@ -29,23 +29,11 @@
 
       <main class="content-shell">
         <section class="login-view" id="login-view">
-          <div class="hero-card">
-            <p class="eyebrow">Admin Access</p>
-            <h2>Управление пользователями, доступами и изменениями</h2>
-            <p class="muted">
-              Вход выполняется отдельно для каждой среды. Сессия хранится локально только для
-              текущей среды и может быть завершена через logout.
-            </p>
-          </div>
-
           <section class="panel login-panel">
-            <div class="panel-head">
-              <div>
-                <h3>Вход в админку</h3>
-                <p class="muted">Сначала авторизуемся, потом открываем нужные экраны.</p>
-              </div>
-              <span class="badge" id="login-env-badge">Production</span>
-            </div>
+            <nav class="environment-switcher login-environment-switcher" aria-label="Environment switcher">
+              <a href="/production/" data-env-link="production">Production</a>
+              <a href="/staging/" data-env-link="staging">Staging</a>
+            </nav>
 
             <form id="login-form" class="form-grid">
               <label>

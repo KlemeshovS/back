@@ -170,6 +170,14 @@ button:hover {
   gap: 22px;
 }
 
+.admin-app.login-mode {
+  grid-template-columns: 1fr;
+}
+
+.admin-app.login-mode .sidebar {
+  display: none;
+}
+
 .hero-card,
 .panel {
   padding: 24px;
@@ -235,6 +243,16 @@ button:hover {
 
 .environment-switcher a:not(.active) {
   background: transparent;
+}
+
+.login-environment-switcher {
+  width: fit-content;
+  margin: 0 auto 8px;
+}
+
+.login-panel {
+  width: min(640px, 100%);
+  margin: 8vh auto 0;
 }
 
 .panel-head {
@@ -551,6 +569,10 @@ tbody tr:hover {
 
   .profile-layout {
     grid-template-columns: 1fr;
+  }
+
+  .login-panel {
+    margin-top: 0;
   }
 
   .dashboard-topbar {

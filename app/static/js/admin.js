@@ -26,8 +26,8 @@ class AdminConsole {
     this.envLinks = document.querySelectorAll("[data-env-link]");
     this.screenLinks = document.querySelectorAll("[data-screen-link]");
     this.adminsScreenLink = document.querySelector('[data-screen-link="admins"]');
+    this.appShell = document.querySelector(".admin-app");
     this.screenTitle = document.getElementById("screen-title");
-    this.loginEnvBadge = document.getElementById("login-env-badge");
     this.sidebarAvatar = document.getElementById("sidebar-avatar");
     this.adminsRoleBadge = document.getElementById("admins-role-badge");
     this.loginView = document.getElementById("login-view");
@@ -129,8 +129,6 @@ class AdminConsole {
   renderEnvironment() {
     const label = this.environmentLabel();
     let index = 0;
-
-    this.loginEnvBadge.textContent = label;
 
     while (index < this.envLinks.length) {
       if (this.envLinks[index].dataset.envLink === this.state.environment) {
@@ -268,6 +266,7 @@ class AdminConsole {
   }
 
   renderLoggedIn() {
+    this.appShell.classList.remove("login-mode");
     this.loginView.classList.add("section-hidden");
     this.dashboardView.classList.remove("section-hidden");
     this.screenNav.classList.remove("section-hidden");
@@ -275,6 +274,7 @@ class AdminConsole {
   }
 
   renderLoggedOut() {
+    this.appShell.classList.add("login-mode");
     this.loginView.classList.remove("section-hidden");
     this.dashboardView.classList.add("section-hidden");
     this.screenNav.classList.add("section-hidden");
