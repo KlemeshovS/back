@@ -355,6 +355,10 @@ textarea {
   background: rgba(255, 255, 255, 0.05);
 }
 
+.password-toggle:hover {
+  transform: translateY(-50%);
+}
+
 .checkbox-row {
   display: flex;
   align-items: center;
