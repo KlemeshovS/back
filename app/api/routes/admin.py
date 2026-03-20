@@ -116,6 +116,15 @@ def update_admin_user(
     return admin_service.update_admin_user(admin_id, payload, current_admin)
 
 
+@router.delete("/admin-users/{admin_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_admin_user(
+    admin_id: int,
+    current_admin: dict = owner_admin_dependency,
+) -> Response:
+    admin_service.delete_admin_user(admin_id, current_admin)
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
 @router.get("/audit-log", response_model=AdminAuditLogListResponse)
 def list_admin_audit_logs(
     limit: int = Query(default=50, ge=1, le=200),

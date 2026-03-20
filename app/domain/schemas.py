@@ -163,6 +163,7 @@ class AdminUserCreateRequest(ApiModel):
 
 
 class AdminUserUpdateRequest(ApiModel):
+    role: Optional[AdminRole] = None
     is_active: Optional[bool] = None
     password: Optional[str] = Field(default=None, min_length=8, max_length=256)
 

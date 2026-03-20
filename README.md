@@ -86,7 +86,10 @@ Backend, landing page и production docs для `Wobbly`.
   - users table + context menu actions
   - user edit modal
   - user delete with confirmation
-  - admins table + owner controls
+  - admins table + context menu actions
+  - admin edit modal
+  - admin delete with confirmation
+  - owner-only create admin action in table header
   - audit log
   - profile screen with self password change
   - role-aware behavior for owner/admin

@@ -68,7 +68,7 @@ body {
 
 .sidebar-brand {
   display: grid;
-  gap: 8px;
+  gap: 6px;
 }
 
 .brand-avatar,
@@ -132,7 +132,20 @@ button:hover {
 }
 
 .nav-button.active {
+  border-color: rgba(143, 103, 255, 0.42);
   box-shadow: 0 12px 30px rgba(111, 92, 255, 0.26);
+  position: relative;
+}
+
+.nav-button.active::before {
+  content: "";
+  position: absolute;
+  left: -12px;
+  top: 10px;
+  bottom: 10px;
+  width: 4px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #8f67ff, #3ecfff);
 }
 
 .sidebar-footer {
@@ -224,54 +237,19 @@ button:hover {
   background: transparent;
 }
 
-.badge-env {
-  color: var(--text);
-}
-
-.badge-admin {
-  min-width: 0;
-  justify-content: center;
-}
-
-.badge-admin-name {
-  color: var(--text);
-}
-
-.profile-chip {
-  display: grid;
-  grid-template-columns: 46px 1fr;
-  gap: 12px;
-  align-items: center;
-  min-width: 260px;
-  padding: 10px 12px;
-  border-radius: 20px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-}
-
-.profile-chip-avatar {
-  width: 46px;
-  height: 46px;
-  font-size: 14px;
-}
-
-.profile-chip-copy {
-  display: grid;
-  gap: 6px;
-}
-
-.profile-chip-line {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
 .panel-head {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
   gap: 16px;
   margin-bottom: 16px;
+}
+
+.panel-head-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
 }
 
 .form-grid,
@@ -368,6 +346,12 @@ textarea {
   justify-content: flex-end;
 }
 
+.admin-actions {
+  position: relative;
+  display: flex;
+  justify-content: flex-end;
+}
+
 .action-menu-trigger {
   min-width: 48px;
   justify-content: center;
@@ -380,7 +364,8 @@ textarea {
   letter-spacing: 0.08em;
 }
 
-.user-actions-menu {
+.user-actions-menu,
+.admin-actions-menu {
   position: absolute;
   top: calc(100% + 8px);
   right: 0;
@@ -574,6 +559,15 @@ tbody tr:hover {
   .profile-chip {
     width: 100%;
     min-width: 0;
+  }
+
+  .nav-button.active::before {
+    left: 10px;
+    right: 10px;
+    top: auto;
+    bottom: -8px;
+    width: auto;
+    height: 4px;
   }
 }
 

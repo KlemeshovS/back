@@ -572,6 +572,10 @@ def update_admin_user(
                     message="Admin not found",
                 )
 
+            role = existing_admin["role"]
+            if payload.role is not None:
+                role = payload.role.value
+
             is_active = existing_admin["is_active"]
             if payload.is_active is not None:
                 is_active = payload.is_active
@@ -583,8 +587,26 @@ def update_admin_user(
                     message="Owner cannot deactivate themselves",
                 )
 
-            updates = ["is_active = %s", "updated_at = NOW()"]
-            values: list[Any] = [is_active]
+            if existing_admin["role"] == AdminRole.OWNER.value and role != AdminRole.OWNER.value:
+                cur.execute(
+                    """
+                    SELECT COUNT(*) AS total
+                    FROM admin_users
+                    WHERE role = %s
+                      AND is_active = TRUE;
+                    """,
+                    (AdminRole.OWNER.value,),
+                )
+                owner_count = cur.fetchone()["total"]
+                if owner_count <= 1:
+                    raise ApiError(
+                        status_code=status.HTTP_403_FORBIDDEN,
+                        code=ApiErrorCode.FORBIDDEN,
+                        message="At least one active owner must remain",
+                    )
+
+            updates = ["role = %s", "is_active = %s", "updated_at = NOW()"]
+            values: list[Any] = [role, is_active]
 
             if payload.password:
                 updates.append("password_hash = %s")
@@ -609,9 +631,11 @@ def update_admin_user(
                 target_id=admin_id,
                 details={
                     "before": {
+                        "role": existing_admin["role"],
                         "isActive": existing_admin["is_active"],
                     },
                     "after": {
+                        "role": updated_admin["role"],
                         "isActive": updated_admin["is_active"],
                         "passwordChanged": bool(payload.password),
                     },
@@ -620,6 +644,75 @@ def update_admin_user(
         conn.commit()
 
     return _build_admin_user(updated_admin)
+
+
+def delete_admin_user(admin_id: int, current_admin: dict[str, Any]) -> None:
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                SELECT id, login, role, is_active
+                FROM admin_users
+                WHERE id = %s;
+                """,
+                (admin_id,),
+            )
+            existing_admin = cur.fetchone()
+            if existing_admin is None:
+                raise ApiError(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    code=ApiErrorCode.ADMIN_NOT_FOUND,
+                    message="Admin not found",
+                )
+
+            if current_admin["id"] == admin_id:
+                raise ApiError(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    code=ApiErrorCode.FORBIDDEN,
+                    message="Owner cannot delete themselves",
+                )
+
+            if existing_admin["role"] == AdminRole.OWNER.value:
+                cur.execute(
+                    """
+                    SELECT COUNT(*) AS total
+                    FROM admin_users
+                    WHERE role = %s
+                      AND is_active = TRUE;
+                    """,
+                    (AdminRole.OWNER.value,),
+                )
+                owner_count = cur.fetchone()["total"]
+                if owner_count <= 1:
+                    raise ApiError(
+                        status_code=status.HTTP_403_FORBIDDEN,
+                        code=ApiErrorCode.FORBIDDEN,
+                        message="At least one active owner must remain",
+                    )
+
+            cur.execute(
+                """
+                DELETE FROM admin_users
+                WHERE id = %s;
+                """,
+                (admin_id,),
+            )
+            _insert_audit_log(
+                cur,
+                admin_id=current_admin["id"],
+                admin_login=current_admin["login"],
+                action="admin_user.delete",
+                target_type="admin_user",
+                target_id=admin_id,
+                details={
+                    "before": {
+                        "login": existing_admin["login"],
+                        "role": existing_admin["role"],
+                        "isActive": existing_admin["is_active"],
+                    }
+                },
+            )
+        conn.commit()
 
 
 def list_audit_logs(limit: int, offset: int) -> AdminAuditLogListResponse:

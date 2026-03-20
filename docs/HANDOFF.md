@@ -103,6 +103,7 @@ Compatibility wrappers пока оставлены:
 - `GET /admin/admin-users`
 - `POST /admin/admin-users`
 - `PATCH /admin/admin-users/{id}`
+- `DELETE /admin/admin-users/{id}`
 
 Текущее поведение leaderboard:
 - `top` возвращает только пользователей с `score >= 0`
@@ -133,7 +134,10 @@ Admin UI сейчас уже умеет:
 - users table + context menu actions
 - user edit modal
 - user delete with confirmation
-- admin users table + owner-only create/update
+- admins table + context menu actions
+- admin edit modal
+- admin delete with confirmation
+- owner-only create admin action in table header
 - audit log screen
 - profile screen со сменой пароля текущего admin
 - role-aware поведение:

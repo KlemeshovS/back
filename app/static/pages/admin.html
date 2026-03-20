@@ -12,7 +12,6 @@
         <div class="sidebar-brand">
           <div class="brand-avatar" id="sidebar-avatar">OW</div>
           <p class="eyebrow">Wobbly Admin</p>
-          <h1>Операционная панель</h1>
         </div>
 
         <nav class="screen-nav section-hidden" id="screen-nav" aria-label="Admin navigation">
@@ -74,18 +73,6 @@
                 <a href="/production/" data-env-link="production">Production</a>
                 <a href="/staging/" data-env-link="staging">Staging</a>
               </nav>
-              <div class="profile-chip">
-                <div class="profile-chip-avatar" id="current-admin-topbar-avatar">—</div>
-                <div class="profile-chip-copy">
-                  <div class="profile-chip-line">
-                    <span class="badge badge-env" id="current-env-badge">Production</span>
-                  </div>
-                  <div class="profile-chip-line">
-                    <span class="badge badge-admin badge-admin-name" id="current-admin-topbar-badge">—</span>
-                    <span class="badge" id="role-badge">admin</span>
-                  </div>
-                </div>
-              </div>
             </div>
           </header>
 
@@ -136,7 +123,12 @@
                     <h3>Администраторы</h3>
                     <p class="muted">Доступы, роли и активация админских аккаунтов.</p>
                   </div>
-                  <span class="badge" id="admins-role-badge">admin</span>
+                  <div class="panel-head-actions">
+                    <button class="ghost-button section-hidden" id="open-admin-create-modal-button" type="button">
+                      Создать admin
+                    </button>
+                    <span class="badge" id="admins-role-badge">admin</span>
+                  </div>
                 </div>
 
                 <div class="table-wrap">
@@ -157,55 +149,14 @@
               </div>
 
               <div class="stack-layout">
-                <div class="panel" id="admin-edit-panel">
+                <div class="panel">
                   <div class="panel-head">
                     <div>
-                      <h3>Настройка admin</h3>
-                      <p class="muted">Операционное управление admin-аккаунтом. Свой пароль меняем только в разделе «Профиль».</p>
-                    </div>
-                    <span class="badge" id="admin-editor-badge">Не выбран</span>
-                  </div>
-
-                  <form id="admin-edit-form" class="form-grid">
-                    <label>
-                      <span>Login</span>
-                      <input id="admin-edit-login" type="text" disabled />
-                    </label>
-                    <label id="admin-edit-password-row">
-                      <span>Новый пароль</span>
-                      <input id="admin-edit-password" type="password" placeholder="Оставь пустым, если менять не нужно" />
-                    </label>
-                    <p class="muted section-hidden" id="admin-edit-self-note">
-                      Для текущего admin-аккаунта смена пароля доступна в разделе «Профиль».
-                    </p>
-                    <label class="checkbox-row">
-                      <input id="admin-edit-active" type="checkbox" />
-                      <span>Аккаунт активен</span>
-                    </label>
-                    <button class="primary-button" type="submit">Сохранить admin</button>
-                  </form>
-                  <p class="status" id="admin-editor-status"></p>
-                </div>
-
-                <div class="panel" id="admin-create-panel">
-                  <div class="panel-head">
-                    <div>
-                      <h3>Создать admin</h3>
-                      <p class="muted">Доступно только owner. Новый admin создается с временным паролем.</p>
+                      <h3>Управление доступами</h3>
+                      <p class="muted">Редактирование и удаление доступны через контекстное меню строки. Свой пароль меняем только в разделе «Профиль».</p>
                     </div>
                   </div>
-
-                  <form id="admin-create-form" class="form-grid">
-                    <label>
-                      <span>Login</span>
-                      <input id="admin-login-input" type="text" placeholder="Новый admin login" />
-                    </label>
-                    <label>
-                      <span>Temporary password</span>
-                      <input id="admin-password-input" type="password" placeholder="Временный пароль" />
-                    </label>
-                    <button class="primary-button" type="submit">Создать admin</button>
-                  </form>
+                  <p class="muted">Нового admin создает только owner через кнопку в шапке таблицы.</p>
                 </div>
               </div>
             </div>
@@ -316,6 +267,74 @@
           <button class="primary-button" type="submit">Сохранить пользователя</button>
         </form>
         <p class="status" id="editor-status"></p>
+      </section>
+    </div>
+
+    <div class="modal-shell section-hidden" id="admin-modal-shell">
+      <div class="modal-backdrop" data-close-admin-modal="true"></div>
+      <section class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="admin-modal-title">
+        <div class="panel-head">
+          <div>
+            <h3 id="admin-modal-title">Редактирование admin</h3>
+            <p class="muted">Редактируем права и статус аккаунта из модального окна. Свой пароль меняем только в разделе «Профиль».</p>
+          </div>
+          <div class="modal-head-actions">
+            <span class="badge" id="admin-editor-badge">Не выбран</span>
+            <button class="ghost-button" type="button" data-close-admin-modal="true">Закрыть</button>
+          </div>
+        </div>
+
+        <form id="admin-edit-form" class="form-grid">
+          <label>
+            <span>Login</span>
+            <input id="admin-edit-login" type="text" disabled />
+          </label>
+          <label>
+            <span>Роль</span>
+            <select id="admin-edit-role">
+              <option value="admin">admin</option>
+              <option value="owner">owner</option>
+            </select>
+          </label>
+          <label id="admin-edit-password-row">
+            <span>Новый пароль</span>
+            <input id="admin-edit-password" type="password" placeholder="Оставь пустым, если менять не нужно" />
+          </label>
+          <p class="muted section-hidden" id="admin-edit-self-note">
+            Для текущего admin-аккаунта смена пароля доступна в разделе «Профиль».
+          </p>
+          <label class="checkbox-row">
+            <input id="admin-edit-active" type="checkbox" />
+            <span>Аккаунт активен</span>
+          </label>
+          <button class="primary-button" type="submit">Сохранить admin</button>
+        </form>
+        <p class="status" id="admin-editor-status"></p>
+      </section>
+    </div>
+
+    <div class="modal-shell section-hidden" id="admin-create-modal-shell">
+      <div class="modal-backdrop" data-close-admin-create-modal="true"></div>
+      <section class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="admin-create-modal-title">
+        <div class="panel-head">
+          <div>
+            <h3 id="admin-create-modal-title">Создать admin</h3>
+            <p class="muted">Доступно только owner. Новый admin создается с временным паролем.</p>
+          </div>
+          <button class="ghost-button" type="button" data-close-admin-create-modal="true">Закрыть</button>
+        </div>
+
+        <form id="admin-create-form" class="form-grid">
+          <label>
+            <span>Login</span>
+            <input id="admin-login-input" type="text" placeholder="Новый admin login" />
+          </label>
+          <label>
+            <span>Temporary password</span>
+            <input id="admin-password-input" type="password" placeholder="Временный пароль" />
+          </label>
+          <button class="primary-button" type="submit">Создать admin</button>
+        </form>
       </section>
     </div>
 

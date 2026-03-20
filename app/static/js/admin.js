@@ -11,6 +11,7 @@ class AdminConsole {
       selectedUserId: null,
       selectedAdminId: null,
       openUserMenuId: null,
+      openAdminMenuId: null,
     };
   }
 
@@ -27,11 +28,7 @@ class AdminConsole {
     this.adminsScreenLink = document.querySelector('[data-screen-link="admins"]');
     this.screenTitle = document.getElementById("screen-title");
     this.loginEnvBadge = document.getElementById("login-env-badge");
-    this.currentEnvBadge = document.getElementById("current-env-badge");
-    this.currentAdminTopbarBadge = document.getElementById("current-admin-topbar-badge");
-    this.currentAdminTopbarAvatar = document.getElementById("current-admin-topbar-avatar");
     this.sidebarAvatar = document.getElementById("sidebar-avatar");
-    this.roleBadge = document.getElementById("role-badge");
     this.adminsRoleBadge = document.getElementById("admins-role-badge");
     this.loginView = document.getElementById("login-view");
     this.dashboardView = document.getElementById("dashboard-view");
@@ -59,12 +56,15 @@ class AdminConsole {
     this.editorScore = document.getElementById("editor-score");
     this.editorRating = document.getElementById("editor-rating");
     this.userModalShell = document.getElementById("user-modal-shell");
+    this.adminModalShell = document.getElementById("admin-modal-shell");
+    this.adminCreateModalShell = document.getElementById("admin-create-modal-shell");
     this.adminCreateForm = document.getElementById("admin-create-form");
-    this.adminCreatePanel = document.getElementById("admin-create-panel");
+    this.openAdminCreateModalButton = document.getElementById("open-admin-create-modal-button");
     this.adminLoginInput = document.getElementById("admin-login-input");
     this.adminPasswordInput = document.getElementById("admin-password-input");
     this.adminEditForm = document.getElementById("admin-edit-form");
     this.adminEditLogin = document.getElementById("admin-edit-login");
+    this.adminEditRole = document.getElementById("admin-edit-role");
     this.adminEditPassword = document.getElementById("admin-edit-password");
     this.adminEditPasswordRow = document.getElementById("admin-edit-password-row");
     this.adminEditSelfNote = document.getElementById("admin-edit-self-note");
@@ -98,6 +98,7 @@ class AdminConsole {
     this.adminCreateForm.addEventListener("submit", (event) => this.handleAdminCreate(event));
     this.adminEditForm.addEventListener("submit", (event) => this.handleAdminUpdate(event));
     this.profilePasswordForm.addEventListener("submit", (event) => this.handlePasswordChange(event));
+    this.openAdminCreateModalButton.addEventListener("click", () => this.openAdminCreateModal());
     document.addEventListener("click", (event) => this.handleGlobalClick(event));
     document.addEventListener("keydown", (event) => this.handleKeyDown(event));
 
@@ -130,7 +131,6 @@ class AdminConsole {
     let index = 0;
 
     this.loginEnvBadge.textContent = label;
-    this.currentEnvBadge.textContent = label;
 
     while (index < this.envLinks.length) {
       if (this.envLinks[index].dataset.envLink === this.state.environment) {
@@ -154,8 +154,6 @@ class AdminConsole {
 
   renderAdminIdentity(login, role) {
     const initials = this.initialsFor(login);
-    this.currentAdminTopbarBadge.textContent = login;
-    this.currentAdminTopbarAvatar.textContent = initials;
     this.profileAvatar.textContent = initials;
     this.sidebarAvatar.textContent = initials;
     this.profileLogin.textContent = login;
@@ -242,14 +240,13 @@ class AdminConsole {
     window.localStorage.setItem(this.storageKey(), JSON.stringify(this.state.session));
 
     this.renderAdminIdentity(me.login, me.role);
-    this.roleBadge.textContent = me.role;
     this.adminsRoleBadge.textContent = me.role;
 
     if (me.role !== "owner") {
-      this.adminCreatePanel.classList.add("section-hidden");
+      this.openAdminCreateModalButton.classList.add("section-hidden");
       this.adminsScreenLink.classList.add("section-hidden");
     } else {
-      this.adminCreatePanel.classList.remove("section-hidden");
+      this.openAdminCreateModalButton.classList.remove("section-hidden");
       this.adminsScreenLink.classList.remove("section-hidden");
     }
 
@@ -282,8 +279,6 @@ class AdminConsole {
     this.dashboardView.classList.add("section-hidden");
     this.screenNav.classList.add("section-hidden");
     this.sidebarFooter.classList.add("section-hidden");
-    this.currentAdminTopbarBadge.textContent = "—";
-    this.currentAdminTopbarAvatar.textContent = "—";
     this.profileAvatar.textContent = "—";
     this.profileLogin.textContent = "—";
     this.profileRole.textContent = "—";
@@ -439,6 +434,16 @@ class AdminConsole {
       return;
     }
 
+    if (event.target && event.target.dataset && event.target.dataset.closeAdminModal === "true") {
+      this.closeAdminModal();
+      return;
+    }
+
+    if (event.target && event.target.dataset && event.target.dataset.closeAdminCreateModal === "true") {
+      this.closeAdminCreateModal();
+      return;
+    }
+
     if (this.state.openUserMenuId !== null) {
       const target = event.target;
       const insideMenu = target.closest("[data-user-menu]");
@@ -448,14 +453,30 @@ class AdminConsole {
         this.renderUsers();
       }
     }
+
+    if (this.state.openAdminMenuId !== null) {
+      const target = event.target;
+      const insideMenu = target.closest("[data-admin-menu]");
+      const insideTrigger = target.closest("[data-admin-menu-trigger]");
+      if (!insideMenu && !insideTrigger) {
+        this.state.openAdminMenuId = null;
+        this.renderAdmins();
+      }
+    }
   }
 
   handleKeyDown(event) {
     if (event.key === "Escape") {
       this.closeUserModal();
+      this.closeAdminModal();
+      this.closeAdminCreateModal();
       if (this.state.openUserMenuId !== null) {
         this.state.openUserMenuId = null;
         this.renderUsers();
+      }
+      if (this.state.openAdminMenuId !== null) {
+        this.state.openAdminMenuId = null;
+        this.renderAdmins();
       }
     }
   }
@@ -476,6 +497,22 @@ class AdminConsole {
 
   closeUserModal() {
     this.userModalShell.classList.add("section-hidden");
+  }
+
+  openAdminModal() {
+    this.adminModalShell.classList.remove("section-hidden");
+  }
+
+  closeAdminModal() {
+    this.adminModalShell.classList.add("section-hidden");
+  }
+
+  openAdminCreateModal() {
+    this.adminCreateModalShell.classList.remove("section-hidden");
+  }
+
+  closeAdminCreateModal() {
+    this.adminCreateModalShell.classList.add("section-hidden");
   }
 
   selectUser(userIdValue) {
@@ -564,13 +601,27 @@ class AdminConsole {
 
     while (index < this.state.admins.length) {
       const admin = this.state.admins[index];
+      const menuClass = this.state.openAdminMenuId === admin.id ? "admin-actions-menu" : "admin-actions-menu section-hidden";
       markup += `
         <tr>
           <td>${admin.id}</td>
           <td>${admin.login}</td>
           <td>${admin.role}</td>
           <td>${admin.isActive ? "yes" : "no"}</td>
-          <td><button type="button" data-admin-id="${admin.id}" data-admin-active="${admin.isActive}">Настроить</button></td>
+          <td class="actions-cell">
+            <div class="admin-actions">
+              <button class="ghost-button action-menu-trigger" type="button" data-admin-menu-trigger="${admin.id}" aria-label="Admin actions">
+                <span class="dots-icon" aria-hidden="true">•••</span>
+              </button>
+              <div class="${menuClass}" data-admin-menu="${admin.id}">
+                <button class="menu-item" type="button" data-admin-edit="${admin.id}">Редактировать</button>
+                <button class="menu-item menu-item-danger" type="button" data-admin-delete="${admin.id}">
+                  <span class="trash-icon" aria-hidden="true">🗑</span>
+                  <span>Удалить</span>
+                </button>
+              </div>
+            </div>
+          </td>
         </tr>
       `;
       index += 1;
@@ -581,14 +632,43 @@ class AdminConsole {
   }
 
   bindAdminButtons() {
-    const buttons = this.adminsTableBody.querySelectorAll("[data-admin-id]");
+    const editButtons = this.adminsTableBody.querySelectorAll("[data-admin-edit]");
+    const menuButtons = this.adminsTableBody.querySelectorAll("[data-admin-menu-trigger]");
+    const deleteButtons = this.adminsTableBody.querySelectorAll("[data-admin-delete]");
     let index = 0;
 
-    while (index < buttons.length) {
-      const button = buttons[index];
-      button.addEventListener("click", () => this.selectAdmin(button.dataset.adminId));
+    while (index < editButtons.length) {
+      const button = editButtons[index];
+      button.addEventListener("click", () => this.selectAdmin(button.dataset.adminEdit));
       index += 1;
     }
+
+    index = 0;
+    while (index < menuButtons.length) {
+      const button = menuButtons[index];
+      button.addEventListener("click", (event) => {
+        event.stopPropagation();
+        this.toggleAdminMenu(button.dataset.adminMenuTrigger);
+      });
+      index += 1;
+    }
+
+    index = 0;
+    while (index < deleteButtons.length) {
+      const button = deleteButtons[index];
+      button.addEventListener("click", () => this.confirmDeleteAdmin(button.dataset.adminDelete));
+      index += 1;
+    }
+  }
+
+  toggleAdminMenu(adminIdValue) {
+    const adminId = Number(adminIdValue);
+    if (this.state.openAdminMenuId === adminId) {
+      this.state.openAdminMenuId = null;
+    } else {
+      this.state.openAdminMenuId = adminId;
+    }
+    this.renderAdmins();
   }
 
   selectAdmin(adminIdValue) {
@@ -599,7 +679,10 @@ class AdminConsole {
     }
 
     this.state.selectedAdminId = admin.id;
+    this.state.openAdminMenuId = null;
+    this.renderAdmins();
     this.adminEditLogin.value = admin.login;
+    this.adminEditRole.value = admin.role;
     this.adminEditPassword.value = "";
     this.adminEditActive.checked = Boolean(admin.isActive);
     this.adminEditorBadge.textContent = "#" + admin.id;
@@ -610,6 +693,7 @@ class AdminConsole {
       this.adminEditPasswordRow.classList.remove("section-hidden");
       this.adminEditSelfNote.classList.add("section-hidden");
     }
+    this.openAdminModal();
     this.showOk(this.adminEditorStatus, "Admin загружен в форму");
   }
 
@@ -625,6 +709,7 @@ class AdminConsole {
 
   async updateAdmin() {
     const payload = {
+      role: this.adminEditRole.value,
       isActive: this.adminEditActive.checked,
       password: this.adminEditPassword.value.trim() || undefined,
     };
@@ -636,7 +721,7 @@ class AdminConsole {
 
     this.replaceAdmin(response);
     this.renderAdmins();
-    this.selectAdmin(response.id);
+    this.closeAdminModal();
     await this.loadOverview();
     await this.loadAuditLogs();
     this.showOk(this.adminEditorStatus, "Admin сохранен");
@@ -658,10 +743,39 @@ class AdminConsole {
 
     this.adminLoginInput.value = "";
     this.adminPasswordInput.value = "";
+    this.closeAdminCreateModal();
     await this.loadAdmins();
     await this.loadOverview();
     await this.loadAuditLogs();
     this.showOk(this.adminsStatus, "Новый admin создан");
+  }
+
+  async confirmDeleteAdmin(adminIdValue) {
+    const adminId = Number(adminIdValue);
+    const admin = this.findById(this.state.admins, adminId);
+    if (!admin) {
+      return;
+    }
+
+    const confirmed = window.confirm(`Точно удалить admin ${admin.login}?`);
+    if (!confirmed) {
+      this.state.openAdminMenuId = null;
+      this.renderAdmins();
+      return;
+    }
+
+    try {
+      await this.request("/admin-users/" + admin.id, { method: "DELETE" });
+      this.removeAdmin(admin.id);
+      this.state.openAdminMenuId = null;
+      this.renderAdmins();
+      this.closeAdminModal();
+      await this.loadOverview();
+      await this.loadAuditLogs();
+      this.showOk(this.adminsStatus, "Admin удален");
+    } catch (error) {
+      this.showError(this.adminsStatus, error.message);
+    }
   }
 
   handlePasswordChange(event) {
@@ -782,6 +896,17 @@ class AdminConsole {
       index += 1;
     }
     this.state.admins.unshift(updatedAdmin);
+  }
+
+  removeAdmin(adminId) {
+    let index = 0;
+    while (index < this.state.admins.length) {
+      if (this.state.admins[index].id === adminId) {
+        this.state.admins.splice(index, 1);
+        return;
+      }
+      index += 1;
+    }
   }
 
   findById(items, id) {

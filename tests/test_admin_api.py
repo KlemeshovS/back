@@ -118,6 +118,30 @@ def test_admin_can_delete_managed_user(monkeypatch) -> None:
     assert response.text == ""
 
 
+def test_owner_can_delete_admin_user(monkeypatch) -> None:
+    client = build_client()
+    client.app.dependency_overrides[get_current_admin] = lambda: {
+        "id": 1,
+        "login": "owner",
+        "role": "owner",
+        "is_active": True,
+    }
+
+    monkeypatch.setattr(
+        admin_service,
+        "delete_admin_user",
+        lambda admin_id, current_admin: None,
+    )
+
+    response = client.delete(
+        "/admin/admin-users/2",
+        headers={"Authorization": "Bearer owner"},
+    )
+
+    assert response.status_code == 204
+    assert response.text == ""
+
+
 def test_admin_logout_returns_status(monkeypatch) -> None:
     client = build_client()
     client.app.dependency_overrides[get_current_admin] = lambda: {

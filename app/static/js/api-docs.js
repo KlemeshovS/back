@@ -58,7 +58,7 @@ class DocsPage {
             paragraphs: [
               "Для админки теперь есть отдельный набор endpoint'ов под /admin.",
               "Admin auth не заменяет обычный user auth. Это отдельный слой для панели управления.",
-              "Основные методы: POST /admin/auth/login, POST /admin/auth/logout, GET /admin/me, PATCH /admin/me/password, GET /admin/overview, GET/PATCH/DELETE /admin/users, GET /admin/audit-log, GET/POST/PATCH /admin/admin-users.",
+              "Основные методы: POST /admin/auth/login, POST /admin/auth/logout, GET /admin/me, PATCH /admin/me/password, GET /admin/overview, GET/PATCH/DELETE /admin/users, GET /admin/audit-log, GET/POST/PATCH/DELETE /admin/admin-users.",
             ],
             muted:
               "UI админки работает через admin.wobbly.site/production/ и admin.wobbly.site/staging/. В браузере теперь используется same-origin admin API: /production/api/... и /staging/api/....",
@@ -69,6 +69,15 @@ class DocsPage {
               "Редактирование пользователя идет через PATCH /admin/users/{userId}.",
               "Удаление пользователя идет через DELETE /admin/users/{userId}.",
               "В UI users flow собран через context menu с 3 точками: редактирование открывается в modal, удаление требует отдельного подтверждения.",
+            ],
+          },
+          {
+            paragraphs: [
+              "Список админов читается через GET /admin/admin-users.",
+              "Создание admin идет через POST /admin/admin-users и доступно только owner.",
+              "Редактирование admin идет через PATCH /admin/admin-users/{adminId}.",
+              "Удаление admin идет через DELETE /admin/admin-users/{adminId}.",
+              "В UI admins flow тоже собран через context menu с 3 точками: редактирование открывается в modal, удаление требует подтверждения, а создание вынесено в шапку таблицы.",
             ],
           },
         ],
