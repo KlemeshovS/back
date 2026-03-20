@@ -1,15 +1,8 @@
 from __future__ import annotations
 
-from fastapi.testclient import TestClient
-
-from app.api.app import create_app
 from app.api.dependencies import get_current_admin
 from app.services import admin_service
-
-
-def build_client() -> TestClient:
-    app = create_app(init_database=False)
-    return TestClient(app)
+from tests.helpers import build_client
 
 
 def test_admin_login_returns_camel_case_response(monkeypatch) -> None:

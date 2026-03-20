@@ -1,11 +1,4 @@
-from fastapi.testclient import TestClient
-
-from app.api.app import create_app
-
-
-def build_client() -> TestClient:
-    app = create_app(init_database=False)
-    return TestClient(app)
+from tests.helpers import build_client
 
 
 def test_rejects_untrusted_host_header() -> None:

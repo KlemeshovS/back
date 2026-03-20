@@ -2,16 +2,9 @@ from __future__ import annotations
 
 from typing import Optional
 
-from fastapi.testclient import TestClient
-
-from app.api.app import create_app
 from app.api.dependencies import get_current_user
 from app.services import user_service
-
-
-def build_client() -> TestClient:
-    app = create_app(init_database=False)
-    return TestClient(app)
+from tests.helpers import build_client
 
 
 def test_healthcheck_returns_ok() -> None:
