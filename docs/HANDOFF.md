@@ -99,6 +99,7 @@ Compatibility wrappers пока оставлены:
 - `GET /admin/users`
 - `GET /admin/users/{id}`
 - `PATCH /admin/users/{id}`
+- `DELETE /admin/users/{id}`
 - `GET /admin/admin-users`
 - `POST /admin/admin-users`
 - `PATCH /admin/admin-users/{id}`
@@ -129,7 +130,9 @@ Admin UI сейчас уже умеет:
 - sidebar navigation по экранам
 - topbar environment switcher `production/staging`
 - overview screen
-- users table + form editing
+- users table + context menu actions
+- user edit modal
+- user delete with confirmation
 - admin users table + owner-only create/update
 - audit log screen
 - profile screen со сменой пароля текущего admin
@@ -142,16 +145,7 @@ Admin UI сейчас уже умеет:
 
 Текущее локальное состояние рабочей директории:
 - current branch: `develop`
-- есть незакоммиченные UI-правки в:
-  - `app/static/pages/admin.html`
-  - `app/static/css/admin.css`
-  - `app/static/js/admin.js`
-- смысл этих правок:
-  - убрать дублирующий copy в sidebar
-  - убрать дублирующий профильный блок в sidebar
-  - сделать sidebar navigation с явным active state
-  - убрать self-password сценарий из экрана `Администраторы`
-- если новый чат продолжает именно эту задачу, сначала смотреть `git status --short --branch` и эти 3 файла
+- перед продолжением всегда сначала проверять `git status --short --branch`
 
 Важно:
 - `/api/docs` собирается клиентским JavaScript

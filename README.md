@@ -83,12 +83,13 @@ Backend, landing page и production docs для `Wobbly`.
 - из-за этого production admin UI обновляется только вместе с `main`, а staging admin UI — вместе с `develop`
 - admin console уже включает:
   - overview
-  - users table + editing form
+  - users table + context menu actions
+  - user edit modal
+  - user delete with confirmation
   - admins table + owner controls
   - audit log
   - profile screen with self password change
   - role-aware behavior for owner/admin
-- в локальном рабочем дереве могут быть незакоммиченные admin UI правки, поэтому при handoff сначала полезно смотреть `git status --short --branch`
 - первый `owner` bootstrap'ится через env и уже поднят на production и staging:
   - `ADMIN_BOOTSTRAP_LOGIN`
   - `ADMIN_BOOTSTRAP_PASSWORD`
