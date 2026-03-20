@@ -331,25 +331,31 @@ textarea {
 }
 
 .table-wrap {
+  position: relative;
   overflow-x: auto;
+  overflow-y: visible;
   border-radius: 18px;
   border: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 .actions-cell {
   width: 84px;
+  position: relative;
+  overflow: visible;
 }
 
 .user-actions {
   position: relative;
   display: flex;
   justify-content: flex-end;
+  overflow: visible;
 }
 
 .admin-actions {
   position: relative;
   display: flex;
   justify-content: flex-end;
+  overflow: visible;
 }
 
 .action-menu-trigger {
@@ -379,6 +385,12 @@ textarea {
   border: 1px solid rgba(255, 255, 255, 0.08);
   box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
   backdrop-filter: blur(20px);
+}
+
+tbody,
+tr,
+td {
+  overflow: visible;
 }
 
 .menu-item {
