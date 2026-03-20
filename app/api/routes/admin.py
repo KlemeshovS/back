@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Optional
 
-from fastapi import APIRouter, Depends, Query, status
+from fastapi import APIRouter, Depends, Query, Response, status
 
 from app.api.dependencies import get_current_admin, require_owner
 from app.domain.schemas import (
@@ -83,6 +83,15 @@ def update_user(
     current_admin: dict = current_admin_dependency,
 ) -> ManagedUserResponse:
     return admin_service.update_managed_user(user_id, payload, current_admin)
+
+
+@router.delete("/users/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_user(
+    user_id: int,
+    current_admin: dict = current_admin_dependency,
+) -> Response:
+    admin_service.delete_managed_user(user_id, current_admin)
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
 @router.get("/admin-users", response_model=AdminUserListResponse)

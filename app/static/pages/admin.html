@@ -95,65 +95,36 @@
           </section>
 
           <section class="screen section-hidden" id="screen-users">
-            <div class="split-layout">
-              <div class="panel">
-                <div class="panel-head">
-                  <div>
-                    <h3>Пользователи</h3>
-                    <p class="muted">Поиск, фильтрация и быстрый выбор записи для редактирования.</p>
-                  </div>
-                  <button id="refresh-users-button" class="ghost-button" type="button">Обновить</button>
+            <div class="panel">
+              <div class="panel-head">
+                <div>
+                  <h3>Пользователи</h3>
+                  <p class="muted">Поиск, фильтрация и быстрые действия через контекстное меню.</p>
                 </div>
-
-                <form id="search-form" class="toolbar">
-                  <input id="search-input" type="search" placeholder="Поиск по username" />
-                  <button class="primary-button" type="submit">Искать</button>
-                </form>
-
-                <div class="table-wrap">
-                  <table>
-                    <thead>
-                      <tr>
-                        <th>ID</th>
-                        <th>Username</th>
-                        <th>Score</th>
-                        <th>Rating</th>
-                        <th>Updated</th>
-                        <th></th>
-                      </tr>
-                    </thead>
-                    <tbody id="users-table-body"></tbody>
-                  </table>
-                </div>
-                <p class="status" id="users-status"></p>
+                <button id="refresh-users-button" class="ghost-button" type="button">Обновить</button>
               </div>
 
-              <div class="panel editor-panel">
-                <div class="panel-head">
-                  <div>
-                    <h3>Редактирование пользователя</h3>
-                    <p class="muted">Правки сохраняются в форме, без редактирования сырого JSON.</p>
-                  </div>
-                  <span class="badge" id="editor-user-badge">Не выбран</span>
-                </div>
+              <form id="search-form" class="toolbar">
+                <input id="search-input" type="search" placeholder="Поиск по username" />
+                <button class="primary-button" type="submit">Искать</button>
+              </form>
 
-                <form id="editor-form" class="form-grid">
-                  <label>
-                    <span>Username</span>
-                    <input id="editor-username" type="text" />
-                  </label>
-                  <label>
-                    <span>Score</span>
-                    <input id="editor-score" type="number" />
-                  </label>
-                  <label class="checkbox-row">
-                    <input id="editor-rating" type="checkbox" />
-                    <span>Участвует в рейтинге</span>
-                  </label>
-                  <button class="primary-button" type="submit">Сохранить пользователя</button>
-                </form>
-                <p class="status" id="editor-status"></p>
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>ID</th>
+                      <th>Username</th>
+                      <th>Score</th>
+                      <th>Rating</th>
+                      <th>Updated</th>
+                      <th></th>
+                    </tr>
+                  </thead>
+                  <tbody id="users-table-body"></tbody>
+                </table>
               </div>
+              <p class="status" id="users-status"></p>
             </div>
           </section>
 
@@ -313,6 +284,39 @@
           </section>
         </section>
       </main>
+    </div>
+
+    <div class="modal-shell section-hidden" id="user-modal-shell">
+      <div class="modal-backdrop" data-close-user-modal="true"></div>
+      <section class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="user-modal-title">
+        <div class="panel-head">
+          <div>
+            <h3 id="user-modal-title">Редактирование пользователя</h3>
+            <p class="muted">Правки сохраняются в модальном окне, без редактирования сырого JSON.</p>
+          </div>
+          <div class="modal-head-actions">
+            <span class="badge" id="editor-user-badge">Не выбран</span>
+            <button class="ghost-button" type="button" data-close-user-modal="true">Закрыть</button>
+          </div>
+        </div>
+
+        <form id="editor-form" class="form-grid">
+          <label>
+            <span>Username</span>
+            <input id="editor-username" type="text" />
+          </label>
+          <label>
+            <span>Score</span>
+            <input id="editor-score" type="number" />
+          </label>
+          <label class="checkbox-row">
+            <input id="editor-rating" type="checkbox" />
+            <span>Участвует в рейтинге</span>
+          </label>
+          <button class="primary-button" type="submit">Сохранить пользователя</button>
+        </form>
+        <p class="status" id="editor-status"></p>
+      </section>
     </div>
 
     <script src="./assets/js/admin.js?v=20260320" defer></script>

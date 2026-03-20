@@ -10,6 +10,7 @@ class AdminConsole {
       audit: [],
       selectedUserId: null,
       selectedAdminId: null,
+      openUserMenuId: null,
     };
   }
 
@@ -57,6 +58,7 @@ class AdminConsole {
     this.editorUsername = document.getElementById("editor-username");
     this.editorScore = document.getElementById("editor-score");
     this.editorRating = document.getElementById("editor-rating");
+    this.userModalShell = document.getElementById("user-modal-shell");
     this.adminCreateForm = document.getElementById("admin-create-form");
     this.adminCreatePanel = document.getElementById("admin-create-panel");
     this.adminLoginInput = document.getElementById("admin-login-input");
@@ -96,6 +98,8 @@ class AdminConsole {
     this.adminCreateForm.addEventListener("submit", (event) => this.handleAdminCreate(event));
     this.adminEditForm.addEventListener("submit", (event) => this.handleAdminUpdate(event));
     this.profilePasswordForm.addEventListener("submit", (event) => this.handlePasswordChange(event));
+    document.addEventListener("click", (event) => this.handleGlobalClick(event));
+    document.addEventListener("keydown", (event) => this.handleKeyDown(event));
 
     let index = 0;
     while (index < this.screenLinks.length) {
@@ -368,6 +372,7 @@ class AdminConsole {
 
     while (index < this.state.users.length) {
       const user = this.state.users[index];
+      const menuClass = this.state.openUserMenuId === user.id ? "user-actions-menu" : "user-actions-menu section-hidden";
       markup += `
         <tr>
           <td>${user.id}</td>
@@ -375,7 +380,20 @@ class AdminConsole {
           <td>${user.score}</td>
           <td>${user.participateInRating ? "on" : "off"}</td>
           <td>${this.formatDate(user.updatedAt)}</td>
-          <td><button type="button" data-user-id="${user.id}">Edit</button></td>
+          <td class="actions-cell">
+            <div class="user-actions">
+              <button class="ghost-button action-menu-trigger" type="button" data-user-menu-trigger="${user.id}" aria-label="User actions">
+                <span class="dots-icon" aria-hidden="true">•••</span>
+              </button>
+              <div class="${menuClass}" data-user-menu="${user.id}">
+                <button class="menu-item" type="button" data-user-edit="${user.id}">Редактировать</button>
+                <button class="menu-item menu-item-danger" type="button" data-user-delete="${user.id}">
+                  <span class="trash-icon" aria-hidden="true">🗑</span>
+                  <span>Удалить</span>
+                </button>
+              </div>
+            </div>
+          </td>
         </tr>
       `;
       index += 1;
@@ -386,14 +404,78 @@ class AdminConsole {
   }
 
   bindUserButtons() {
-    const buttons = this.usersTableBody.querySelectorAll("[data-user-id]");
+    const editButtons = this.usersTableBody.querySelectorAll("[data-user-edit]");
+    const menuButtons = this.usersTableBody.querySelectorAll("[data-user-menu-trigger]");
+    const deleteButtons = this.usersTableBody.querySelectorAll("[data-user-delete]");
     let index = 0;
 
-    while (index < buttons.length) {
-      const button = buttons[index];
-      button.addEventListener("click", () => this.selectUser(button.dataset.userId));
+    while (index < editButtons.length) {
+      const button = editButtons[index];
+      button.addEventListener("click", () => this.selectUser(button.dataset.userEdit));
       index += 1;
     }
+
+    index = 0;
+    while (index < menuButtons.length) {
+      const button = menuButtons[index];
+      button.addEventListener("click", (event) => {
+        event.stopPropagation();
+        this.toggleUserMenu(button.dataset.userMenuTrigger);
+      });
+      index += 1;
+    }
+
+    index = 0;
+    while (index < deleteButtons.length) {
+      const button = deleteButtons[index];
+      button.addEventListener("click", () => this.confirmDeleteUser(button.dataset.userDelete));
+      index += 1;
+    }
+  }
+
+  handleGlobalClick(event) {
+    if (event.target && event.target.dataset && event.target.dataset.closeUserModal === "true") {
+      this.closeUserModal();
+      return;
+    }
+
+    if (this.state.openUserMenuId !== null) {
+      const target = event.target;
+      const insideMenu = target.closest("[data-user-menu]");
+      const insideTrigger = target.closest("[data-user-menu-trigger]");
+      if (!insideMenu && !insideTrigger) {
+        this.state.openUserMenuId = null;
+        this.renderUsers();
+      }
+    }
+  }
+
+  handleKeyDown(event) {
+    if (event.key === "Escape") {
+      this.closeUserModal();
+      if (this.state.openUserMenuId !== null) {
+        this.state.openUserMenuId = null;
+        this.renderUsers();
+      }
+    }
+  }
+
+  toggleUserMenu(userIdValue) {
+    const userId = Number(userIdValue);
+    if (this.state.openUserMenuId === userId) {
+      this.state.openUserMenuId = null;
+    } else {
+      this.state.openUserMenuId = userId;
+    }
+    this.renderUsers();
+  }
+
+  openUserModal() {
+    this.userModalShell.classList.remove("section-hidden");
+  }
+
+  closeUserModal() {
+    this.userModalShell.classList.add("section-hidden");
   }
 
   selectUser(userIdValue) {
@@ -404,10 +486,13 @@ class AdminConsole {
     }
 
     this.state.selectedUserId = user.id;
+    this.state.openUserMenuId = null;
+    this.renderUsers();
     this.editorUserBadge.textContent = "#" + user.id;
     this.editorUsername.value = user.username || "";
     this.editorScore.value = String(user.score);
     this.editorRating.checked = Boolean(user.participateInRating);
+    this.openUserModal();
     this.showOk(this.editorStatus, "Пользователь загружен в форму");
   }
 
@@ -432,10 +517,38 @@ class AdminConsole {
     });
     this.replaceUser(response);
     this.renderUsers();
-    this.selectUser(response.id);
+    this.closeUserModal();
     await this.loadOverview();
     await this.loadAuditLogs();
     this.showOk(this.editorStatus, "Пользователь сохранен");
+  }
+
+  async confirmDeleteUser(userIdValue) {
+    const userId = Number(userIdValue);
+    const user = this.findById(this.state.users, userId);
+    if (!user) {
+      return;
+    }
+
+    const confirmed = window.confirm(`Точно удалить пользователя ${user.username || "#" + user.id}?`);
+    if (!confirmed) {
+      this.state.openUserMenuId = null;
+      this.renderUsers();
+      return;
+    }
+
+    try {
+      await this.request("/users/" + user.id, { method: "DELETE" });
+      this.removeUser(user.id);
+      this.state.openUserMenuId = null;
+      this.renderUsers();
+      this.closeUserModal();
+      await this.loadOverview();
+      await this.loadAuditLogs();
+      this.showOk(this.usersStatus, "Пользователь удален");
+    } catch (error) {
+      this.showError(this.usersStatus, error.message);
+    }
   }
 
   async loadAdmins() {
@@ -629,6 +742,10 @@ class AdminConsole {
       throw new Error(errorPayload.message || "Request failed");
     }
 
+    if (response.status === 204 || response.status === 205) {
+      return null;
+    }
+
     return response.json();
   }
 
@@ -642,6 +759,17 @@ class AdminConsole {
       index += 1;
     }
     this.state.users.unshift(updatedUser);
+  }
+
+  removeUser(userId) {
+    let index = 0;
+    while (index < this.state.users.length) {
+      if (this.state.users[index].id === userId) {
+        this.state.users.splice(index, 1);
+        return;
+      }
+      index += 1;
+    }
   }
 
   replaceAdmin(updatedAdmin) {

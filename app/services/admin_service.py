@@ -443,6 +443,50 @@ def update_managed_user(
     return _build_managed_user(updated_user)
 
 
+def delete_managed_user(user_id: int, current_admin: dict[str, Any]) -> None:
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                SELECT id, username, score, is_rating_enabled
+                FROM users
+                WHERE id = %s;
+                """,
+                (user_id,),
+            )
+            existing_user = cur.fetchone()
+            if existing_user is None:
+                raise ApiError(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    code=ApiErrorCode.USER_NOT_FOUND,
+                    message="User not found",
+                )
+
+            cur.execute(
+                """
+                DELETE FROM users
+                WHERE id = %s;
+                """,
+                (user_id,),
+            )
+            _insert_audit_log(
+                cur,
+                admin_id=current_admin["id"],
+                admin_login=current_admin["login"],
+                action="user.delete",
+                target_type="user",
+                target_id=user_id,
+                details={
+                    "before": {
+                        "username": existing_user["username"],
+                        "score": existing_user["score"],
+                        "participateInRating": existing_user["is_rating_enabled"],
+                    }
+                },
+            )
+        conn.commit()
+
+
 def list_admin_users() -> AdminUserListResponse:
     with get_connection() as conn:
         with conn.cursor() as cur:

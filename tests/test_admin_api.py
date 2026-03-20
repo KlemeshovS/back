@@ -94,6 +94,30 @@ def test_admin_can_patch_managed_user(monkeypatch) -> None:
     assert response.json()["participateInRating"] is True
 
 
+def test_admin_can_delete_managed_user(monkeypatch) -> None:
+    client = build_client()
+    client.app.dependency_overrides[get_current_admin] = lambda: {
+        "id": 1,
+        "login": "owner",
+        "role": "owner",
+        "is_active": True,
+    }
+
+    monkeypatch.setattr(
+        admin_service,
+        "delete_managed_user",
+        lambda user_id, current_admin: None,
+    )
+
+    response = client.delete(
+        "/admin/users/14",
+        headers={"Authorization": "Bearer owner"},
+    )
+
+    assert response.status_code == 204
+    assert response.text == ""
+
+
 def test_admin_logout_returns_status(monkeypatch) -> None:
     client = build_client()
     client.app.dependency_overrides[get_current_admin] = lambda: {
