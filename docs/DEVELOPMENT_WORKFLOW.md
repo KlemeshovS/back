@@ -72,6 +72,7 @@ Commit message оформляем по `Conventional Commits`.
 - `develop` держим как самую актуальную ветку разработки
 - `main` держим как production-ready ветку
 - без явного запроса пользователя `main` не обновляем
+- если пользователь не просил production release буквально и явно, любые изменения фиксируем только в `develop`
 - после merge удаляем ветку локально и в GitHub
 - после merge в `develop` ориентируемся сначала на staging GitHub Actions pipeline
 - после merge в `main` ориентируемся сначала на production GitHub Actions pipeline

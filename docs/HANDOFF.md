@@ -139,17 +139,21 @@ Admin UI сейчас уже умеет:
 - admin delete with confirmation
 - owner-only create admin action in table header
 - audit log screen
-- profile screen со сменой пароля текущего admin
+- profile screen только с информацией об аккаунте
+- login screen без лишних заголовков
+- login screen с environment switcher
+- password visibility toggle на login screen по клику на глазик
 - role-aware поведение:
   - owner видит экран и управление `Администраторы`
   - обычный `admin` не должен видеть owner-only controls
 - операционное правило UI:
-  - свой пароль меняем только в разделе `Профиль`
+  - self-service смены пароля в текущем UI сейчас нет, хотя backend endpoint `PATCH /admin/me/password` пока существует
   - экран `Администраторы` нужен для управления другими admin-аккаунтами
 
 Текущее локальное состояние рабочей директории:
 - current branch: `develop`
 - перед продолжением всегда сначала проверять `git status --short --branch`
+- если `git status` чистый и активная ветка `develop`, можно продолжать работу без дополнительных уточнений
 
 Важно:
 - `/api/docs` собирается клиентским JavaScript
@@ -275,6 +279,7 @@ Tooling config:
    - `app/static/js/admin.js`
    - `app/api/routes/admin.py`
    - `app/services/admin_service.py`
+   - потом уже только при необходимости `app/static/js/api-docs.js`, `README.md`, `docs/DEPLOY.md`
 5. если задача про архитектуру: смотреть `app/api/`, `app/services/`, `app/core/`, `app/domain/`, `app/db/`
 
 ## Current Next Improvements

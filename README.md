@@ -91,7 +91,9 @@ Backend, landing page и production docs для `Wobbly`.
   - admin delete with confirmation
   - owner-only create admin action in table header
   - audit log
-  - profile screen with self password change
+  - profile screen with account info only
+  - minimal login screen with environment switcher
+  - login password visibility toggle by click on eye button
   - role-aware behavior for owner/admin
 - первый `owner` bootstrap'ится через env и уже поднят на production и staging:
   - `ADMIN_BOOTSTRAP_LOGIN`
@@ -242,6 +244,7 @@ docker compose up --build
   - `app/static/js/admin.js`
   - `app/api/routes/admin.py`
   - `app/services/admin_service.py`
+- для нового чата важно: актуальная рабочая ветка обычно `develop`; не предлагать merge в `main`, если пользователь явно не запросил production release
 - если меняется API, нужно обновлять текстовую docs page на `https://api.wobbly.site/api/docs` в том же изменении
 - CI дополнительно проверяет, что API-изменения не уходят без обновления `/api/docs`
 - linters and tests: `ruff`, `pytest`
