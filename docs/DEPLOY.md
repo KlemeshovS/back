@@ -114,6 +114,10 @@ ssh -i /Users/klem/Documents/eguene/deploy_key root@api.wobbly.site 'curl -fsS h
 ```
 
 ```bash
+ssh -i /Users/klem/Documents/eguene/deploy_key root@api.wobbly.site 'curl -fsS http://127.0.0.1:8000/ready'
+```
+
+```bash
 ssh -i /Users/klem/Documents/eguene/deploy_key root@api.wobbly.site 'nginx -t'
 ```
 
@@ -261,6 +265,7 @@ Pipeline опирается на локальные скрипты:
 - ждет не только `systemctl is-active`, но и успешный ответ healthcheck URL
 - если `/health` не поднимается вовремя, печатает свежие `journalctl` логи сервиса и завершает deploy с ошибкой
 - не включает в release archive локальные dev-артефакты вроде `.venv`, caches и `frontend/node_modules`
+- `/ready` можно использовать как дополнительную пост-деплойную проверку доступности БД
 
 Важно:
 - `nginx` конфиги не раскатываются текущим GitHub Actions deploy автоматически
@@ -359,6 +364,10 @@ ssh -i /Users/klem/Documents/eguene/deploy_key root@api.wobbly.site 'chown ratin
 
 ```bash
 curl -fsS http://127.0.0.1:8000/health
+```
+
+```bash
+curl -fsS http://127.0.0.1:8000/ready
 ```
 
 Проверка публичного API:

@@ -73,6 +73,35 @@ export const docsSections: DocsSection[] = [
     ],
   },
   {
+    id: "health",
+    title: "Service Health",
+    cards: [
+      {
+        method: "GET",
+        badgeClass: "get",
+        path: "/health",
+        paragraphs: ["Показывает, что HTTP-приложение запущено и отвечает."],
+        response: `{
+  "status": "ok"
+}`,
+      },
+      {
+        method: "GET",
+        badgeClass: "get",
+        path: "/ready",
+        paragraphs: [
+          "Показывает, что сервис реально готов принимать трафик.",
+          "Сейчас readiness проверяет доступность PostgreSQL через простой DB ping.",
+        ],
+        response: `{
+  "status": "ok"
+}`,
+        muted:
+          "Если база недоступна, endpoint вернет 503 и единый error contract с message = Service not ready.",
+      },
+    ],
+  },
+  {
     id: "admin-api",
     title: "Admin API",
     cards: [

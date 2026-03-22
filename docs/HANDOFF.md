@@ -80,6 +80,8 @@ Backend продолжает раздавать собранный frontend buil
 ## API State
 
 Актуальные основные endpoint'ы:
+- `GET /health`
+- `GET /ready`
 - `POST /auth/anonymous`
 - `GET /me`
 - `PATCH /me/profile`

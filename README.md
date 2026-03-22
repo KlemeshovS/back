@@ -6,6 +6,7 @@ Monorepo для `Wobbly`, разделенный на два подпроект�
 
 Сейчас проект включает:
 - API для anonymous auth, профиля и рейтингов
+- health и readiness endpoint'ы для monitoring/deploy checks
 - admin API и admin UI foundation
 - admin console with separate staging/production surfaces
 - landing page на `https://wobbly.site`
@@ -172,6 +173,20 @@ Responses:
 - `200` рейтинг обновлён
 - `401` не передан или невалиден bearer token
 - `429` слишком много обновлений рейтинга
+
+### `GET /health`
+
+Показывает, что HTTP-приложение запущено и отвечает.
+
+### `GET /ready`
+
+Показывает, что backend реально готов принимать трафик.
+
+Сейчас readiness проверяет доступность PostgreSQL через простой DB ping.
+
+Responses:
+- `200` сервис готов
+- `503` сервис еще не готов или БД недоступна
 
 ## Error Contract
 

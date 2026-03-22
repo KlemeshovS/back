@@ -1,8 +1,10 @@
 from __future__ import annotations
 
+from contextlib import contextmanager
 from typing import Optional
 
 from app.api.dependencies import get_current_user
+from app.api.routes import health
 from app.services import user_service
 from tests.helpers import build_client
 
@@ -14,6 +16,63 @@ def test_healthcheck_returns_ok() -> None:
 
     assert response.status_code == 200
     assert response.json() == {"status": "ok"}
+
+
+def test_readiness_returns_ok_when_database_is_available(monkeypatch) -> None:
+    client = build_client()
+
+    @contextmanager
+    def fake_connection():
+        class FakeCursor:
+            def execute(self, query: str) -> None:
+                assert query == "SELECT 1"
+
+            def fetchone(self):
+                return (1,)
+
+            def __enter__(self):
+                return self
+
+            def __exit__(self, exc_type, exc, tb) -> None:
+                return None
+
+        class FakeConnection:
+            def cursor(self) -> FakeCursor:
+                return FakeCursor()
+
+            def __enter__(self):
+                return self
+
+            def __exit__(self, exc_type, exc, tb) -> None:
+                return None
+
+        yield FakeConnection()
+
+    monkeypatch.setattr(health, "get_connection", fake_connection)
+
+    response = client.get("/ready")
+
+    assert response.status_code == 200
+    assert response.json() == {"status": "ok"}
+
+
+def test_readiness_returns_503_when_database_is_unavailable(monkeypatch) -> None:
+    client = build_client()
+
+    @contextmanager
+    def broken_connection():
+        raise RuntimeError("db down")
+        yield
+
+    monkeypatch.setattr(health, "get_connection", broken_connection)
+
+    response = client.get("/ready")
+
+    assert response.status_code == 503
+    assert response.json() == {
+        "code": "HTTP_ERROR",
+        "message": "Service not ready",
+    }
 
 
 def test_patch_me_rating_updates_participation(monkeypatch) -> None:
