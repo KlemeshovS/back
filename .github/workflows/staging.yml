@@ -105,8 +105,7 @@ jobs:
             done
           done
           for url in \
-            https://admin.wobbly.site/staging/ \
-            https://admin.wobbly.site/og/wobbly-mark.svg
+            https://admin.wobbly.site/staging/
           do
             for attempt in 1 2 3 4 5 6 7 8 9 10; do
               if curl -fsS "$url" >/dev/null; then

@@ -315,7 +315,6 @@ X-Staging-Key: <secret>
 После frontend/backend split smoke checks должны проверять не только API и landing, но и admin surface:
 - `https://admin.wobbly.site/production/`
 - `https://admin.wobbly.site/staging/`
-- `https://admin.wobbly.site/og/wobbly-mark.svg`
 
 ## Common Failure: SSH Key Parsing
 
