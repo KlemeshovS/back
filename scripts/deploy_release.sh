@@ -26,6 +26,8 @@ if [[ -f "${ROOT_DIR}/frontend/package.json" ]]; then
   npm --prefix "${ROOT_DIR}/frontend" run build
 fi
 
+export COPYFILE_DISABLE=1
+
 tar \
   --exclude-vcs \
   --exclude=".github" \
@@ -34,6 +36,7 @@ tar \
   --exclude="deploy_key.pub" \
   --exclude="__pycache__" \
   --exclude=".DS_Store" \
+  --exclude="._*" \
   --exclude=".venv" \
   --exclude=".pytest_cache" \
   --exclude=".ruff_cache" \
@@ -56,6 +59,7 @@ ssh -o BatchMode=yes -i "$SSH_KEY_PATH" "${DEPLOY_USER}@${DEPLOY_HOST}" "\
     cp '${DEPLOY_PATH}/app/static/pages/landing.html' '${REMOTE_BACKUP_DIR}/landing.html'; \
   fi && \
   tar -xzf '${REMOTE_TMP_ARCHIVE}' -C '${DEPLOY_PATH}' && \
+  find '${DEPLOY_PATH}' -name '._*' -delete && \
   '${DEPLOY_VENV_PATH}/bin/python' -m pip install -r '${DEPLOY_PATH}/backend/requirements.txt' && \
   chown -R '${DEPLOY_OWNER}' '${DEPLOY_PATH}' && \
   systemctl restart '${DEPLOY_SERVICE}' && \
