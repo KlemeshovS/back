@@ -40,8 +40,7 @@ Admin baseline в коде уже есть:
   - `ADMIN_BOOTSTRAP_LOGIN`
   - `ADMIN_BOOTSTRAP_PASSWORD`
 - admin host уже поднят на `https://admin.wobbly.site`
-- `admin.wobbly.site/production/` проксируется в production app
-- `admin.wobbly.site/staging/` проксируется в staging app
+- `admin.wobbly.site/production/` и `admin.wobbly.site/staging/` теперь используют один и тот же UI shell
 - same-origin admin API идет через:
   - `/production/api/...`
   - `/staging/api/...`
@@ -50,6 +49,7 @@ Admin baseline в коде уже есть:
   - `/og/...`
 - owner bootstrap уже применен на production и staging
 - staging CORS уже разрешает `https://admin.wobbly.site`
+- различие между `production` и `staging` в админке теперь только в API backend, а не в наборе frontend ассетов
 - bootstrap credentials это operational secret; в репозиторий их не кладем
 
 Важно:

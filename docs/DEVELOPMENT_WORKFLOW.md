@@ -76,7 +76,7 @@ Commit message оформляем по `Conventional Commits`.
 - после merge удаляем ветку локально и в GitHub
 - после merge в `develop` ориентируемся сначала на staging GitHub Actions pipeline
 - после merge в `main` ориентируемся сначала на production GitHub Actions pipeline
-- staging admin UI считаем частью `develop`, production admin UI считаем частью `main`
+- admin UI считаем единым frontend shell; различие между `production` и `staging` должно быть только в API-окружении
 - если меняется API-контракт или поведение endpoint'ов, в том же изменении нужно обновлять `https://api.wobbly.site/api/docs`
 - по мере роста API текстовую docs page нужно упрощать и перестраивать так, чтобы она оставалась удобной для чтения
 - API-изменение без обновления docs считается незавершенным
