@@ -378,6 +378,11 @@ curl -I https://api.wobbly.site/api/docs
 curl -I https://api.wobbly.site/docs
 ```
 
+Важно:
+- health/readiness для release gate сейчас проверяются локально на сервере через `127.0.0.1`
+- внешний post-deploy smoke-check должен проверять публичные user-facing surfaces, а не внутреннюю готовность процесса
+- nginx конфиги не раскатываются автоматически вместе с кодом, поэтому внешний `/health` или `/ready` не стоит делать обязательным pipeline gate без отдельной синхронизации server nginx
+
 Проверка главной страницы:
 
 ```bash
