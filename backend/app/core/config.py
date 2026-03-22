@@ -14,22 +14,25 @@ class Settings(BaseSettings):
     score_username_window_seconds: int = 60
     database_url: str = Field(
         default="postgresql://app:app@db:5432/app",
-        alias="DATABASE_URL",
+        validation_alias="DATABASE_URL",
     )
     trusted_hosts: str = Field(
         default=(
             "api.wobbly.site,staging-api.wobbly.site,wobbly.site,admin.wobbly.site,localhost,127.0.0.1,85.239.57.243,testserver"
         ),
-        alias="TRUSTED_HOSTS",
+        validation_alias="TRUSTED_HOSTS",
     )
     cors_allowed_origins: str = Field(
         default=(
             "https://wobbly.site,https://api.wobbly.site,https://admin.wobbly.site,http://localhost,http://127.0.0.1"
         ),
-        alias="CORS_ALLOWED_ORIGINS",
+        validation_alias="CORS_ALLOWED_ORIGINS",
     )
-    admin_bootstrap_login: str = Field(default="", alias="ADMIN_BOOTSTRAP_LOGIN")
-    admin_bootstrap_password: str = Field(default="", alias="ADMIN_BOOTSTRAP_PASSWORD")
+    admin_bootstrap_login: str = Field(default="", validation_alias="ADMIN_BOOTSTRAP_LOGIN")
+    admin_bootstrap_password: str = Field(
+        default="",
+        validation_alias="ADMIN_BOOTSTRAP_PASSWORD",
+    )
 
     model_config = SettingsConfigDict(
         env_file=".env",
