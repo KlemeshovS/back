@@ -92,6 +92,7 @@ jobs:
       - name: Smoke check public URLs
         run: |
           curl -fsS https://api.wobbly.site/health
+          curl -fsS https://api.wobbly.site/ready
           curl -fsS https://api.wobbly.site/api/docs >/dev/null
           curl -fsS https://api.wobbly.site/api/swagger >/dev/null
           curl -fsS https://wobbly.site >/dev/null

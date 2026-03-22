@@ -45,8 +45,16 @@ ssh -o BatchMode=yes -i "$SSH_KEY_PATH" "${DEPLOY_USER}@${DEPLOY_HOST}" "mkdir -
 scp -i "$SSH_KEY_PATH" "$TMP_ARCHIVE" "${DEPLOY_USER}@${DEPLOY_HOST}:${REMOTE_TMP_ARCHIVE}"
 
 ssh -o BatchMode=yes -i "$SSH_KEY_PATH" "${DEPLOY_USER}@${DEPLOY_HOST}" "\
-  cp '${DEPLOY_PATH}/backend/app/main.py' '${REMOTE_BACKUP_DIR}/main.py' && \
-  cp '${DEPLOY_PATH}/backend/app/static/index.html' '${REMOTE_BACKUP_DIR}/index.html' && \
+  if [ -f '${DEPLOY_PATH}/backend/app/main.py' ]; then \
+    cp '${DEPLOY_PATH}/backend/app/main.py' '${REMOTE_BACKUP_DIR}/main.py'; \
+  elif [ -f '${DEPLOY_PATH}/app/main.py' ]; then \
+    cp '${DEPLOY_PATH}/app/main.py' '${REMOTE_BACKUP_DIR}/main.py'; \
+  fi && \
+  if [ -f '${DEPLOY_PATH}/backend/app/static/index.html' ]; then \
+    cp '${DEPLOY_PATH}/backend/app/static/index.html' '${REMOTE_BACKUP_DIR}/index.html'; \
+  elif [ -f '${DEPLOY_PATH}/app/static/pages/landing.html' ]; then \
+    cp '${DEPLOY_PATH}/app/static/pages/landing.html' '${REMOTE_BACKUP_DIR}/landing.html'; \
+  fi && \
   tar -xzf '${REMOTE_TMP_ARCHIVE}' -C '${DEPLOY_PATH}' && \
   '${DEPLOY_VENV_PATH}/bin/python' -m pip install -r '${DEPLOY_PATH}/backend/requirements.txt' && \
   chown -R '${DEPLOY_OWNER}' '${DEPLOY_PATH}' && \
