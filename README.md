@@ -45,15 +45,6 @@ Monorepo для `Wobbly`, разделенный на два подпроект�
 - `.github/workflows/pipeline.yml` — verify + deploy pipeline
 - `backend/pyproject.toml` — lint/test tooling config
 
-Старые модули:
-- `backend/app/auth.py`
-- `backend/app/config.py`
-- `backend/app/database.py`
-- `backend/app/rate_limit.py`
-- `backend/app/schemas.py`
-
-пока оставлены как compatibility wrappers, чтобы рефакторинг был безопасным и не ломал imports одним шагом.
-
 ## Current Project Snapshot
 
 Если работа переносится в новый чат, это нужно считать актуальной базой проекта:
@@ -237,6 +228,15 @@ npm --prefix frontend run dev
 ```bash
 ./scripts/ci_check.sh
 ```
+
+Она включает:
+- `ruff check backend/app backend/tests scripts`
+- `pytest`
+- `npm --prefix frontend run lint`
+- `npm --prefix frontend run format`
+- `npm --prefix frontend run build`
+- `docker compose config`
+- docs sync check
 
 ## Docs Rule
 

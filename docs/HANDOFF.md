@@ -77,13 +77,6 @@ Admin baseline в коде уже есть:
 
 Backend продолжает раздавать собранный frontend build из `backend/app/static`.
 
-Compatibility wrappers пока оставлены:
-- `backend/app/auth.py`
-- `backend/app/config.py`
-- `backend/app/database.py`
-- `backend/app/rate_limit.py`
-- `backend/app/schemas.py`
-
 ## API State
 
 Актуальные основные endpoint'ы:

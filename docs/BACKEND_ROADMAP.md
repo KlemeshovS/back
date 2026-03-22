@@ -198,21 +198,7 @@
 - базовый rate limiting уже есть
 - следующая ступень это не только ограничение запросов, но и детекция странного поведения
 
-### 13. Clean up remaining compatibility wrappers
-
-Что сделать:
-- убрать re-export wrappers, если они больше не нужны:
-  - `backend/app/auth.py`
-  - `backend/app/config.py`
-  - `backend/app/database.py`
-  - `backend/app/rate_limit.py`
-  - `backend/app/schemas.py`
-
-Почему это важно:
-- они были полезны на переходном этапе рефакторинга
-- дальше лучше оставить одну ясную структуру без дублирующих точек входа
-
-### 14. Add developer ergonomics
+### 13. Add developer ergonomics
 
 Что сделать:
 - вынести dev dependencies в отдельный файл или optional extras
@@ -223,7 +209,7 @@
 - tooling уже есть
 - теперь стоит сделать его проще в использовании для следующего разработчика
 
-### 15. Continue admin console polish
+### 14. Continue admin console polish
 
 Что сделать:
 - добавить change role в owner-only admin management
@@ -252,7 +238,6 @@
 ### Phase 3
 - error monitoring
 - richer leaderboard queries
-- cleanup of compatibility wrappers
 
 ### Phase 4
 - API versioning
@@ -315,3 +300,6 @@
 - done: при изменении API docs page обновляется в том же изменении
 - done: проектный handoff и deploy context зафиксированы в `.md`
 - done: non-README docs вынесены в `docs/`
+
+### Cleanup
+- done: удалены compatibility wrappers после разделения `backend/` и `frontend/`
