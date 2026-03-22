@@ -446,13 +446,10 @@ textarea {
 
 .user-actions-menu,
 .admin-actions-menu {
-  position: absolute;
-  top: auto;
-  bottom: calc(100% + 8px);
-  right: 0;
-  z-index: 40;
+  position: fixed;
+  z-index: 120;
   display: grid;
-  min-width: 196px;
+  width: 220px;
   gap: 6px;
   padding: 8px;
   border-radius: 16px;

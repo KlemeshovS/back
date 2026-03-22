@@ -201,37 +201,38 @@
                           class="ghost-button action-menu-trigger"
                           type="button"
                           aria-label="User actions"
-                          @click="
-                            consoleState.openUserMenuId =
-                              consoleState.openUserMenuId === user.id
-                                ? null
-                                : user.id
+                          @click.stop="
+                            consoleState.toggleUserMenu($event, user.id)
                           "
                         >
                           <span class="dots-icon" aria-hidden="true">•••</span>
                         </button>
-                        <div
-                          class="user-actions-menu"
-                          :class="{
-                            'section-hidden':
-                              consoleState.openUserMenuId !== user.id,
-                          }"
-                        >
-                          <button
-                            class="menu-item"
-                            type="button"
-                            @click="consoleState.selectUser(user)"
+                        <Teleport to="body">
+                          <div
+                            v-if="consoleState.isUserMenuOpen(user.id)"
+                            class="user-actions-menu"
+                            :style="{
+                              top: `${consoleState.menuState.top}px`,
+                              left: `${consoleState.menuState.left}px`,
+                            }"
+                            @click.stop
                           >
-                            Редактировать
-                          </button>
-                          <button
-                            class="menu-item menu-item-danger"
-                            type="button"
-                            @click="consoleState.confirmDeleteUser(user)"
-                          >
-                            Удалить
-                          </button>
-                        </div>
+                            <button
+                              class="menu-item"
+                              type="button"
+                              @click="consoleState.selectUser(user)"
+                            >
+                              Редактировать
+                            </button>
+                            <button
+                              class="menu-item menu-item-danger"
+                              type="button"
+                              @click="consoleState.confirmDeleteUser(user)"
+                            >
+                              Удалить
+                            </button>
+                          </div>
+                        </Teleport>
                       </div>
                     </td>
                   </tr>
@@ -297,39 +298,40 @@
                             class="ghost-button action-menu-trigger"
                             type="button"
                             aria-label="Admin actions"
-                            @click="
-                              consoleState.openAdminMenuId =
-                                consoleState.openAdminMenuId === admin.id
-                                  ? null
-                                  : admin.id
+                            @click.stop="
+                              consoleState.toggleAdminMenu($event, admin.id)
                             "
                           >
                             <span class="dots-icon" aria-hidden="true"
                               >•••</span
                             >
                           </button>
-                          <div
-                            class="user-actions-menu"
-                            :class="{
-                              'section-hidden':
-                                consoleState.openAdminMenuId !== admin.id,
-                            }"
-                          >
-                            <button
-                              class="menu-item"
-                              type="button"
-                              @click="consoleState.selectAdmin(admin)"
+                          <Teleport to="body">
+                            <div
+                              v-if="consoleState.isAdminMenuOpen(admin.id)"
+                              class="user-actions-menu"
+                              :style="{
+                                top: `${consoleState.menuState.top}px`,
+                                left: `${consoleState.menuState.left}px`,
+                              }"
+                              @click.stop
                             >
-                              Редактировать
-                            </button>
-                            <button
-                              class="menu-item menu-item-danger"
-                              type="button"
-                              @click="consoleState.confirmDeleteAdmin(admin)"
-                            >
-                              Удалить
-                            </button>
-                          </div>
+                              <button
+                                class="menu-item"
+                                type="button"
+                                @click="consoleState.selectAdmin(admin)"
+                              >
+                                Редактировать
+                              </button>
+                              <button
+                                class="menu-item menu-item-danger"
+                                type="button"
+                                @click="consoleState.confirmDeleteAdmin(admin)"
+                              >
+                                Удалить
+                              </button>
+                            </div>
+                          </Teleport>
                         </div>
                       </td>
                     </tr>

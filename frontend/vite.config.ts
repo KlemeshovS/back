@@ -13,5 +13,17 @@ export default defineConfig({
   build: {
     outDir: "../backend/app/static",
     emptyOutDir: true,
+    rollupOptions: {
+      output: {
+        entryFileNames: "assets/admin-console-[hash].js",
+        chunkFileNames: "assets/chunks/[name]-[hash].js",
+        assetFileNames: (assetInfo) => {
+          if (assetInfo.name?.endsWith(".css")) {
+            return "assets/admin-console-[hash][extname]";
+          }
+          return "assets/[name]-[hash][extname]";
+        },
+      },
+    },
   },
 });
