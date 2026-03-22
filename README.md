@@ -1,6 +1,8 @@
 # Rating Service MVP
 
-Backend, landing page и production docs для `Wobbly`.
+Monorepo для `Wobbly`, разделенный на два подпроекта:
+- `backend/` — FastAPI API, migrations, tests и runtime
+- `frontend/` — Vue 3 + TypeScript UI для landing, privacy, docs и admin surfaces
 
 Сейчас проект включает:
 - API для anonymous auth, профиля и рейтингов
@@ -20,30 +22,35 @@ Backend, landing page и production docs для `Wobbly`.
 
 ## Project Structure
 
-Текущая структура проекта после второго этапа рефакторинга:
-- `app/main.py` — минимальный entrypoint
-- `app/api/app.py` — app factory
-- `app/api/dependencies.py` — общие dependencies
-- `app/api/routes/` — route modules по зонам ответственности
-- `app/core/` — auth, config, rate limiting
-- `app/db/` — database access и init_db
-- `app/domain/` — Pydantic schemas
-- `app/services/` — business logic
-- `app/static/` — landing, docs page, css, js, assets
-- `alembic/` — migration scripts
+Текущая структура проекта:
+- `backend/app/main.py` — минимальный entrypoint
+- `backend/app/api/app.py` — app factory
+- `backend/app/api/dependencies.py` — общие dependencies
+- `backend/app/api/routes/` — route modules по зонам ответственности
+- `backend/app/core/` — auth, config, rate limiting
+- `backend/app/db/` — database access и init_db
+- `backend/app/domain/` — Pydantic schemas
+- `backend/app/services/` — business logic
+- `backend/app/static/` — собранный frontend build, который раздается backend'ом
+- `backend/alembic/` — migration scripts
 - `scripts/` — CI checks, deploy, docs sync checks
 - `.githooks/` — локальные git hooks
-- `tests/` — unit и integration tests
+- `backend/tests/` — unit и integration tests
+- `frontend/src/` — Vue source code
+- `frontend/src/pages/` — landing, privacy, docs, admin screens
+- `frontend/src/features/docs/content.ts` — источник правды для docs page
+- `frontend/src/features/admin/` — admin console state и typed API client
+- `frontend/package.json` — frontend tooling: TypeScript, ESLint, Prettier, Vite
 - `docs/` — operational, mobile, roadmap и handoff документация
 - `.github/workflows/pipeline.yml` — verify + deploy pipeline
-- `pyproject.toml` — lint/test tooling config
+- `backend/pyproject.toml` — lint/test tooling config
 
 Старые модули:
-- `app/auth.py`
-- `app/config.py`
-- `app/database.py`
-- `app/rate_limit.py`
-- `app/schemas.py`
+- `backend/app/auth.py`
+- `backend/app/config.py`
+- `backend/app/database.py`
+- `backend/app/rate_limit.py`
+- `backend/app/schemas.py`
 
 пока оставлены как compatibility wrappers, чтобы рефакторинг был безопасным и не ломал imports одним шагом.
 
@@ -218,6 +225,25 @@ docker compose up --build
 
 После запуска API будет доступно на:
 - `http://localhost:8000`
+
+Frontend dev server:
+
+```bash
+npm --prefix frontend run dev
+```
+
+Полная локальная проверка:
+
+```bash
+./scripts/ci_check.sh
+```
+
+## Docs Rule
+
+Если меняется API, в том же изменении нужно обновлять:
+- `frontend/src/features/docs/content.ts`
+- при необходимости `docs/MOBILE_API.md`
+- при необходимости `README.md`
 - Swagger UI: `http://localhost:8000/api/swagger`
 - Text docs: `http://localhost:8000/api/docs`
 
@@ -239,21 +265,21 @@ docker compose up --build
 - conventions: trunk-based development + Conventional Commits
 - branch flow: `develop` для активной разработки, `main` только для production releases по явному запросу
 - если задача про admin console, первыми смотреть:
-  - `app/static/pages/admin.html`
-  - `app/static/css/admin.css`
-  - `app/static/js/admin.js`
-  - `app/api/routes/admin.py`
-  - `app/services/admin_service.py`
+  - `frontend/src/pages/AdminPage.vue`
+  - `frontend/src/features/admin/useAdminConsole.ts`
+  - `frontend/src/features/admin/api.ts`
+  - `backend/app/api/routes/admin.py`
+  - `backend/app/services/admin_service.py`
 - для нового чата важно: актуальная рабочая ветка обычно `develop`; не предлагать merge в `main`, если пользователь явно не запросил production release
 - если меняется API, нужно обновлять текстовую docs page на `https://api.wobbly.site/api/docs` в том же изменении
 - CI дополнительно проверяет, что API-изменения не уходят без обновления `/api/docs`
 - linters and tests: `ruff`, `pytest`
 - локальные обязательные hooks: `.githooks/pre-commit`, `.githooks/pre-push`
-- после рефакторинга новые endpoint changes обычно живут в `app/api/routes/`, `app/services/`, `app/domain/`, `app/core/`
+- после рефакторинга новые endpoint changes обычно живут в `backend/app/api/routes/`, `backend/app/services/`, `backend/app/domain/`, `backend/app/core/`
 - schema changes теперь должны идти через Alembic migrations
 
 Если меняется поведение API, обычно нужно обновлять:
-- `app/static/js/api-docs.js`
+- `frontend/src/features/docs/content.ts`
 - при необходимости `docs/MOBILE_API.md`
 - при необходимости `README.md`
 
@@ -264,8 +290,8 @@ docker compose up --build
 ```
 
 Что делают hooks:
-- `pre-commit` — `ruff --fix`, `ruff`, Python syntax, JS syntax
-- `pre-push` — `pytest`
+- `pre-commit` — `ruff --fix`, `ruff`, Python syntax, frontend ESLint/Prettier
+- `pre-push` — `pytest`, frontend build
 
 ## Context Transfer
 

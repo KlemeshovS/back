@@ -56,30 +56,30 @@ Admin baseline в коде уже есть:
 
 ## Current Architecture
 
-Структура после второго этапа рефакторинга:
-- `app/main.py` — минимальный entrypoint
-- `app/api/app.py` — app factory
-- `app/api/dependencies.py` — dependencies
-- `app/api/routes/`:
-  - `auth.py`
-  - `profile.py`
-  - `leaderboard.py`
-  - `docs.py`
-  - `site.py`
-  - `health.py`
-- `app/services/user_service.py` — business logic
-- `app/core/` — auth, config, rate limiting
-- `app/db/database.py` — DB access
-- `app/domain/schemas.py` — Pydantic schemas
-- `app/static/` — landing page, docs page, css, js, assets
-- `alembic/` — migration scripts
+Репозиторий теперь разделен на два подпроекта:
+- `backend/`
+  - `backend/app/main.py` — минимальный entrypoint
+  - `backend/app/api/` — app factory, dependencies, routes
+  - `backend/app/services/` — business logic
+  - `backend/app/core/` — auth, config, rate limiting
+  - `backend/app/db/database.py` — DB access
+  - `backend/app/domain/schemas.py` — Pydantic schemas
+  - `backend/alembic/` — migrations
+  - `backend/tests/` — unit и integration tests
+- `frontend/`
+  - `frontend/src/pages/` — landing, privacy, docs, admin screens
+  - `frontend/src/features/docs/content.ts` — источник правды для `/api/docs`
+  - `frontend/src/features/admin/` — admin console state и typed API client
+  - `frontend/package.json` — Vite, Vue, TypeScript, ESLint, Prettier
+
+Backend продолжает раздавать собранный frontend build из `backend/app/static`.
 
 Compatibility wrappers пока оставлены:
-- `app/auth.py`
-- `app/config.py`
-- `app/database.py`
-- `app/rate_limit.py`
-- `app/schemas.py`
+- `backend/app/auth.py`
+- `backend/app/config.py`
+- `backend/app/database.py`
+- `backend/app/rate_limit.py`
+- `backend/app/schemas.py`
 
 ## API State
 
@@ -112,7 +112,7 @@ Compatibility wrappers пока оставлены:
 ## Docs Rule
 
 Если меняется API, в том же изменении нужно обновлять:
-- `app/static/js/api-docs.js`
+- `frontend/src/features/docs/content.ts`
 - при необходимости `docs/MOBILE_API.md`
 - при необходимости `README.md`
 
@@ -120,12 +120,12 @@ Compatibility wrappers пока оставлены:
 - формат ответа: `code + message`
 
 Источник правды для человекочитаемой API docs page:
-- `app/static/js/api-docs.js`
+- `frontend/src/features/docs/content.ts`
 
 Admin UI файлы:
-- `app/static/pages/admin.html`
-- `app/static/css/admin.css`
-- `app/static/js/admin.js`
+- `frontend/src/pages/AdminPage.vue`
+- `frontend/src/features/admin/useAdminConsole.ts`
+- `frontend/src/features/admin/api.ts`
 
 Admin UI сейчас уже умеет:
 - sidebar navigation по экранам
@@ -156,24 +156,28 @@ Admin UI сейчас уже умеет:
 - если `git status` чистый и активная ветка `develop`, можно продолжать работу без дополнительных уточнений
 
 Важно:
-- `/api/docs` собирается клиентским JavaScript
+- `/api/docs` собирается frontend приложением на Vue
 - при сыром `curl` в HTML не всегда будут видны финальные тексты
-- если нужно проверить содержимое docs page, сначала смотри `app/static/js/api-docs.js`
+- если нужно проверить содержимое docs page, сначала смотри `frontend/src/features/docs/content.ts`
 
 ## Testing And Tooling
 
 Сейчас в проекте уже есть:
 - `ruff`
 - `pytest`
+- `Vue 3 + TypeScript`
+- `ESLint`
+- `Prettier`
 - unit tests:
-  - `tests/test_auth.py`
-  - `tests/test_rate_limit.py`
-  - `tests/test_schemas.py`
+  - `backend/tests/test_auth.py`
+  - `backend/tests/test_rate_limit.py`
+  - `backend/tests/test_schemas.py`
 - integration tests:
-  - `tests/test_api_endpoints.py`
+  - `backend/tests/test_api_endpoints.py`
 
 Tooling config:
-- `pyproject.toml`
+- `backend/pyproject.toml`
+- `frontend/package.json`
 
 ## CI/CD
 
@@ -272,15 +276,15 @@ Tooling config:
 Если новый чат продолжает работу:
 1. `git status --short --branch`
 2. если задача про production: прочитать `docs/DEPLOY.md`
-3. если задача про API: прочитать `docs/MOBILE_API.md` и посмотреть `app/static/js/api-docs.js`
+3. если задача про API: прочитать `docs/MOBILE_API.md` и посмотреть `frontend/src/features/docs/content.ts`
 4. если задача про админку: сначала смотреть:
-   - `app/static/pages/admin.html`
-   - `app/static/css/admin.css`
-   - `app/static/js/admin.js`
-   - `app/api/routes/admin.py`
-   - `app/services/admin_service.py`
-   - потом уже только при необходимости `app/static/js/api-docs.js`, `README.md`, `docs/DEPLOY.md`
-5. если задача про архитектуру: смотреть `app/api/`, `app/services/`, `app/core/`, `app/domain/`, `app/db/`
+   - `frontend/src/pages/AdminPage.vue`
+   - `frontend/src/features/admin/useAdminConsole.ts`
+   - `frontend/src/features/admin/api.ts`
+   - `backend/app/api/routes/admin.py`
+   - `backend/app/services/admin_service.py`
+   - потом уже только при необходимости `frontend/src/features/docs/content.ts`, `README.md`, `docs/DEPLOY.md`
+5. если задача про архитектуру: смотреть `backend/app/api/`, `backend/app/services/`, `backend/app/core/`, `backend/app/domain/`, `backend/app/db/`
 
 ## Current Next Improvements
 

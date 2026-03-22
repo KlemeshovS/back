@@ -80,6 +80,7 @@ Commit message оформляем по `Conventional Commits`.
 - если меняется API-контракт или поведение endpoint'ов, в том же изменении нужно обновлять `https://api.wobbly.site/api/docs`
 - по мере роста API текстовую docs page нужно упрощать и перестраивать так, чтобы она оставалась удобной для чтения
 - API-изменение без обновления docs считается незавершенным
+- источником правды для docs page в текущей структуре считается `frontend/src/features/docs/content.ts`
 
 ## Handoff Rule
 
@@ -136,20 +137,23 @@ Commit message оформляем по `Conventional Commits`.
 ## Architecture Rule
 
 После второго этапа рефакторинга:
-- `app/main.py` должен оставаться тонким entrypoint
-- новые route changes должны идти в `app/api/routes/`
-- dependencies должны идти в `app/api/dependencies.py`
-- business logic должна идти в `app/services/`
-- schemas должны идти в `app/domain/`
-- core utilities должны идти в `app/core/`
+- `backend/app/main.py` должен оставаться тонким entrypoint
+- новые route changes должны идти в `backend/app/api/routes/`
+- dependencies должны идти в `backend/app/api/dependencies.py`
+- business logic должна идти в `backend/app/services/`
+- schemas должны идти в `backend/app/domain/`
+- core utilities должны идти в `backend/app/core/`
+- frontend changes должны идти в `frontend/src/`
+- page-level Vue screens должны жить в `frontend/src/pages/`
+- admin UI state и typed API calls должны жить в `frontend/src/features/admin/`
 - admin UI задачи должны в первую очередь смотреть в:
-  - `app/static/pages/admin.html`
-  - `app/static/css/admin.css`
-  - `app/static/js/admin.js`
-  - `app/api/routes/admin.py`
-  - `app/services/admin_service.py`
+  - `frontend/src/pages/AdminPage.vue`
+  - `frontend/src/features/admin/useAdminConsole.ts`
+  - `frontend/src/features/admin/api.ts`
+  - `backend/app/api/routes/admin.py`
+  - `backend/app/services/admin_service.py`
 
-Если новая задача снова раздувает `app/main.py`, это признак, что изменение кладется не туда.
+Если новая задача снова раздувает `backend/app/main.py`, это признак, что изменение кладется не туда.
 
 ## Local Hooks Rule
 
@@ -163,7 +167,7 @@ Commit message оформляем по `Conventional Commits`.
 - `ruff check --fix`
 - повторную проверку `ruff`
 - Python syntax checks
-- JavaScript syntax checks
+- frontend ESLint/Prettier checks
 
 Подключение hooks:
 
@@ -176,9 +180,11 @@ Commit message оформляем по `Conventional Commits`.
   - `ruff check --fix`
   - повторная проверка `ruff`
   - Python syntax checks
-  - JavaScript syntax checks
+  - frontend ESLint
+  - frontend Prettier
 - `pre-push`:
   - `pytest`
+  - frontend build
 
 В CI остаются:
 - `docker compose config`

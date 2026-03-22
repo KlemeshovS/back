@@ -6,7 +6,7 @@ Requires=postgresql.service
 [Service]
 User=ratingapp
 Group=ratingapp
-WorkingDirectory=/opt/rating-service-staging
+WorkingDirectory=/opt/rating-service-staging/backend
 EnvironmentFile=/opt/rating-service-staging/.env
 ExecStart=/opt/rating-service-staging/.venv/bin/uvicorn app.main:app --host 0.0.0.0 --port 8001
 Restart=always

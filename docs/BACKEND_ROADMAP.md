@@ -26,9 +26,10 @@
 - давать self-service смену пароля текущему admin
 
 Инженерная база уже тоже есть:
-- проект разнесен на `app/api`, `app/services`, `app/core`, `app/db`, `app/domain`
+- backend разнесен на `backend/app/api`, `backend/app/services`, `backend/app/core`, `backend/app/db`, `backend/app/domain`
+- frontend вынесен в отдельный `frontend/` подпроект на Vue + TypeScript
 - подключен `Alembic`
-- добавлены `ruff`, `pytest`, pre-commit и pre-push hooks
+- добавлены `ruff`, `pytest`, Vue/TypeScript tooling, ESLint, Prettier, pre-commit и pre-push hooks
 - есть unit tests и integration tests
 - CI/CD уже автоматизирован через GitHub Actions
 - production deploy идет через `verify -> deploy`
@@ -201,11 +202,11 @@
 
 Что сделать:
 - убрать re-export wrappers, если они больше не нужны:
-  - `app/auth.py`
-  - `app/config.py`
-  - `app/database.py`
-  - `app/rate_limit.py`
-  - `app/schemas.py`
+  - `backend/app/auth.py`
+  - `backend/app/config.py`
+  - `backend/app/database.py`
+  - `backend/app/rate_limit.py`
+  - `backend/app/schemas.py`
 
 Почему это важно:
 - они были полезны на переходном этапе рефакторинга

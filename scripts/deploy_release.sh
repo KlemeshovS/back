@@ -21,6 +21,11 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
 cd "$ROOT_DIR"
 
+if [[ -f "${ROOT_DIR}/frontend/package.json" ]]; then
+  npm --prefix "${ROOT_DIR}/frontend" ci
+  npm --prefix "${ROOT_DIR}/frontend" run build
+fi
+
 tar \
   --exclude-vcs \
   --exclude=".github" \
@@ -35,11 +40,10 @@ ssh -o BatchMode=yes -i "$SSH_KEY_PATH" "${DEPLOY_USER}@${DEPLOY_HOST}" "mkdir -
 scp -i "$SSH_KEY_PATH" "$TMP_ARCHIVE" "${DEPLOY_USER}@${DEPLOY_HOST}:${REMOTE_TMP_ARCHIVE}"
 
 ssh -o BatchMode=yes -i "$SSH_KEY_PATH" "${DEPLOY_USER}@${DEPLOY_HOST}" "\
-  cp '${DEPLOY_PATH}/app/main.py' '${REMOTE_BACKUP_DIR}/main.py' && \
-  cp '${DEPLOY_PATH}/app/static/pages/landing.html' '${REMOTE_BACKUP_DIR}/landing.html' && \
-  cp '${DEPLOY_PATH}/app/static/js/landing.js' '${REMOTE_BACKUP_DIR}/landing.js' && \
+  cp '${DEPLOY_PATH}/backend/app/main.py' '${REMOTE_BACKUP_DIR}/main.py' && \
+  cp '${DEPLOY_PATH}/backend/app/static/index.html' '${REMOTE_BACKUP_DIR}/index.html' && \
   tar -xzf '${REMOTE_TMP_ARCHIVE}' -C '${DEPLOY_PATH}' && \
-  '${DEPLOY_VENV_PATH}/bin/python' -m pip install -r '${DEPLOY_PATH}/requirements.txt' && \
+  '${DEPLOY_VENV_PATH}/bin/python' -m pip install -r '${DEPLOY_PATH}/backend/requirements.txt' && \
   chown -R '${DEPLOY_OWNER}' '${DEPLOY_PATH}' && \
   systemctl restart '${DEPLOY_SERVICE}' && \
   for attempt in 1 2 3 4 5 6 7 8 9 10; do \

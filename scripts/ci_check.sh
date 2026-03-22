@@ -3,26 +3,36 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+PYTHON_BIN="${ROOT_DIR}/.venv/bin/python"
+
+if [[ ! -x "$PYTHON_BIN" ]]; then
+  PYTHON_BIN="python3"
+fi
 
 cd "$ROOT_DIR"
 
 echo "Running Python syntax checks"
-python3 -c "import ast, pathlib; ast.parse(pathlib.Path('app/main.py').read_text())"
-python3 -c "import ast, pathlib; ast.parse(pathlib.Path('app/core/auth.py').read_text())"
-python3 -c "import ast, pathlib; ast.parse(pathlib.Path('app/core/config.py').read_text())"
-python3 -c "import ast, pathlib; ast.parse(pathlib.Path('app/core/rate_limit.py').read_text())"
-python3 -c "import ast, pathlib; ast.parse(pathlib.Path('app/db/database.py').read_text())"
-python3 -c "import ast, pathlib; ast.parse(pathlib.Path('app/domain/schemas.py').read_text())"
-
-echo "Running JavaScript syntax checks"
-node --check app/static/js/landing.js
-node --check app/static/js/api-docs.js
+"$PYTHON_BIN" -c "import ast, pathlib; ast.parse(pathlib.Path('backend/app/main.py').read_text())"
+"$PYTHON_BIN" -c "import ast, pathlib; ast.parse(pathlib.Path('backend/app/core/auth.py').read_text())"
+"$PYTHON_BIN" -c "import ast, pathlib; ast.parse(pathlib.Path('backend/app/core/config.py').read_text())"
+"$PYTHON_BIN" -c "import ast, pathlib; ast.parse(pathlib.Path('backend/app/core/rate_limit.py').read_text())"
+"$PYTHON_BIN" -c "import ast, pathlib; ast.parse(pathlib.Path('backend/app/db/database.py').read_text())"
+"$PYTHON_BIN" -c "import ast, pathlib; ast.parse(pathlib.Path('backend/app/domain/schemas.py').read_text())"
 
 echo "Running Ruff"
-ruff check app tests scripts
+"$PYTHON_BIN" -m ruff check backend/app backend/tests scripts
 
 echo "Running pytest"
-pytest
+"$PYTHON_BIN" -m pytest
+
+echo "Running frontend lint"
+npm --prefix frontend run lint
+
+echo "Running frontend format check"
+npm --prefix frontend run format
+
+echo "Running frontend build"
+npm --prefix frontend run build
 
 echo "Validating Docker Compose config"
 docker compose config >/dev/null

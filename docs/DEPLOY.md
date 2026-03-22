@@ -81,7 +81,7 @@ ssh -i /Users/klem/Documents/eguene/deploy_key root@api.wobbly.site
 ```
 
 Ключевые пути:
-- app code: `/opt/rating-service/app`
+- app code: `/opt/rating-service/backend/app`
 - backups created during manual deploys: `/opt/rating-service/.deploy-backups`
 
 ## Source Of Truth For Docs Page
@@ -89,14 +89,14 @@ ssh -i /Users/klem/Documents/eguene/deploy_key root@api.wobbly.site
 Человекочитаемая API docs page на `https://api.wobbly.site/api/docs` собирается клиентским JavaScript.
 
 Файлы:
-- `app/static/pages/api-docs.html`
-- `app/static/css/api-docs.css`
-- `app/static/js/api-docs.js`
+- `frontend/src/pages/ApiDocsPage.vue`
+- `frontend/src/features/docs/content.ts`
+- build output в `backend/app/static/`
 
 Это важно для проверки:
 - сырой `curl` по `/api/docs` покажет HTML-оболочку
-- содержимое секций и endpoint descriptions живет в `app/static/js/api-docs.js`
-- если нужно проверить, обновилась ли текстовая документация после API change, смотри и production URL, и `app/static/js/api-docs.js`
+- содержимое секций и endpoint descriptions живет в `frontend/src/features/docs/content.ts`
+- если нужно проверить, обновилась ли текстовая документация после API change, смотри и production URL, и `frontend/src/features/docs/content.ts`
 
 ## Quick Verification Commands
 
@@ -186,7 +186,7 @@ journalctl -u rating-service -n 100 --no-pager
 `pipeline.yml` делает следующее:
 - на `pull_request` в `main` запускает только `verify`
 - на `push` в `main` запускает `verify`, а затем `deploy`
-- `verify` ставит Python и Node tooling, гоняет `ruff`, `pytest`, JS syntax checks, Docker config validation и docs sync check
+- `verify` ставит Python и Node tooling, гоняет backend checks, frontend lint/build, Docker config validation и docs sync check
 - `verify` checkout'ит репозиторий с полной историей, чтобы docs sync check мог сравнивать `base sha` и `head sha`
 - `deploy` собирает release archive, копирует его на production и перезапускает `rating-service`
 
@@ -195,8 +195,8 @@ journalctl -u rating-service -n 100 --no-pager
 Схема БД теперь управляется через `Alembic`.
 
 Что важно:
-- миграции лежат в `alembic/versions/`
-- приложение на старте вызывает `alembic upgrade head` программно через `app/db/database.py`
+- миграции лежат в `backend/alembic/versions/`
+- приложение на старте вызывает `alembic upgrade head` программно через `backend/app/db/database.py`
 - это дает плавный переход без отдельного ручного SQL на сервере
 
 ### GitHub Secrets
@@ -253,7 +253,7 @@ Pipeline опирается на локальные скрипты:
 
 Во время deploy script теперь:
 - распаковывает release
-- обновляет Python dependencies в production venv через `pip install -r requirements.txt`
+- обновляет Python dependencies в production venv через `pip install -r backend/requirements.txt`
 - только потом перезапускает `rating-service`
 - ждет не только `systemctl is-active`, но и успешный ответ healthcheck URL
 - если `/health` не поднимается вовремя, печатает свежие `journalctl` логи сервиса и завершает deploy с ошибкой
@@ -286,13 +286,13 @@ X-Staging-Key: <secret>
 - `scripts/check_api_docs_sync.sh`
 
 После рефакторинга ориентироваться нужно на текущую архитектуру:
-- route and behavior changes обычно живут в `app/api/routes/`
-- schema changes живут в `app/domain/`
-- business logic живет в `app/services/`
-- auth and shared behavior могут жить в `app/core/`
+- route and behavior changes обычно живут в `backend/app/api/routes/`
+- schema changes живут в `backend/app/domain/`
+- business logic живет в `backend/app/services/`
+- auth and shared behavior могут жить в `backend/app/core/`
 
 Если поведение API меняется, вместе с этим должны обновляться:
-- `app/static/js/api-docs.js`
+- `frontend/src/features/docs/content.ts`
 - при необходимости `docs/MOBILE_API.md`
 - при необходимости `README.md`
 
