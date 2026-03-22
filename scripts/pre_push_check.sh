@@ -3,17 +3,25 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+PYTHON_BIN="${ROOT_DIR}/.venv/bin/python"
+
+if [[ ! -x "$PYTHON_BIN" ]]; then
+  PYTHON_BIN="python3"
+fi
 
 cd "$ROOT_DIR"
 
-if ! python3 -m pytest --version >/dev/null 2>&1; then
+if ! "$PYTHON_BIN" -m pytest --version >/dev/null 2>&1; then
   echo "pytest is required for pre-push checks."
   echo "Install project test dependencies first."
-  echo "Example: python3 -m pip install -r requirements.txt pytest httpx"
+  echo "Example: python3 -m pip install -r backend/requirements.txt pytest httpx"
   exit 1
 fi
 
 echo "Running pytest"
-python3 -m pytest
+"$PYTHON_BIN" -m pytest
+
+echo "Running frontend build"
+npm --prefix frontend run build
 
 echo "Pre-push checks completed"

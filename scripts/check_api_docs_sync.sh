@@ -29,11 +29,11 @@ API_CHANGED=false
 DOCS_CHANGED=false
 
 while IFS= read -r file; do
-  if [[ "$file" == app/api/routes/* || "$file" == "app/api/dependencies.py" || "$file" == "app/api/app.py" || "$file" == app/services/* || "$file" == app/domain/* || "$file" == app/core/* || "$file" == "app/main.py" || "$file" == "app/schemas.py" ]]; then
+  if [[ "$file" == backend/app/api/routes/* || "$file" == "backend/app/api/dependencies.py" || "$file" == "backend/app/api/app.py" || "$file" == backend/app/services/* || "$file" == backend/app/domain/* || "$file" == backend/app/core/* || "$file" == "backend/app/main.py" ]]; then
     API_CHANGED=true
   fi
 
-  if [[ "$file" == "app/static/js/api-docs.js" || "$file" == "app/static/pages/api-docs.html" || "$file" == "docs/MOBILE_API.md" || "$file" == "README.md" ]]; then
+  if [[ "$file" == "frontend/src/features/docs/content.ts" || "$file" == "frontend/src/pages/ApiDocsPage.vue" || "$file" == "docs/MOBILE_API.md" || "$file" == "README.md" ]]; then
     DOCS_CHANGED=true
   fi
 done <<< "$CHANGED_FILES"

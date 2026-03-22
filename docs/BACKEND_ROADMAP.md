@@ -18,11 +18,18 @@
 - работать на `https://api.wobbly.site`
 - публиковать Swagger на `https://api.wobbly.site/api/swagger`
 - публиковать человекочитаемую docs page на `https://api.wobbly.site/api/docs`
+- обслуживать отдельную admin surface:
+  - `https://admin.wobbly.site/production/`
+  - `https://admin.wobbly.site/staging/`
+- иметь admin auth и роли `owner/admin`
+- поддерживать audit log админских действий
+- давать self-service смену пароля текущему admin
 
 Инженерная база уже тоже есть:
-- проект разнесен на `app/api`, `app/services`, `app/core`, `app/db`, `app/domain`
+- backend разнесен на `backend/app/api`, `backend/app/services`, `backend/app/core`, `backend/app/db`, `backend/app/domain`
+- frontend вынесен в отдельный `frontend/` подпроект на Vue + TypeScript
 - подключен `Alembic`
-- добавлены `ruff`, `pytest`, pre-commit и pre-push hooks
+- добавлены `ruff`, `pytest`, Vue/TypeScript tooling, ESLint, Prettier, pre-commit и pre-push hooks
 - есть unit tests и integration tests
 - CI/CD уже автоматизирован через GitHub Actions
 - production deploy идет через `verify -> deploy`
@@ -191,21 +198,7 @@
 - базовый rate limiting уже есть
 - следующая ступень это не только ограничение запросов, но и детекция странного поведения
 
-### 13. Clean up remaining compatibility wrappers
-
-Что сделать:
-- убрать re-export wrappers, если они больше не нужны:
-  - `app/auth.py`
-  - `app/config.py`
-  - `app/database.py`
-  - `app/rate_limit.py`
-  - `app/schemas.py`
-
-Почему это важно:
-- они были полезны на переходном этапе рефакторинга
-- дальше лучше оставить одну ясную структуру без дублирующих точек входа
-
-### 14. Add developer ergonomics
+### 13. Add developer ergonomics
 
 Что сделать:
 - вынести dev dependencies в отдельный файл или optional extras
@@ -215,6 +208,18 @@
 Почему это важно:
 - tooling уже есть
 - теперь стоит сделать его проще в использовании для следующего разработчика
+
+### 14. Continue admin console polish
+
+Что сделать:
+- добавить change role в owner-only admin management
+- улучшить UX screens `Администраторы` / `Профиль`, чтобы не было сценарных дублей
+- добавить pagination/filters в audit log
+- добавить richer empty/loading/error states
+
+Почему это важно:
+- backend foundation уже есть
+- дальше основная ценность в удобстве и надежности admin operations
 
 ## Suggested Execution Order
 
@@ -233,11 +238,11 @@
 ### Phase 3
 - error monitoring
 - richer leaderboard queries
-- cleanup of compatibility wrappers
 
 ### Phase 4
 - API versioning
 - developer ergonomics improvements
+- admin console polish
 
 ## Recommended Next Task
 
@@ -295,3 +300,6 @@
 - done: при изменении API docs page обновляется в том же изменении
 - done: проектный handoff и deploy context зафиксированы в `.md`
 - done: non-README docs вынесены в `docs/`
+
+### Cleanup
+- done: удалены compatibility wrappers после разделения `backend/` и `frontend/`

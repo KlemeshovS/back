@@ -1,0 +1,286 @@
+:root {
+  --bg: #0f1020;
+  --panel: #17192b;
+  --panel-2: #1f2340;
+  --text: #f3f4ff;
+  --muted: #b9bce0;
+  --accent: #7c5cff;
+  --border: rgba(255, 255, 255, 0.09);
+  --code: #101221;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family:
+    ui-sans-serif,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+  background:
+    radial-gradient(
+      circle at top left,
+      rgba(124, 92, 255, 0.24),
+      transparent 30%
+    ),
+    radial-gradient(
+      circle at top right,
+      rgba(49, 208, 170, 0.18),
+      transparent 25%
+    ),
+    var(--bg);
+  color: var(--text);
+  line-height: 1.55;
+  overflow-x: hidden;
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: 280px minmax(0, 1fr);
+  min-height: 100vh;
+}
+
+.sidebar {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  padding: 32px 20px;
+  overflow-y: auto;
+  border-right: 1px solid var(--border);
+  background: rgba(10, 12, 24, 0.85);
+  backdrop-filter: blur(10px);
+}
+
+.brand {
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  margin-bottom: 8px;
+}
+
+.subtitle {
+  color: var(--muted);
+  margin-bottom: 24px;
+  font-size: 14px;
+}
+
+.sidebar a {
+  display: block;
+  color: var(--muted);
+  text-decoration: none;
+  padding: 8px 10px;
+  border-radius: 10px;
+  margin-bottom: 6px;
+}
+
+.sidebar a:hover {
+  color: var(--text);
+  background: rgba(124, 92, 255, 0.14);
+}
+
+.content {
+  padding: 40px 56px 80px;
+  max-width: 980px;
+  width: min(100%, 980px);
+}
+
+.hero {
+  margin-bottom: 28px;
+  padding: 28px;
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  background: linear-gradient(
+    135deg,
+    rgba(124, 92, 255, 0.16),
+    rgba(49, 208, 170, 0.08)
+  );
+}
+
+h1,
+h2,
+h3 {
+  margin-top: 0;
+}
+
+h1 {
+  font-size: clamp(32px, 5vw, 42px);
+  margin-bottom: 8px;
+}
+
+h2 {
+  font-size: clamp(24px, 3.4vw, 28px);
+  margin: 40px 0 16px;
+  padding-top: 12px;
+  scroll-margin-top: 16px;
+}
+
+h3 {
+  font-size: clamp(18px, 2.4vw, 20px);
+  margin: 28px 0 12px;
+}
+
+p,
+li {
+  color: var(--text);
+}
+
+.muted {
+  color: var(--muted);
+}
+
+.card {
+  padding: 24px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  margin-bottom: 18px;
+}
+
+.method {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  margin-bottom: 10px;
+}
+
+.badge {
+  display: inline-block;
+  min-width: 62px;
+  text-align: center;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 800;
+  color: white;
+  background: var(--accent);
+}
+
+.badge.get {
+  background: #1d9bf0;
+}
+
+.badge.post {
+  background: #22c55e;
+}
+
+.badge.patch {
+  background: #f59e0b;
+}
+
+code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  background: rgba(255, 255, 255, 0.06);
+  padding: 2px 6px;
+  border-radius: 6px;
+}
+
+pre {
+  margin: 12px 0 0;
+  background: var(--code);
+  color: #e5e7ff;
+  padding: 16px;
+  border-radius: 16px;
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.quick-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 16px;
+  margin-top: 18px;
+}
+
+.quick-box {
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 18px;
+}
+
+.links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.links a {
+  color: var(--text);
+  text-decoration: none;
+  background: rgba(124, 92, 255, 0.2);
+  border: 1px solid var(--border);
+  padding: 10px 14px;
+  border-radius: 12px;
+}
+
+ul {
+  padding-left: 20px;
+}
+
+@media (max-width: 920px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+
+  .sidebar {
+    position: static;
+    height: auto;
+    border-right: 0;
+    border-bottom: 1px solid var(--border);
+    padding: 20px 16px 14px;
+  }
+
+  .content {
+    padding: 28px 20px 60px;
+  }
+
+  .sidebar nav {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+    margin: 0 -2px;
+    scrollbar-width: thin;
+  }
+
+  .sidebar a {
+    display: inline-flex;
+    white-space: nowrap;
+    margin-bottom: 0;
+  }
+}
+
+@media (max-width: 640px) {
+  .content {
+    padding: 20px 14px 48px;
+  }
+
+  .hero,
+  .card,
+  .quick-box {
+    padding: 18px;
+    border-radius: 18px;
+  }
+
+  .links {
+    flex-direction: column;
+  }
+
+  .links a {
+    width: 100%;
+    text-align: center;
+  }
+
+  .quick-grid {
+    grid-template-columns: 1fr;
+  }
+}

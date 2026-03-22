@@ -11,6 +11,7 @@
 - API: `https://api.wobbly.site`
 - Swagger: `https://api.wobbly.site/api/swagger`
 - text docs: `https://api.wobbly.site/api/docs`
+- expected active development branch: `develop`
 
 ## Current Production Truth
 
@@ -38,6 +39,18 @@ Admin baseline в коде уже есть:
 - первый owner создается через env bootstrap:
   - `ADMIN_BOOTSTRAP_LOGIN`
   - `ADMIN_BOOTSTRAP_PASSWORD`
+- admin host уже поднят на `https://admin.wobbly.site`
+- `admin.wobbly.site/production/` проксируется в production app
+- `admin.wobbly.site/staging/` проксируется в staging app
+- same-origin admin API идет через:
+  - `/production/api/...`
+  - `/staging/api/...`
+- admin frontend assets идут через:
+  - `/assets/...`
+  - `/og/...`
+- owner bootstrap уже применен на production и staging
+- staging CORS уже разрешает `https://admin.wobbly.site`
+- bootstrap credentials это operational secret; в репозиторий их не кладем
 
 Важно:
 - production сейчас не живет через `docker compose up`
@@ -46,34 +59,29 @@ Admin baseline в коде уже есть:
 
 ## Current Architecture
 
-Структура после второго этапа рефакторинга:
-- `app/main.py` — минимальный entrypoint
-- `app/api/app.py` — app factory
-- `app/api/dependencies.py` — dependencies
-- `app/api/routes/`:
-  - `auth.py`
-  - `profile.py`
-  - `leaderboard.py`
-  - `docs.py`
-  - `site.py`
-  - `health.py`
-- `app/services/user_service.py` — business logic
-- `app/core/` — auth, config, rate limiting
-- `app/db/database.py` — DB access
-- `app/domain/schemas.py` — Pydantic schemas
-- `app/static/` — landing page, docs page, css, js, assets
-- `alembic/` — migration scripts
+Репозиторий теперь разделен на два подпроекта:
+- `backend/`
+  - `backend/app/main.py` — минимальный entrypoint
+  - `backend/app/api/` — app factory, dependencies, routes
+  - `backend/app/services/` — business logic
+  - `backend/app/core/` — auth, config, rate limiting
+  - `backend/app/db/database.py` — DB access
+  - `backend/app/domain/schemas.py` — Pydantic schemas
+  - `backend/alembic/` — migrations
+  - `backend/tests/` — unit и integration tests
+- `frontend/`
+  - `frontend/src/pages/` — landing, privacy, docs, admin screens
+  - `frontend/src/features/docs/content.ts` — источник правды для `/api/docs`
+  - `frontend/src/features/admin/` — admin console state и typed API client
+  - `frontend/package.json` — Vite, Vue, TypeScript, ESLint, Prettier
 
-Compatibility wrappers пока оставлены:
-- `app/auth.py`
-- `app/config.py`
-- `app/database.py`
-- `app/rate_limit.py`
-- `app/schemas.py`
+Backend продолжает раздавать собранный frontend build из `backend/app/static`.
 
 ## API State
 
 Актуальные основные endpoint'ы:
+- `GET /health`
+- `GET /ready`
 - `POST /auth/anonymous`
 - `GET /me`
 - `PATCH /me/profile`
@@ -82,13 +90,18 @@ Compatibility wrappers пока оставлены:
 - `GET /leaderboard/top`
 - `GET /leaderboard/bottom`
 - `POST /admin/auth/login`
+- `POST /admin/auth/logout`
 - `GET /admin/me`
+- `PATCH /admin/me/password`
+- `GET /admin/overview`
 - `GET /admin/users`
 - `GET /admin/users/{id}`
 - `PATCH /admin/users/{id}`
+- `DELETE /admin/users/{id}`
 - `GET /admin/admin-users`
 - `POST /admin/admin-users`
 - `PATCH /admin/admin-users/{id}`
+- `DELETE /admin/admin-users/{id}`
 
 Текущее поведение leaderboard:
 - `top` возвращает только пользователей с `score >= 0`
@@ -97,7 +110,7 @@ Compatibility wrappers пока оставлены:
 ## Docs Rule
 
 Если меняется API, в том же изменении нужно обновлять:
-- `app/static/js/api-docs.js`
+- `frontend/src/features/docs/content.ts`
 - при необходимости `docs/MOBILE_API.md`
 - при необходимости `README.md`
 
@@ -105,32 +118,64 @@ Compatibility wrappers пока оставлены:
 - формат ответа: `code + message`
 
 Источник правды для человекочитаемой API docs page:
-- `app/static/js/api-docs.js`
+- `frontend/src/features/docs/content.ts`
 
 Admin UI файлы:
-- `app/static/pages/admin.html`
-- `app/static/css/admin.css`
-- `app/static/js/admin.js`
+- `frontend/src/pages/AdminPage.vue`
+- `frontend/src/features/admin/useAdminConsole.ts`
+- `frontend/src/features/admin/api.ts`
+
+Admin UI сейчас уже умеет:
+- sidebar navigation по экранам
+- topbar environment switcher `production/staging`
+- overview screen
+- users table + context menu actions
+- user edit modal
+- user delete with confirmation
+- admins table + context menu actions
+- admin edit modal
+- admin delete with confirmation
+- owner-only create admin action in table header
+- audit log screen
+- profile screen только с информацией об аккаунте
+- login screen без лишних заголовков
+- login screen с environment switcher
+- password visibility toggle на login screen по клику на глазик
+- role-aware поведение:
+  - owner видит экран и управление `Администраторы`
+  - обычный `admin` не должен видеть owner-only controls
+- операционное правило UI:
+  - self-service смены пароля в текущем UI сейчас нет, хотя backend endpoint `PATCH /admin/me/password` пока существует
+  - экран `Администраторы` нужен для управления другими admin-аккаунтами
+
+Текущее локальное состояние рабочей директории:
+- current branch: `develop`
+- перед продолжением всегда сначала проверять `git status --short --branch`
+- если `git status` чистый и активная ветка `develop`, можно продолжать работу без дополнительных уточнений
 
 Важно:
-- `/api/docs` собирается клиентским JavaScript
+- `/api/docs` собирается frontend приложением на Vue
 - при сыром `curl` в HTML не всегда будут видны финальные тексты
-- если нужно проверить содержимое docs page, сначала смотри `app/static/js/api-docs.js`
+- если нужно проверить содержимое docs page, сначала смотри `frontend/src/features/docs/content.ts`
 
 ## Testing And Tooling
 
 Сейчас в проекте уже есть:
 - `ruff`
 - `pytest`
+- `Vue 3 + TypeScript`
+- `ESLint`
+- `Prettier`
 - unit tests:
-  - `tests/test_auth.py`
-  - `tests/test_rate_limit.py`
-  - `tests/test_schemas.py`
+  - `backend/tests/test_auth.py`
+  - `backend/tests/test_rate_limit.py`
+  - `backend/tests/test_schemas.py`
 - integration tests:
-  - `tests/test_api_endpoints.py`
+  - `backend/tests/test_api_endpoints.py`
 
 Tooling config:
-- `pyproject.toml`
+- `backend/pyproject.toml`
+- `frontend/package.json`
 
 ## CI/CD
 
@@ -140,7 +185,7 @@ Tooling config:
 3. GitHub Actions запускает `.github/workflows/staging.yml`
 4. `verify` гоняет проверки
 5. `deploy-staging` выкатывает изменения в staging после зеленого `verify`
-6. когда нужен production release, `develop` вливается в `main`
+6. когда пользователь явно запрашивает production release, `develop` вливается в `main`
 7. GitHub Actions запускает `.github/workflows/pipeline.yml`
 8. `deploy` выкатывает на production после зеленого `verify`
 
@@ -151,7 +196,7 @@ Tooling config:
 
 Ветки по окружениям:
 - `develop` — основная разработка и staging
-- `main` — production release branch
+- `main` — production release branch, которую обновляем только по явной команде пользователя
 
 Нюанс docs sync check:
 - в GitHub Actions `verify` использует полный fetch history
@@ -229,8 +274,15 @@ Tooling config:
 Если новый чат продолжает работу:
 1. `git status --short --branch`
 2. если задача про production: прочитать `docs/DEPLOY.md`
-3. если задача про API: прочитать `docs/MOBILE_API.md` и посмотреть `app/static/js/api-docs.js`
-4. если задача про архитектуру: смотреть `app/api/`, `app/services/`, `app/core/`, `app/domain/`, `app/db/`
+3. если задача про API: прочитать `docs/MOBILE_API.md` и посмотреть `frontend/src/features/docs/content.ts`
+4. если задача про админку: сначала смотреть:
+   - `frontend/src/pages/AdminPage.vue`
+   - `frontend/src/features/admin/useAdminConsole.ts`
+   - `frontend/src/features/admin/api.ts`
+   - `backend/app/api/routes/admin.py`
+   - `backend/app/services/admin_service.py`
+   - потом уже только при необходимости `frontend/src/features/docs/content.ts`, `README.md`, `docs/DEPLOY.md`
+5. если задача про архитектуру: смотреть `backend/app/api/`, `backend/app/services/`, `backend/app/core/`, `backend/app/domain/`, `backend/app/db/`
 
 ## Current Next Improvements
 

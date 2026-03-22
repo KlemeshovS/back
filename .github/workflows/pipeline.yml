@@ -30,12 +30,15 @@ jobs:
       - name: Install Python dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt pytest ruff httpx
+          pip install -r backend/requirements.txt pytest ruff httpx
 
       - name: Setup Node
         uses: actions/setup-node@v6
         with:
           node-version: "22"
+
+      - name: Install frontend dependencies
+        run: npm ci --prefix frontend
 
       - name: Determine docs sync base ref
         run: |
@@ -59,6 +62,11 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: "22"
 
       - name: Write SSH key
         run: |
@@ -87,3 +95,5 @@ jobs:
           curl -fsS https://api.wobbly.site/api/docs >/dev/null
           curl -fsS https://api.wobbly.site/api/swagger >/dev/null
           curl -fsS https://wobbly.site >/dev/null
+          curl -fsS https://admin.wobbly.site/production/ >/dev/null
+          curl -fsS https://admin.wobbly.site/og/wobbly-mark.svg >/dev/null

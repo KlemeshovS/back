@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" fill="none">
+  <rect width="1200" height="630" rx="40" fill="#070910"/>
+  <g filter="url(#blurA)">
+    <circle cx="244" cy="122" r="180" fill="#8B6CFF" fill-opacity="0.35"/>
+  </g>
+  <g filter="url(#blurB)">
+    <circle cx="1018" cy="112" r="160" fill="#FF8ECB" fill-opacity="0.28"/>
+  </g>
+  <g filter="url(#blurC)">
+    <circle cx="764" cy="538" r="220" fill="#67EADC" fill-opacity="0.22"/>
+  </g>
+  <rect x="64" y="64" width="1072" height="502" rx="36" fill="url(#panel)" stroke="rgba(255,255,255,0.12)"/>
+  <circle cx="138" cy="138" r="20" fill="url(#mark)"/>
+  <text x="172" y="148" fill="#F7F8FF" font-family="Inter, SF Pro Display, Arial, sans-serif" font-size="28" font-weight="700">Wobbly</text>
+  <text x="96" y="252" fill="#F7F8FF" font-family="Inter, SF Pro Display, Arial, sans-serif" font-size="72" font-weight="700" letter-spacing="-3">Minimal sobriety</text>
+  <text x="96" y="328" fill="#F7F8FF" font-family="Inter, SF Pro Display, Arial, sans-serif" font-size="72" font-weight="700" letter-spacing="-3">tracker for iPhone.</text>
+  <text x="96" y="390" fill="#ADB4CC" font-family="Inter, SF Pro Text, Arial, sans-serif" font-size="28">Log days fast. See your rhythm clearly. Stay focused without pressure.</text>
+  <rect x="96" y="448" width="256" height="78" rx="18" fill="#050607" stroke="rgba(255,255,255,0.14)"/>
+  <text x="126" y="476" fill="rgba(255,255,255,0.72)" font-family="Inter, SF Pro Text, Arial, sans-serif" font-size="15" letter-spacing="1">AVAILABLE ON IPHONE</text>
+  <text x="126" y="512" fill="#FFFFFF" font-family="Inter, SF Pro Display, Arial, sans-serif" font-size="30" font-weight="700">App Store</text>
+  <g>
+    <rect x="832" y="128" width="210" height="372" rx="40" fill="url(#phone)" stroke="rgba(255,255,255,0.10)"/>
+    <rect x="848" y="144" width="178" height="340" rx="30" fill="url(#screen)"/>
+    <rect x="889" y="154" width="94" height="18" rx="9" fill="#05070D"/>
+    <text x="876" y="230" fill="#F7F8FF" font-family="Inter, SF Pro Display, Arial, sans-serif" font-size="54" font-weight="700" letter-spacing="-2">24</text>
+    <text x="876" y="256" fill="#ADB4CC" font-family="Inter, SF Pro Text, Arial, sans-serif" font-size="16">days in focus</text>
+    <rect x="876" y="296" width="16" height="54" rx="8" fill="url(#bars)"/>
+    <rect x="900" y="268" width="16" height="82" rx="8" fill="url(#bars)"/>
+    <rect x="924" y="286" width="16" height="64" rx="8" fill="url(#bars)"/>
+    <rect x="948" y="238" width="16" height="112" rx="8" fill="url(#bars)"/>
+    <rect x="972" y="274" width="16" height="76" rx="8" fill="url(#bars)"/>
+    <rect x="876" y="378" width="122" height="72" rx="18" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.08)"/>
+    <text x="894" y="406" fill="#F7F8FF" font-family="Inter, SF Pro Display, Arial, sans-serif" font-size="16" font-weight="700">Rhythm looks steady</text>
+    <text x="894" y="430" fill="#ADB4CC" font-family="Inter, SF Pro Text, Arial, sans-serif" font-size="13">One clear screen for your progress.</text>
+  </g>
+  <defs>
+    <filter id="blurA" x="-96" y="-218" width="680" height="680" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feGaussianBlur stdDeviation="80"/>
+    </filter>
+    <filter id="blurB" x="618" y="-288" width="800" height="800" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feGaussianBlur stdDeviation="120"/>
+    </filter>
+    <filter id="blurC" x="264" y="38" width="1000" height="1000" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feGaussianBlur stdDeviation="140"/>
+    </filter>
+    <linearGradient id="panel" x1="600" y1="64" x2="600" y2="566" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#101523" stop-opacity="0.88"/>
+      <stop offset="1" stop-color="#090D18" stop-opacity="0.96"/>
+    </linearGradient>
+    <linearGradient id="mark" x1="118" y1="118" x2="158" y2="158" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#67EADC"/>
+      <stop offset="0.6" stop-color="#8B6CFF"/>
+      <stop offset="1" stop-color="#FF8ECB"/>
+    </linearGradient>
+    <linearGradient id="phone" x1="937" y1="128" x2="937" y2="500" gradientUnits="userSpaceOnUse">
+      <stop stop-color="rgba(255,255,255,0.18)"/>
+      <stop offset="1" stop-color="#101424"/>
+    </linearGradient>
+    <linearGradient id="screen" x1="937" y1="144" x2="937" y2="484" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#171B34"/>
+      <stop offset="1" stop-color="#0D1323"/>
+    </linearGradient>
+    <linearGradient id="bars" x1="0" y1="238" x2="0" y2="350" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#67EADC"/>
+      <stop offset="1" stop-color="#8B6CFF"/>
+    </linearGradient>
+  </defs>
+</svg>

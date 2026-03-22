@@ -1,10 +1,14 @@
 # Rating Service MVP
 
-Backend, landing page и production docs для `Wobbly`.
+Monorepo для `Wobbly`, разделенный на два подпроекта:
+- `backend/` — FastAPI API, migrations, tests и runtime
+- `frontend/` — Vue 3 + TypeScript UI для landing, privacy, docs и admin surfaces
 
 Сейчас проект включает:
 - API для anonymous auth, профиля и рейтингов
+- health и readiness endpoint'ы для monitoring/deploy checks
 - admin API и admin UI foundation
+- admin console with separate staging/production surfaces
 - landing page на `https://wobbly.site`
 - текстовую docs page на `https://api.wobbly.site/api/docs`
 - production deploy через GitHub Actions
@@ -19,32 +23,28 @@ Backend, landing page и production docs для `Wobbly`.
 
 ## Project Structure
 
-Текущая структура проекта после второго этапа рефакторинга:
-- `app/main.py` — минимальный entrypoint
-- `app/api/app.py` — app factory
-- `app/api/dependencies.py` — общие dependencies
-- `app/api/routes/` — route modules по зонам ответственности
-- `app/core/` — auth, config, rate limiting
-- `app/db/` — database access и init_db
-- `app/domain/` — Pydantic schemas
-- `app/services/` — business logic
-- `app/static/` — landing, docs page, css, js, assets
-- `alembic/` — migration scripts
+Текущая структура проекта:
+- `backend/app/main.py` — минимальный entrypoint
+- `backend/app/api/app.py` — app factory
+- `backend/app/api/dependencies.py` — общие dependencies
+- `backend/app/api/routes/` — route modules по зонам ответственности
+- `backend/app/core/` — auth, config, rate limiting
+- `backend/app/db/` — database access и init_db
+- `backend/app/domain/` — Pydantic schemas
+- `backend/app/services/` — business logic
+- `backend/app/static/` — собранный frontend build, который раздается backend'ом
+- `backend/alembic/` — migration scripts
 - `scripts/` — CI checks, deploy, docs sync checks
 - `.githooks/` — локальные git hooks
-- `tests/` — unit и integration tests
+- `backend/tests/` — unit и integration tests
+- `frontend/src/` — Vue source code
+- `frontend/src/pages/` — landing, privacy, docs, admin screens
+- `frontend/src/features/docs/content.ts` — источник правды для docs page
+- `frontend/src/features/admin/` — admin console state и typed API client
+- `frontend/package.json` — frontend tooling: TypeScript, ESLint, Prettier, Vite
 - `docs/` — operational, mobile, roadmap и handoff документация
 - `.github/workflows/pipeline.yml` — verify + deploy pipeline
-- `pyproject.toml` — lint/test tooling config
-
-Старые модули:
-- `app/auth.py`
-- `app/config.py`
-- `app/database.py`
-- `app/rate_limit.py`
-- `app/schemas.py`
-
-пока оставлены как compatibility wrappers, чтобы рефакторинг был безопасным и не ломал imports одним шагом.
+- `backend/pyproject.toml` — lint/test tooling config
 
 ## Current Project Snapshot
 
@@ -63,6 +63,7 @@ Backend, landing page и production docs для `Wobbly`.
 - reverse proxy в production: `nginx`
 - базовый edge-side rate limiting уже включен на `api.wobbly.site`
 - основной путь разработки: feature branch -> merge в `develop` -> staging pipeline
+- `main` не трогаем по умолчанию; merge `develop` -> `main` делаем только по явной команде на production release
 - production release path: merge `develop` -> `main` -> production pipeline
 - staging deploy path: push в `develop` -> GitHub Actions -> verify -> deploy-staging
 - ручной deploy через копирование файлов в `/opt/rating-service` и `systemctl restart rating-service` остается fallback-сценарием
@@ -73,10 +74,30 @@ Backend, landing page и production docs для `Wobbly`.
 - точные команды деплоя описаны в `docs/DEPLOY.md`
 - отдельная сводка для переноса контекста лежит в `docs/HANDOFF.md`
 - staging уже поднят на `https://staging-api.wobbly.site` и закрыт через `X-Staging-Key`
-- админка спроектирована под `https://admin.wobbly.site/production/` и `https://admin.wobbly.site/staging/`
-- первый `owner` bootstrap'ится через env:
+- админка уже доступна на:
+  - `https://admin.wobbly.site/production/`
+  - `https://admin.wobbly.site/staging/`
+- `admin.wobbly.site/production/` теперь обслуживается production app
+- `admin.wobbly.site/staging/` теперь обслуживается staging app
+- из-за этого production admin UI обновляется только вместе с `main`, а staging admin UI — вместе с `develop`
+- admin console уже включает:
+  - overview
+  - users table + context menu actions
+  - user edit modal
+  - user delete with confirmation
+  - admins table + context menu actions
+  - admin edit modal
+  - admin delete with confirmation
+  - owner-only create admin action in table header
+  - audit log
+  - profile screen with account info only
+  - minimal login screen with environment switcher
+  - login password visibility toggle by click on eye button
+  - role-aware behavior for owner/admin
+- первый `owner` bootstrap'ится через env и уже поднят на production и staging:
   - `ADMIN_BOOTSTRAP_LOGIN`
   - `ADMIN_BOOTSTRAP_PASSWORD`
+- bootstrap credentials считаем operational secret и не храним в репозитории
 
 ## API
 
@@ -153,6 +174,20 @@ Responses:
 - `401` не передан или невалиден bearer token
 - `429` слишком много обновлений рейтинга
 
+### `GET /health`
+
+Показывает, что HTTP-приложение запущено и отвечает.
+
+### `GET /ready`
+
+Показывает, что backend реально готов принимать трафик.
+
+Сейчас readiness проверяет доступность PostgreSQL через простой DB ping.
+
+Responses:
+- `200` сервис готов
+- `503` сервис еще не готов или БД недоступна
+
 ## Error Contract
 
 Ошибки API теперь возвращаются в едином формате:
@@ -196,6 +231,34 @@ docker compose up --build
 
 После запуска API будет доступно на:
 - `http://localhost:8000`
+
+Frontend dev server:
+
+```bash
+npm --prefix frontend run dev
+```
+
+Полная локальная проверка:
+
+```bash
+./scripts/ci_check.sh
+```
+
+Она включает:
+- `ruff check backend/app backend/tests scripts`
+- `pytest`
+- `npm --prefix frontend run lint`
+- `npm --prefix frontend run format`
+- `npm --prefix frontend run build`
+- `docker compose config`
+- docs sync check
+
+## Docs Rule
+
+Если меняется API, в том же изменении нужно обновлять:
+- `frontend/src/features/docs/content.ts`
+- при необходимости `docs/MOBILE_API.md`
+- при необходимости `README.md`
 - Swagger UI: `http://localhost:8000/api/swagger`
 - Text docs: `http://localhost:8000/api/docs`
 
@@ -215,16 +278,23 @@ docker compose up --build
 - anti-abuse plan: `docs/ANTI_ABUSE.md`
 - backend roadmap: `docs/BACKEND_ROADMAP.md`
 - conventions: trunk-based development + Conventional Commits
-- branch flow: `develop` для активной разработки, `main` только для production releases
+- branch flow: `develop` для активной разработки, `main` только для production releases по явному запросу
+- если задача про admin console, первыми смотреть:
+  - `frontend/src/pages/AdminPage.vue`
+  - `frontend/src/features/admin/useAdminConsole.ts`
+  - `frontend/src/features/admin/api.ts`
+  - `backend/app/api/routes/admin.py`
+  - `backend/app/services/admin_service.py`
+- для нового чата важно: актуальная рабочая ветка обычно `develop`; не предлагать merge в `main`, если пользователь явно не запросил production release
 - если меняется API, нужно обновлять текстовую docs page на `https://api.wobbly.site/api/docs` в том же изменении
 - CI дополнительно проверяет, что API-изменения не уходят без обновления `/api/docs`
 - linters and tests: `ruff`, `pytest`
 - локальные обязательные hooks: `.githooks/pre-commit`, `.githooks/pre-push`
-- после рефакторинга новые endpoint changes обычно живут в `app/api/routes/`, `app/services/`, `app/domain/`, `app/core/`
+- после рефакторинга новые endpoint changes обычно живут в `backend/app/api/routes/`, `backend/app/services/`, `backend/app/domain/`, `backend/app/core/`
 - schema changes теперь должны идти через Alembic migrations
 
 Если меняется поведение API, обычно нужно обновлять:
-- `app/static/js/api-docs.js`
+- `frontend/src/features/docs/content.ts`
 - при необходимости `docs/MOBILE_API.md`
 - при необходимости `README.md`
 
@@ -235,8 +305,8 @@ docker compose up --build
 ```
 
 Что делают hooks:
-- `pre-commit` — `ruff --fix`, `ruff`, Python syntax, JS syntax
-- `pre-push` — `pytest`
+- `pre-commit` — `ruff --fix`, `ruff`, Python syntax, frontend ESLint/Prettier
+- `pre-push` — `pytest`, frontend build
 
 ## Context Transfer
 
