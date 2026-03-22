@@ -38,8 +38,7 @@ Admin baseline:
 - admin UI paths:
   - `/production/`
   - `/staging/`
-- `admin.wobbly.site/production/` идет в production app на `127.0.0.1:8000`
-- `admin.wobbly.site/staging/` идет в staging app на `127.0.0.1:8001`
+- `admin.wobbly.site/production/` и `admin.wobbly.site/staging/` используют один и тот же UI shell с `127.0.0.1:8000`
 - admin same-origin API:
   - `/production/api/...` -> production `/admin/...`
   - `/staging/api/...` -> staging `/admin/...`
@@ -49,10 +48,8 @@ Admin baseline:
 - admin certificate уже выпущен через `certbot --nginx`
 - owner bootstrap уже применен через env на production и staging
 - bootstrap credentials это operational secret и не хранятся в репозитории
-- admin UI в production и staging теперь может отличаться по функционалу и внешнему виду, потому что:
-  - `admin.wobbly.site/production/` следует `main`
-  - `admin.wobbly.site/staging/` следует `develop`
-- если UI баг виден только на staging admin, сначала смотреть `develop`, а не `main`
+- admin UI в production и staging теперь намеренно одинаковый
+- если UI баг виден на одном admin URL, сначала считать это общим frontend багом, а потом уже проверять различие API-окружений
 
 ## Access
 

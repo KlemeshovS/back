@@ -201,6 +201,7 @@ button:hover {
   border: 1px solid var(--panel-border);
   box-shadow: var(--shadow);
   backdrop-filter: blur(18px);
+  overflow: visible;
 }
 
 .hero-card {
@@ -303,6 +304,7 @@ button:hover {
   display: grid;
   grid-template-columns: minmax(0, 1.6fr) minmax(320px, 0.9fr);
   gap: 22px;
+  overflow: visible;
 }
 
 .admins-layout {
@@ -445,9 +447,10 @@ textarea {
 .user-actions-menu,
 .admin-actions-menu {
   position: absolute;
-  top: calc(100% + 8px);
+  top: auto;
+  bottom: calc(100% + 8px);
   right: 0;
-  z-index: 20;
+  z-index: 40;
   display: grid;
   min-width: 196px;
   gap: 6px;

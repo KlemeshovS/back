@@ -77,9 +77,10 @@ Monorepo для `Wobbly`, разделенный на два подпроект�
 - админка уже доступна на:
   - `https://admin.wobbly.site/production/`
   - `https://admin.wobbly.site/staging/`
-- `admin.wobbly.site/production/` теперь обслуживается production app
-- `admin.wobbly.site/staging/` теперь обслуживается staging app
-- из-за этого production admin UI обновляется только вместе с `main`, а staging admin UI — вместе с `develop`
+- оба admin URL теперь обслуживаются одним и тем же UI shell
+- различие между ними только в API backend:
+  - `production` использует production admin API
+  - `staging` использует staging admin API
 - admin console уже включает:
   - overview
   - users table + context menu actions
