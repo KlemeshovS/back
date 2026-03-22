@@ -1,4 +1,4 @@
-import { computed, onBeforeUnmount, onMounted, reactive, ref } from "vue";
+import { computed, reactive, ref } from "vue";
 
 import { HttpError } from "@/shared/api/http";
 
@@ -71,17 +71,6 @@ export function useAdminConsole() {
   const isUserModalOpen = ref(false);
   const isAdminModalOpen = ref(false);
   const isAdminCreateModalOpen = ref(false);
-  const menuState = reactive<{
-    kind: "user" | "admin" | null;
-    id: number | null;
-    top: number;
-    left: number;
-  }>({
-    kind: null,
-    id: null,
-    top: 0,
-    left: 0,
-  });
   const userForm = reactive({
     username: "",
     score: 0,
@@ -125,78 +114,6 @@ export function useAdminConsole() {
   function clearStatus(target: StatusState) {
     target.kind = "idle";
     target.text = "";
-  }
-
-  function closeMenus() {
-    menuState.kind = null;
-    menuState.id = null;
-  }
-
-  function positionMenu(triggerElement: HTMLElement) {
-    const rect = triggerElement.getBoundingClientRect();
-    const menuWidth = 220;
-    const menuHeight = 132;
-    const gap = 8;
-    const viewportPadding = 12;
-    const spaceBelow = window.innerHeight - rect.bottom;
-    const shouldOpenBelow =
-      spaceBelow >= menuHeight || rect.top < menuHeight + viewportPadding;
-
-    menuState.top = shouldOpenBelow
-      ? rect.bottom + gap
-      : Math.max(viewportPadding, rect.top - menuHeight - gap);
-    menuState.left = Math.min(
-      window.innerWidth - menuWidth - viewportPadding,
-      Math.max(viewportPadding, rect.right - menuWidth),
-    );
-  }
-
-  function toggleUserMenu(event: MouseEvent, userId: number) {
-    const triggerElement = event.currentTarget as HTMLElement | null;
-    if (!triggerElement) {
-      return;
-    }
-
-    if (menuState.kind === "user" && menuState.id === userId) {
-      closeMenus();
-      return;
-    }
-
-    positionMenu(triggerElement);
-    menuState.kind = "user";
-    menuState.id = userId;
-  }
-
-  function toggleAdminMenu(event: MouseEvent, adminId: number) {
-    const triggerElement = event.currentTarget as HTMLElement | null;
-    if (!triggerElement) {
-      return;
-    }
-
-    if (menuState.kind === "admin" && menuState.id === adminId) {
-      closeMenus();
-      return;
-    }
-
-    positionMenu(triggerElement);
-    menuState.kind = "admin";
-    menuState.id = adminId;
-  }
-
-  function isUserMenuOpen(userId: number) {
-    return menuState.kind === "user" && menuState.id === userId;
-  }
-
-  function isAdminMenuOpen(adminId: number) {
-    return menuState.kind === "admin" && menuState.id === adminId;
-  }
-
-  function handleWindowClick() {
-    closeMenus();
-  }
-
-  function handleViewportChange() {
-    closeMenus();
   }
 
   function restoreSession() {
@@ -365,7 +282,6 @@ export function useAdminConsole() {
   }
 
   function selectUser(user: ManagedUserResponse) {
-    closeMenus();
     selectedUser.value = user;
     userForm.username = user.username ?? "";
     userForm.score = user.score;
@@ -375,7 +291,6 @@ export function useAdminConsole() {
   }
 
   function selectAdmin(admin: AdminUserResponse) {
-    closeMenus();
     selectedAdmin.value = admin;
     adminEditForm.role = admin.role;
     adminEditForm.isActive = admin.isActive;
@@ -406,7 +321,6 @@ export function useAdminConsole() {
   }
 
   async function confirmDeleteUser(user: ManagedUserResponse) {
-    closeMenus();
     if (
       !session.value ||
       !window.confirm(`Удалить пользователя #${user.id}?`)
@@ -468,7 +382,6 @@ export function useAdminConsole() {
   }
 
   async function confirmDeleteAdmin(admin: AdminUserResponse) {
-    closeMenus();
     if (!session.value || !window.confirm(`Удалить admin #${admin.id}?`)) {
       return;
     }
@@ -486,18 +399,6 @@ export function useAdminConsole() {
   function formatDate(value: string) {
     return new Date(value).toLocaleString();
   }
-
-  onMounted(() => {
-    window.addEventListener("click", handleWindowClick);
-    window.addEventListener("resize", handleViewportChange);
-    window.addEventListener("scroll", handleViewportChange, true);
-  });
-
-  onBeforeUnmount(() => {
-    window.removeEventListener("click", handleWindowClick);
-    window.removeEventListener("resize", handleViewportChange);
-    window.removeEventListener("scroll", handleViewportChange, true);
-  });
 
   return reactive({
     environment,
@@ -524,7 +425,6 @@ export function useAdminConsole() {
     isUserModalOpen,
     isAdminModalOpen,
     isAdminCreateModalOpen,
-    menuState,
     userForm,
     adminCreateForm,
     adminEditForm,
@@ -540,11 +440,6 @@ export function useAdminConsole() {
     loadAudit,
     selectUser,
     selectAdmin,
-    toggleUserMenu,
-    toggleAdminMenu,
-    isUserMenuOpen,
-    isAdminMenuOpen,
-    closeMenus,
     saveUser,
     confirmDeleteUser,
     createAdmin,

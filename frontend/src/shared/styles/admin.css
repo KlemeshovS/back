@@ -425,6 +425,7 @@ textarea {
   overflow: visible;
 }
 
+.action-menu-root,
 .admin-actions {
   position: relative;
   display: flex;
@@ -444,6 +445,7 @@ textarea {
   letter-spacing: 0.08em;
 }
 
+.action-menu-popup,
 .user-actions-menu,
 .admin-actions-menu {
   position: fixed;

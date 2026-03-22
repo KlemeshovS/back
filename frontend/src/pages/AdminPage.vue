@@ -197,42 +197,11 @@
                     <td>{{ consoleState.formatDate(user.updatedAt) }}</td>
                     <td class="actions-cell">
                       <div class="user-actions">
-                        <button
-                          class="ghost-button action-menu-trigger"
-                          type="button"
-                          aria-label="User actions"
-                          @click.stop="
-                            consoleState.toggleUserMenu($event, user.id)
-                          "
-                        >
-                          <span class="dots-icon" aria-hidden="true">•••</span>
-                        </button>
-                        <Teleport to="body">
-                          <div
-                            v-if="consoleState.isUserMenuOpen(user.id)"
-                            class="user-actions-menu"
-                            :style="{
-                              top: `${consoleState.menuState.top}px`,
-                              left: `${consoleState.menuState.left}px`,
-                            }"
-                            @click.stop
-                          >
-                            <button
-                              class="menu-item"
-                              type="button"
-                              @click="consoleState.selectUser(user)"
-                            >
-                              Редактировать
-                            </button>
-                            <button
-                              class="menu-item menu-item-danger"
-                              type="button"
-                              @click="consoleState.confirmDeleteUser(user)"
-                            >
-                              Удалить
-                            </button>
-                          </div>
-                        </Teleport>
+                        <ActionMenuButton
+                          button-label="User actions"
+                          :actions="rowActions"
+                          @select="handleUserAction($event, user)"
+                        />
                       </div>
                     </td>
                   </tr>
@@ -294,44 +263,11 @@
                       <td>{{ admin.isActive ? "yes" : "no" }}</td>
                       <td class="actions-cell">
                         <div class="user-actions">
-                          <button
-                            class="ghost-button action-menu-trigger"
-                            type="button"
-                            aria-label="Admin actions"
-                            @click.stop="
-                              consoleState.toggleAdminMenu($event, admin.id)
-                            "
-                          >
-                            <span class="dots-icon" aria-hidden="true"
-                              >•••</span
-                            >
-                          </button>
-                          <Teleport to="body">
-                            <div
-                              v-if="consoleState.isAdminMenuOpen(admin.id)"
-                              class="user-actions-menu"
-                              :style="{
-                                top: `${consoleState.menuState.top}px`,
-                                left: `${consoleState.menuState.left}px`,
-                              }"
-                              @click.stop
-                            >
-                              <button
-                                class="menu-item"
-                                type="button"
-                                @click="consoleState.selectAdmin(admin)"
-                              >
-                                Редактировать
-                              </button>
-                              <button
-                                class="menu-item menu-item-danger"
-                                type="button"
-                                @click="consoleState.confirmDeleteAdmin(admin)"
-                              >
-                                Удалить
-                              </button>
-                            </div>
-                          </Teleport>
+                          <ActionMenuButton
+                            button-label="Admin actions"
+                            :actions="rowActions"
+                            @select="handleAdminAction($event, admin)"
+                          />
                         </div>
                       </td>
                     </tr>
@@ -622,6 +558,11 @@
 import { computed, onMounted } from "vue";
 
 import { useAdminConsole } from "@/features/admin/useAdminConsole";
+import type {
+  AdminUserResponse,
+  ManagedUserResponse,
+} from "@/features/admin/types";
+import ActionMenuButton from "@/shared/ui/ActionMenuButton.vue";
 import "@/shared/styles/admin.css";
 
 const consoleState = useAdminConsole();
@@ -659,6 +600,33 @@ const overviewItems = computed(() => [
     value: consoleState.overview?.auditLogEntries ?? "—",
   },
 ]);
+
+const rowActions = [
+  { key: "edit", label: "Редактировать" },
+  { key: "delete", label: "Удалить", danger: true },
+] as const;
+
+function handleUserAction(action: string, user: ManagedUserResponse) {
+  if (action === "edit") {
+    consoleState.selectUser(user);
+    return;
+  }
+
+  if (action === "delete") {
+    void consoleState.confirmDeleteUser(user);
+  }
+}
+
+function handleAdminAction(action: string, admin: AdminUserResponse) {
+  if (action === "edit") {
+    consoleState.selectAdmin(admin);
+    return;
+  }
+
+  if (action === "delete") {
+    void consoleState.confirmDeleteAdmin(admin);
+  }
+}
 
 function statusClass(status: { kind: string }) {
   if (status.kind === "error") {
