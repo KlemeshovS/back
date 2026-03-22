@@ -89,7 +89,33 @@ jobs:
 
       - name: Smoke check staging URLs
         run: |
-          curl -fsS -H "X-Staging-Key: ${{ secrets.STAGING_ACCESS_KEY }}" "${{ secrets.STAGING_PUBLIC_BASE_URL }}/api/docs" >/dev/null
-          curl -fsS -H "X-Staging-Key: ${{ secrets.STAGING_ACCESS_KEY }}" "${{ secrets.STAGING_PUBLIC_BASE_URL }}/api/swagger" >/dev/null
-          curl -fsS https://admin.wobbly.site/staging/ >/dev/null
-          curl -fsS https://admin.wobbly.site/og/wobbly-mark.svg >/dev/null
+          for url in \
+            "${{ secrets.STAGING_PUBLIC_BASE_URL }}/api/docs" \
+            "${{ secrets.STAGING_PUBLIC_BASE_URL }}/api/swagger"
+          do
+            for attempt in 1 2 3 4 5 6 7 8 9 10; do
+              if curl -fsS -H "X-Staging-Key: ${{ secrets.STAGING_ACCESS_KEY }}" "$url" >/dev/null; then
+                break
+              fi
+              if [ "$attempt" -eq 10 ]; then
+                echo "Smoke check failed for $url"
+                exit 1
+              fi
+              sleep 3
+            done
+          done
+          for url in \
+            https://admin.wobbly.site/staging/ \
+            https://admin.wobbly.site/og/wobbly-mark.svg
+          do
+            for attempt in 1 2 3 4 5 6 7 8 9 10; do
+              if curl -fsS "$url" >/dev/null; then
+                break
+              fi
+              if [ "$attempt" -eq 10 ]; then
+                echo "Smoke check failed for $url"
+                exit 1
+              fi
+              sleep 3
+            done
+          done
