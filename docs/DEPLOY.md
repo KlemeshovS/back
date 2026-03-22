@@ -155,6 +155,7 @@ journalctl -u rating-service -n 100 --no-pager
 - `deploy/nginx/api-rate-limits.conf`
 - `deploy/nginx/api.wobbly.site.conf`
 - staging templates тоже есть в репозитории:
+  - `deploy/systemd/rating-service.service`
   - `deploy/nginx/staging-api.wobbly.site.conf`
   - `deploy/systemd/rating-service-staging.service`
 
@@ -257,6 +258,10 @@ Pipeline опирается на локальные скрипты:
 - `scripts/ci_check.sh`
 - `scripts/check_api_docs_sync.sh`
 - `scripts/deploy_release.sh`
+
+Systemd templates в репозитории:
+- `deploy/systemd/rating-service.service`
+- `deploy/systemd/rating-service-staging.service`
 
 Во время deploy script теперь:
 - распаковывает release
