@@ -45,6 +45,9 @@ Admin baseline в коде уже есть:
 - same-origin admin API идет через:
   - `/production/api/...`
   - `/staging/api/...`
+- admin frontend assets идут через:
+  - `/assets/...`
+  - `/og/...`
 - owner bootstrap уже применен на production и staging
 - staging CORS уже разрешает `https://admin.wobbly.site`
 - bootstrap credentials это operational secret; в репозиторий их не кладем

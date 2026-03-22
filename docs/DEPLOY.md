@@ -43,6 +43,9 @@ Admin baseline:
 - admin same-origin API:
   - `/production/api/...` -> production `/admin/...`
   - `/staging/api/...` -> staging `/admin/...`
+- admin frontend assets теперь идут через:
+  - `/assets/...`
+  - `/og/...`
 - admin certificate уже выпущен через `certbot --nginx`
 - owner bootstrap уже применен через env на production и staging
 - bootstrap credentials это operational secret и не хранятся в репозитории
@@ -257,6 +260,7 @@ Pipeline опирается на локальные скрипты:
 - только потом перезапускает `rating-service`
 - ждет не только `systemctl is-active`, но и успешный ответ healthcheck URL
 - если `/health` не поднимается вовремя, печатает свежие `journalctl` логи сервиса и завершает deploy с ошибкой
+- не включает в release archive локальные dev-артефакты вроде `.venv`, caches и `frontend/node_modules`
 
 Важно:
 - `nginx` конфиги не раскатываются текущим GitHub Actions deploy автоматически
@@ -295,6 +299,13 @@ X-Staging-Key: <secret>
 - `frontend/src/features/docs/content.ts`
 - при необходимости `docs/MOBILE_API.md`
 - при необходимости `README.md`
+
+### Admin Smoke Checks
+
+После frontend/backend split smoke checks должны проверять не только API и landing, но и admin surface:
+- `https://admin.wobbly.site/production/`
+- `https://admin.wobbly.site/staging/`
+- `https://admin.wobbly.site/og/wobbly-mark.svg`
 
 ## Common Failure: SSH Key Parsing
 

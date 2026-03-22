@@ -34,6 +34,11 @@ tar \
   --exclude="deploy_key.pub" \
   --exclude="__pycache__" \
   --exclude=".DS_Store" \
+  --exclude=".venv" \
+  --exclude=".pytest_cache" \
+  --exclude=".ruff_cache" \
+  --exclude="frontend/node_modules" \
+  --exclude="frontend/dist" \
   -czf "$TMP_ARCHIVE" .
 
 ssh -o BatchMode=yes -i "$SSH_KEY_PATH" "${DEPLOY_USER}@${DEPLOY_HOST}" "mkdir -p '${REMOTE_BACKUP_DIR}'"

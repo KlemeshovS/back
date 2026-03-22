@@ -92,3 +92,5 @@ jobs:
           curl -fsS -H "X-Staging-Key: ${{ secrets.STAGING_ACCESS_KEY }}" "${{ secrets.STAGING_PUBLIC_BASE_URL }}/health"
           curl -fsS -H "X-Staging-Key: ${{ secrets.STAGING_ACCESS_KEY }}" "${{ secrets.STAGING_PUBLIC_BASE_URL }}/api/docs" >/dev/null
           curl -fsS -H "X-Staging-Key: ${{ secrets.STAGING_ACCESS_KEY }}" "${{ secrets.STAGING_PUBLIC_BASE_URL }}/api/swagger" >/dev/null
+          curl -fsS https://admin.wobbly.site/staging/ >/dev/null
+          curl -fsS https://admin.wobbly.site/og/wobbly-mark.svg >/dev/null
