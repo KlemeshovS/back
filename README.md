@@ -8,7 +8,7 @@ Monorepo для `Wobbly`, разделенный на два подпроект�
 - API для anonymous auth, профиля и рейтингов
 - health и readiness endpoint'ы для monitoring/deploy checks
 - admin API и admin UI foundation
-- admin console with separate staging/production surfaces
+- production admin console
 - landing page на `https://wobbly.site`
 - текстовую docs page на `https://api.wobbly.site/api/docs`
 - production deploy через GitHub Actions
@@ -53,19 +53,13 @@ Monorepo для `Wobbly`, разделенный на два подпроект�
 - production Swagger: `https://api.wobbly.site/api/swagger`
 - production text docs: `https://api.wobbly.site/api/docs`
 - production site: `https://wobbly.site`
-- staging API path on server: `/opt/rating-service-staging`
-- staging service: `rating-service-staging.service`
-- staging database: `app_staging`
-- staging public URL: `https://staging-api.wobbly.site`
-- staging workflow: `.github/workflows/staging.yml` on `develop`
 - продовый сервис: `rating-service.service`
 - продовый путь на сервере: `/opt/rating-service`
 - reverse proxy в production: `nginx`
 - базовый edge-side rate limiting уже включен на `api.wobbly.site`
 - основной путь разработки: feature branch -> merge в `develop` -> staging pipeline
-- `main` не трогаем по умолчанию; merge `develop` -> `main` делаем только по явной команде на production release
-- production release path: merge `develop` -> `main` -> production pipeline
-- staging deploy path: push в `develop` -> GitHub Actions -> verify -> deploy-staging
+- `main` не трогаем по умолчанию; production release делаем только по явной команде пользователя
+- production release path: `develop` -> `scripts/prepare_main_release.sh` -> release branch -> `main` -> production pipeline
 - ручной deploy через копирование файлов в `/opt/rating-service` и `systemctl restart rating-service` остается fallback-сценарием
 
 Это важно:
@@ -73,14 +67,8 @@ Monorepo для `Wobbly`, разделенный на два подпроект�
 - production topology уже другая, и ее не нужно заново угадывать
 - точные команды деплоя описаны в `docs/DEPLOY.md`
 - отдельная сводка для переноса контекста лежит в `docs/HANDOFF.md`
-- staging уже поднят на `https://staging-api.wobbly.site` и закрыт через `X-Staging-Key`
-- админка уже доступна на:
-  - `https://admin.wobbly.site/production/`
-  - `https://admin.wobbly.site/staging/`
-- оба admin URL теперь обслуживаются одним и тем же UI shell
-- различие между ними только в API backend:
-  - `production` использует production admin API
-  - `staging` использует staging admin API
+- staging operational details intentionally documented only in `docs/STAGING.md` on `develop`
+- production admin доступна на `https://admin.wobbly.site/production/`
 - admin console уже включает:
   - overview
   - users table + context menu actions
@@ -95,10 +83,22 @@ Monorepo для `Wobbly`, разделенный на два подпроект�
   - minimal login screen with environment switcher
   - login password visibility toggle by click on eye button
   - role-aware behavior for owner/admin
-- первый `owner` bootstrap'ится через env и уже поднят на production и staging:
+- первый `owner` bootstrap'ится через env и уже поднят на production:
   - `ADMIN_BOOTSTRAP_LOGIN`
   - `ADMIN_BOOTSTRAP_PASSWORD`
 - bootstrap credentials считаем operational secret и не храним в репозитории
+
+## Release Flow
+
+Production release больше не делается прямым merge `develop -> main`.
+
+Новый flow:
+1. завершить работу в `develop`
+2. убедиться, что staging-проверка завершена
+3. на `develop` запустить `./scripts/prepare_main_release.sh`
+4. получить временную release-ветку без staging-only workflow/templates/docs
+5. проверить production-facing docs и surfaces
+6. влить release-ветку в `main`
 
 ## API
 

@@ -24,32 +24,27 @@
 - SSH access: `root@api.wobbly.site` через локальный `deploy_key`
 - рабочий пользователь приложения: `ratingapp`
 
-Staging baseline тоже уже поднят:
-- staging path: `/opt/rating-service-staging`
-- staging service: `rating-service-staging.service`
-- staging DB: `app_staging`
-- staging nginx protection идет через `X-Staging-Key`
-- staging workflow лежит в `.github/workflows/staging.yml`
-- staging public URL: `https://staging-api.wobbly.site`
-- staging HTTPS уже поднят через `certbot --nginx`
+Важно для веток:
+- `develop` содержит production и staging operational context
+- `main` должна содержать только production-facing truth
+- staging operational details держим в `docs/STAGING.md` и develop-only артефактах
+- production release теперь готовится через release-ветку, а не через прямой merge `develop -> main`
 
 Admin baseline в коде уже есть:
-- admin UI routes: `/production/` и `/staging/` на `admin.wobbly.site`
+- admin UI route для production: `/production/` на `admin.wobbly.site`
 - admin API routes: `/admin/...`
 - первый owner создается через env bootstrap:
   - `ADMIN_BOOTSTRAP_LOGIN`
   - `ADMIN_BOOTSTRAP_PASSWORD`
 - admin host уже поднят на `https://admin.wobbly.site`
-- `admin.wobbly.site/production/` и `admin.wobbly.site/staging/` теперь используют один и тот же UI shell
-- same-origin admin API идет через:
+- production admin URL: `https://admin.wobbly.site/production/`
+- same-origin admin API для production идет через:
   - `/production/api/...`
-  - `/staging/api/...`
 - admin frontend assets идут через:
   - `/assets/...`
   - `/og/...`
-- owner bootstrap уже применен на production и staging
-- staging CORS уже разрешает `https://admin.wobbly.site`
-- различие между `production` и `staging` в админке теперь только в API backend, а не в наборе frontend ассетов
+- owner bootstrap уже применен на production
+- staging admin details intentionally live outside production handoff
 - bootstrap credentials это operational secret; в репозиторий их не кладем
 
 Важно:
@@ -132,7 +127,7 @@ Admin UI файлы:
 
 Admin UI сейчас уже умеет:
 - sidebar navigation по экранам
-- topbar environment switcher `production/staging`
+- topbar environment switcher logic exists in develop, but production handoff should treat `/production/` as the only production-facing admin surface
 - overview screen
 - users table + context menu actions
 - user edit modal
@@ -188,12 +183,11 @@ Tooling config:
 Основной flow:
 1. разработка идет в короткой ветке
 2. merge в `develop`
-3. GitHub Actions запускает `.github/workflows/staging.yml`
-4. `verify` гоняет проверки
-5. `deploy-staging` выкатывает изменения в staging после зеленого `verify`
-6. когда пользователь явно запрашивает production release, `develop` вливается в `main`
-7. GitHub Actions запускает `.github/workflows/pipeline.yml`
-8. `deploy` выкатывает на production после зеленого `verify`
+3. GitHub Actions на `develop` гоняет staging verify/deploy flow
+4. когда пользователь явно запрашивает production release, из `develop` готовится release-ветка через `scripts/prepare_main_release.sh`
+5. release-ветка вливается в `main`
+6. GitHub Actions запускает `.github/workflows/pipeline.yml`
+7. `deploy` выкатывает на production после зеленого `verify`
 
 Локальные скрипты, на которые опирается pipeline:
 - `scripts/ci_check.sh`
@@ -202,7 +196,8 @@ Tooling config:
 
 Ветки по окружениям:
 - `develop` — основная разработка и staging
-- `main` — production release branch, которую обновляем только по явной команде пользователя
+- release branch — временная production-prep ветка без staging-only хвостов
+- `main` — production-only branch, которую обновляем только по явной команде пользователя
 
 Нюанс docs sync check:
 - в GitHub Actions `verify` использует полный fetch history
@@ -233,30 +228,10 @@ Tooling config:
 Для текущего production:
 - `DEPLOY_VENV_PATH=/opt/rating-service/.venv`
 
-Для staging workflow нужны отдельные secrets:
-- `STAGING_DEPLOY_HOST`
-- `STAGING_DEPLOY_USER`
-- `STAGING_DEPLOY_PATH`
-- `STAGING_DEPLOY_SERVICE`
-- `STAGING_DEPLOY_OWNER`
-- `STAGING_DEPLOY_VENV_PATH`
-- `STAGING_DEPLOY_SSH_KEY`
-- `STAGING_PUBLIC_BASE_URL`
-- `STAGING_ACCESS_KEY`
-
-Текущее ожидаемое наполнение staging secrets:
-- `STAGING_DEPLOY_HOST=api.wobbly.site`
-- `STAGING_DEPLOY_USER=root`
-- `STAGING_DEPLOY_PATH=/opt/rating-service-staging`
-- `STAGING_DEPLOY_SERVICE=rating-service-staging`
-- `STAGING_DEPLOY_OWNER=ratingapp:ratingapp`
-- `STAGING_DEPLOY_VENV_PATH=/opt/rating-service-staging/.venv`
-- `STAGING_PUBLIC_BASE_URL=https://staging-api.wobbly.site`
-- `STAGING_ACCESS_KEY=<shared secret value>`
-
 Healthcheck URL в workflow теперь зафиксирован в коде:
 - production deploy gate: `http://127.0.0.1:8000/ready`
-- staging deploy gate: `http://127.0.0.1:8001/ready`
+
+Staging-specific secrets и operational details смотри только в `docs/STAGING.md` на ветке `develop`.
 
 Типовая проблема:
 - `Load key ... error in libcrypto`
