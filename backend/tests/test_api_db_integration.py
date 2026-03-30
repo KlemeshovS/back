@@ -29,6 +29,25 @@ def test_anonymous_auth_flow_works_against_real_database(db_client) -> None:
     }
 
 
+def test_api_v1_anonymous_auth_flow_works_against_real_database(db_client) -> None:
+    response = db_client.post("/api/v1/auth/anonymous")
+
+    assert response.status_code == 201
+    auth_payload = response.json()
+
+    me_response = db_client.get(
+        "/api/v1/me",
+        headers=auth_headers(auth_payload["accessToken"]),
+    )
+
+    assert me_response.status_code == 200
+    assert me_response.json() == {
+        "id": auth_payload["userId"],
+        "username": None,
+        "participateInRating": False,
+    }
+
+
 def test_profile_update_persists_to_real_database(db_client) -> None:
     auth_payload = create_anonymous_user(db_client)
 
@@ -154,6 +173,44 @@ def test_leaderboard_queries_use_real_database_data(db_client) -> None:
             {"username": "gamma", "score": -4},
         ],
         "total": 1,
+    }
+
+
+def test_api_v1_leaderboard_queries_use_real_database_data(db_client) -> None:
+    alpha = create_anonymous_user(db_client)
+    beta = create_anonymous_user(db_client)
+
+    db_client.patch(
+        "/api/v1/me/profile",
+        json={"username": "v1_alpha", "participateInRating": True},
+        headers=auth_headers(alpha["accessToken"]),
+    )
+    db_client.patch(
+        "/api/v1/me/profile",
+        json={"username": "v1_beta", "participateInRating": True},
+        headers=auth_headers(beta["accessToken"]),
+    )
+
+    db_client.post(
+        "/api/v1/me/score",
+        json={"score": 30},
+        headers=auth_headers(alpha["accessToken"]),
+    )
+    db_client.post(
+        "/api/v1/me/score",
+        json={"score": 10},
+        headers=auth_headers(beta["accessToken"]),
+    )
+
+    top_response = db_client.get("/api/v1/leaderboard/top?limit=2")
+
+    assert top_response.status_code == 200
+    assert top_response.json() == {
+        "items": [
+            {"username": "v1_alpha", "score": 30},
+            {"username": "v1_beta", "score": 10},
+        ],
+        "total": 2,
     }
 
 

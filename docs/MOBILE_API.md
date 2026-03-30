@@ -3,8 +3,10 @@
 ## Base URL
 
 ```text
-https://api.wobbly.site
+https://api.wobbly.site/api/v1
 ```
+
+Legacy unversioned routes пока сохранены для обратной совместимости, но новый mobile-контракт нужно строить уже на `/api/v1/...`.
 
 ## Swagger
 
@@ -27,13 +29,14 @@ Authorization: Bearer <accessToken>
 ```
 
 Защищенные методы:
-- `GET /me`
-- `PATCH /me/profile`
-- `PATCH /me/rating`
-- `POST /me/score`
+- `GET /api/v1/me`
+- `PATCH /api/v1/me/profile`
+- `PATCH /api/v1/me/rating`
+- `POST /api/v1/me/score`
 
 После включения `TrustedHostMiddleware`, ограниченного CORS и `nginx` rate limiting мобильному приложению ничего менять не нужно, если оно:
 - использует `https://api.wobbly.site`
+- использует versioned routes под `/api/v1/...`
 - не подменяет вручную заголовок `Host`
 - передает `Authorization: Bearer <accessToken>` в защищенные методы
 
@@ -47,7 +50,7 @@ Authorization: Bearer <accessToken>
 - `username`
 - `participateInRating`
 
-Источником истины лучше считать ответ `GET /me`.
+Источником истины лучше считать ответ `GET /api/v1/me`.
 
 ## Integration Flow
 
@@ -55,40 +58,40 @@ Authorization: Bearer <accessToken>
 
 1. Проверить, есть ли локально `accessToken`
 2. Если токена нет:
-   - вызвать `POST /auth/anonymous`
+   - вызвать `POST /api/v1/auth/anonymous`
    - сохранить `accessToken`
    - сохранить `userId`
 
 ### Regular App Start
 
 1. Если токен есть:
-   - вызвать `GET /me`
+   - вызвать `GET /api/v1/me`
    - получить текущий профиль
 
 ### Profile Screen
 
 Когда пользователь вводит имя и включает участие в рейтинге:
-- вызвать `PATCH /me/profile`
+- вызвать `PATCH /api/v1/me/profile`
 
 Если нужно отдельно включить или выключить себя из рейтингов:
-- вызвать `PATCH /me/rating`
+- вызвать `PATCH /api/v1/me/rating`
 
 ### Score Update
 
 Когда приложение хочет отправить рейтинг:
-- вызвать `POST /me/score`
+- вызвать `POST /api/v1/me/score`
 
 ### Leaderboard Screen
 
-- `GET /leaderboard/top?limit=100`
+- `GET /api/v1/leaderboard/top?limit=100`
 
 ### Anti-Leaderboard Screen
 
-- `GET /leaderboard/bottom?limit=100`
+- `GET /api/v1/leaderboard/bottom?limit=100`
 
 ## Endpoints
 
-### `POST /auth/anonymous`
+### `POST /api/v1/auth/anonymous`
 
 Создает anonymous user и возвращает токен.
 
@@ -108,7 +111,7 @@ Response:
 }
 ```
 
-### `GET /me`
+### `GET /api/v1/me`
 
 Возвращает профиль текущего авторизованного пользователя.
 
@@ -122,7 +125,7 @@ Response:
 }
 ```
 
-### `PATCH /me/profile`
+### `PATCH /api/v1/me/profile`
 
 Обновляет имя и участие в рейтинге.
 
@@ -150,7 +153,7 @@ Response:
 - `username` должен быть уникальным
 - разрешены только латинские буквы, цифры, `_`, `.`, `-`
 
-### `PATCH /me/rating`
+### `PATCH /api/v1/me/rating`
 
 Позволяет отдельно включать и выключать участие текущего пользователя в рейтинге.
 
@@ -176,7 +179,7 @@ Response:
 - если отправить `"participateInRating": true` без сохраненного `username`, backend вернет `422`
 - если отправить `"participateInRating": false`, пользователь исключается из leaderboard
 
-### `POST /me/score`
+### `POST /api/v1/me/score`
 
 Обновляет рейтинг текущего авторизованного пользователя.
 
@@ -202,11 +205,11 @@ Response:
 - мобильное приложение не должно передавать `username`
 - backend сам определяет пользователя по токену
 
-### `GET /leaderboard/top?limit=100`
+### `GET /api/v1/leaderboard/top?limit=100`
 
 Возвращает топ пользователей только с `score >= 0`.
 
-### `GET /leaderboard/bottom?limit=100`
+### `GET /api/v1/leaderboard/bottom?limit=100`
 
 Возвращает антитоп пользователей только с `score < 0`.
 
@@ -227,6 +230,14 @@ Response:
   "total": 20
 }
 ```
+
+## Versioning Strategy
+
+- `v1` — текущий стабильный public contract для mobile/web clients
+- unversioned routes пока остаются как compatibility layer
+- все обратно совместимые изменения можно добавлять в `v1`
+- любое breaking change требует нового namespace, например `/api/v2/...`
+- при появлении `v2` нужно оставлять migration window, в котором `v1` и `v2` работают параллельно
 
 ## Error Handling
 

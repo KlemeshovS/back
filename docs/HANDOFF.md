@@ -82,13 +82,13 @@ Backend продолжает раздавать собранный frontend buil
 Актуальные основные endpoint'ы:
 - `GET /health`
 - `GET /ready`
-- `POST /auth/anonymous`
-- `GET /me`
-- `PATCH /me/profile`
-- `PATCH /me/rating`
-- `POST /me/score`
-- `GET /leaderboard/top`
-- `GET /leaderboard/bottom`
+- `POST /api/v1/auth/anonymous`
+- `GET /api/v1/me`
+- `PATCH /api/v1/me/profile`
+- `PATCH /api/v1/me/rating`
+- `POST /api/v1/me/score`
+- `GET /api/v1/leaderboard/top`
+- `GET /api/v1/leaderboard/bottom`
 - `POST /admin/auth/login`
 - `POST /admin/auth/logout`
 - `GET /admin/me`
@@ -106,6 +106,11 @@ Backend продолжает раздавать собранный frontend buil
 Текущее поведение leaderboard:
 - `top` возвращает только пользователей с `score >= 0`
 - `bottom` возвращает только пользователей с `score < 0`
+
+Versioning rule:
+- `v1` — текущий стабильный public contract
+- legacy unversioned routes пока остаются как compatibility layer
+- breaking changes нельзя вносить в `v1` без нового version namespace вроде `/api/v2/...`
 
 ## Docs Rule
 
@@ -172,6 +177,7 @@ Admin UI сейчас уже умеет:
   - `backend/tests/test_schemas.py`
 - integration tests:
   - `backend/tests/test_api_endpoints.py`
+  - `backend/tests/test_api_db_integration.py`
 
 Tooling config:
 - `backend/pyproject.toml`
