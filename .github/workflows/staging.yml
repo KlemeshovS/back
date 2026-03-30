@@ -83,7 +83,7 @@ jobs:
           DEPLOY_SERVICE: ${{ secrets.STAGING_DEPLOY_SERVICE }}
           DEPLOY_OWNER: ${{ secrets.STAGING_DEPLOY_OWNER }}
           DEPLOY_VENV_PATH: ${{ secrets.STAGING_DEPLOY_VENV_PATH }}
-          DEPLOY_HEALTHCHECK_URL: ${{ secrets.STAGING_DEPLOY_HEALTHCHECK_URL }}
+          DEPLOY_HEALTHCHECK_URL: http://127.0.0.1:8001/ready
           SSH_KEY_PATH: /home/runner/.ssh/deploy_key
         run: ./scripts/deploy_release.sh
 

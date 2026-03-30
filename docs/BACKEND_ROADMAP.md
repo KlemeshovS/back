@@ -43,18 +43,7 @@
 Отдельный operational план по защите API:
 - `docs/ANTI_ABUSE.md`
 
-### 1. Add readiness endpoint
-
-Что сделать:
-- добавить `/ready`
-- проверять доступность PostgreSQL
-- возвращать понятный статус для production smoke-check и deploy pipeline
-
-Почему это важно:
-- сейчас `/health` проверяет только то, что приложение поднялось
-- для production и deploy полезнее отличать “процесс жив” от “приложение готово обслуживать запросы”
-
-### 2. Add score history table
+### 1. Add score history table
 
 Что сделать:
 - добавить таблицу `score_events`
@@ -70,7 +59,7 @@
 - сейчас хранится только текущий `score`
 - невозможно разбирать историю изменений, спорные кейсы и аномалии
 
-### 3. Harden score rules
+### 2. Harden score rules
 
 Что сделать:
 - явно зафиксировать бизнес-правила для `score`
@@ -81,7 +70,7 @@
 Почему это важно:
 - сейчас техническая валидация есть, но продуктовая модель рейтинга еще не до конца закреплена
 
-### 4. Add integration tests with real test DB
+### 3. Add integration tests with real test DB
 
 Что сделать:
 - поднять изолированную test PostgreSQL для CI
@@ -224,7 +213,6 @@
 ## Suggested Execution Order
 
 ### Phase 1
-- `/ready`
 - integration tests with real test DB
 - structured logging
 
@@ -285,7 +273,7 @@
   - `app_staging`
   - отдельный `staging.yml` workflow
 - done: deploy script обновляет dependencies в production venv
-- done: deploy script ждет успешный `/health` перед завершением
+- done: deploy script ждет успешный `/ready` перед завершением
 - done: `nginx` rate limiting включен для `api.wobbly.site`
 
 ### Testing / Tooling

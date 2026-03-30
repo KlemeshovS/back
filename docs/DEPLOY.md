@@ -222,7 +222,6 @@ journalctl -u rating-service -n 100 --no-pager
 - `STAGING_DEPLOY_SERVICE`
 - `STAGING_DEPLOY_OWNER`
 - `STAGING_DEPLOY_VENV_PATH`
-- `STAGING_DEPLOY_HEALTHCHECK_URL`
 - `STAGING_DEPLOY_SSH_KEY`
 - `STAGING_PUBLIC_BASE_URL`
 - `STAGING_ACCESS_KEY`
@@ -245,9 +244,12 @@ journalctl -u rating-service -n 100 --no-pager
 - `STAGING_DEPLOY_SERVICE=rating-service-staging`
 - `STAGING_DEPLOY_OWNER=ratingapp:ratingapp`
 - `STAGING_DEPLOY_VENV_PATH=/opt/rating-service-staging/.venv`
-- `STAGING_DEPLOY_HEALTHCHECK_URL=http://127.0.0.1:8001/health`
 - `STAGING_PUBLIC_BASE_URL=https://staging-api.wobbly.site`
 - `STAGING_ACCESS_KEY=<shared secret value>`
+
+`pipeline.yml` и `staging.yml` теперь явно используют:
+- production: `http://127.0.0.1:8000/ready`
+- staging: `http://127.0.0.1:8001/ready`
 
 ### Local Scripts Used By CI/CD
 
@@ -265,9 +267,9 @@ Systemd templates в репозитории:
 - обновляет Python dependencies в production venv через `pip install -r backend/requirements.txt`
 - только потом перезапускает `rating-service`
 - ждет не только `systemctl is-active`, но и успешный ответ healthcheck URL
-- если `/health` не поднимается вовремя, печатает свежие `journalctl` логи сервиса и завершает deploy с ошибкой
+- если `/ready` не поднимается вовремя, печатает свежие `journalctl` логи сервиса и завершает deploy с ошибкой
 - не включает в release archive локальные dev-артефакты вроде `.venv`, caches и `frontend/node_modules`
-- `/ready` можно использовать как дополнительную пост-деплойную проверку доступности БД
+- использует `/ready` как реальную пост-рестарт проверку доступности БД, а `/health` оставляет lightweight liveness endpoint
 
 Важно:
 - `nginx` конфиги не раскатываются текущим GitHub Actions deploy автоматически

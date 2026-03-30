@@ -222,7 +222,7 @@ Tooling config:
 - release архив распаковывается в `/opt/rating-service`
 - затем обновляются Python dependencies в server venv
 - только после этого перезапускается `rating-service.service`
-- deploy считается успешным только если поднялся локальный `/health`
+- deploy считается успешным только если поднялся локальный `/ready`
 
 Для текущего production:
 - `DEPLOY_VENV_PATH=/opt/rating-service/.venv`
@@ -234,7 +234,6 @@ Tooling config:
 - `STAGING_DEPLOY_SERVICE`
 - `STAGING_DEPLOY_OWNER`
 - `STAGING_DEPLOY_VENV_PATH`
-- `STAGING_DEPLOY_HEALTHCHECK_URL`
 - `STAGING_DEPLOY_SSH_KEY`
 - `STAGING_PUBLIC_BASE_URL`
 - `STAGING_ACCESS_KEY`
@@ -246,9 +245,12 @@ Tooling config:
 - `STAGING_DEPLOY_SERVICE=rating-service-staging`
 - `STAGING_DEPLOY_OWNER=ratingapp:ratingapp`
 - `STAGING_DEPLOY_VENV_PATH=/opt/rating-service-staging/.venv`
-- `STAGING_DEPLOY_HEALTHCHECK_URL=http://127.0.0.1:8001/health`
 - `STAGING_PUBLIC_BASE_URL=https://staging-api.wobbly.site`
 - `STAGING_ACCESS_KEY=<shared secret value>`
+
+Healthcheck URL в workflow теперь зафиксирован в коде:
+- production deploy gate: `http://127.0.0.1:8000/ready`
+- staging deploy gate: `http://127.0.0.1:8001/ready`
 
 Типовая проблема:
 - `Load key ... error in libcrypto`
@@ -287,7 +289,6 @@ Tooling config:
 ## Current Next Improvements
 
 Самые логичные следующие технические шаги:
-- readiness endpoint `/ready`
 - uptime monitoring for `/health` and `/ready`
 - richer integration tests with test DB
 - structured logging
