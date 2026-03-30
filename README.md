@@ -254,6 +254,15 @@ npm --prefix frontend run dev
 - `docker compose config`
 - docs sync check
 
+Реальные integration tests с PostgreSQL:
+
+```bash
+docker compose up -d db
+TEST_DATABASE_URL=postgresql://app:app@127.0.0.1:5432/app ./.venv/bin/pytest backend/tests/test_api_db_integration.py
+```
+
+В CI эти тесты идут через отдельный изолированный PostgreSQL service.
+
 ## Docs Rule
 
 Если меняется API, в том же изменении нужно обновлять:
