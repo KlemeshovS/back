@@ -18,6 +18,8 @@ from app.core.config import settings
 from app.core.errors import ApiError
 from app.db.database import init_db
 
+PUBLIC_API_V1_PREFIX = "/api/v1"
+
 
 @asynccontextmanager
 async def db_lifespan(_: FastAPI):
@@ -67,5 +69,8 @@ def create_app(init_database: bool = True) -> FastAPI:
     app.include_router(auth.router)
     app.include_router(profile.router)
     app.include_router(leaderboard.router)
+    app.include_router(auth.router, prefix=PUBLIC_API_V1_PREFIX)
+    app.include_router(profile.router, prefix=PUBLIC_API_V1_PREFIX)
+    app.include_router(leaderboard.router, prefix=PUBLIC_API_V1_PREFIX)
 
     return app

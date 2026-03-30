@@ -102,7 +102,17 @@ Monorepo для `Wobbly`, разделенный на два подпроект�
 
 ## API
 
-### `POST /auth/anonymous`
+### Public API Versioning
+
+Новый публичный контракт для клиентов теперь начинается с `/api/v1/...`.
+
+Это значит:
+- для новых mobile/web клиентов нужно использовать `https://api.wobbly.site/api/v1`
+- текущие unversioned routes пока сохранены для обратной совместимости
+- обратно совместимые изменения можно добавлять в `v1`
+- любые breaking changes в будущем должны идти через новый namespace, например `/api/v2/...`
+
+### `POST /api/v1/auth/anonymous`
 
 Создает анонимного пользователя и возвращает bearer token.
 
@@ -122,11 +132,11 @@ Response:
 Authorization: Bearer rt_xxxxx
 ```
 
-### `GET /me`
+### `GET /api/v1/me`
 
 Возвращает профиль текущего авторизованного пользователя.
 
-### `PATCH /me/profile`
+### `PATCH /api/v1/me/profile`
 
 Request:
 
@@ -143,7 +153,7 @@ Responses:
 - `409` такой `username` уже существует
 - `422` нельзя включить участие в рейтинге без `username`
 
-### `PATCH /me/rating`
+### `PATCH /api/v1/me/rating`
 
 Позволяет отдельно включить или выключить участие текущего пользователя в рейтингах.
 
@@ -160,7 +170,7 @@ Responses:
 - `401` не передан или невалиден bearer token
 - `422` нельзя включить участие в рейтинге без `username`
 
-### `POST /me/score`
+### `POST /api/v1/me/score`
 
 Request:
 
@@ -211,11 +221,11 @@ Responses:
 - `VALIDATION_ERROR` — тело запроса не прошло валидацию: не хватает полей или формат данных неверный
 - `INTERNAL_SERVER_ERROR` — внутренняя ошибка backend
 
-### `GET /leaderboard/top?limit=100`
+### `GET /api/v1/leaderboard/top?limit=100`
 
 Возвращает пользователей с максимальным рейтингом, у которых `score >= 0`.
 
-### `GET /leaderboard/bottom?limit=100`
+### `GET /api/v1/leaderboard/bottom?limit=100`
 
 Возвращает пользователей с минимальным рейтингом, у которых `score < 0`.
 
@@ -253,6 +263,15 @@ npm --prefix frontend run dev
 - `npm --prefix frontend run build`
 - `docker compose config`
 - docs sync check
+
+Реальные integration tests с PostgreSQL:
+
+```bash
+docker compose up -d db
+TEST_DATABASE_URL=postgresql://app:app@127.0.0.1:5432/app ./.venv/bin/pytest backend/tests/test_api_db_integration.py
+```
+
+В CI эти тесты идут через отдельный изолированный PostgreSQL service.
 
 ## Docs Rule
 

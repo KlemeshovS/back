@@ -43,18 +43,7 @@
 Отдельный operational план по защите API:
 - `docs/ANTI_ABUSE.md`
 
-### 1. Add readiness endpoint
-
-Что сделать:
-- добавить `/ready`
-- проверять доступность PostgreSQL
-- возвращать понятный статус для production smoke-check и deploy pipeline
-
-Почему это важно:
-- сейчас `/health` проверяет только то, что приложение поднялось
-- для production и deploy полезнее отличать “процесс жив” от “приложение готово обслуживать запросы”
-
-### 2. Add score history table
+### 1. Add score history table
 
 Что сделать:
 - добавить таблицу `score_events`
@@ -70,7 +59,7 @@
 - сейчас хранится только текущий `score`
 - невозможно разбирать историю изменений, спорные кейсы и аномалии
 
-### 3. Harden score rules
+### 2. Harden score rules
 
 Что сделать:
 - явно зафиксировать бизнес-правила для `score`
@@ -81,23 +70,7 @@
 Почему это важно:
 - сейчас техническая валидация есть, но продуктовая модель рейтинга еще не до конца закреплена
 
-### 4. Add integration tests with real test DB
-
-Что сделать:
-- поднять изолированную test PostgreSQL для CI
-- добавить сценарии с реальной БД вместо только monkeypatch-based tests
-- покрыть:
-  - anonymous auth flow
-  - profile update
-  - rating toggle
-  - score update
-  - leaderboard queries
-  - error scenarios
-
-Почему это важно:
-- текущие integration tests уже полезны, но они не ловят проблемы SQL, миграций и реальных DB-paths
-
-### 5. Add structured logging
+### 3. Add structured logging
 
 Что сделать:
 - перейти на структурированные логи
@@ -111,7 +84,7 @@
 Почему это важно:
 - без этого неудобно разбирать инциденты и ошибки мобильной интеграции
 
-### 6. Add uptime monitoring
+### 4. Add uptime monitoring
 
 Что сделать:
 - поднять простой мониторинг доступности
@@ -128,7 +101,7 @@
 - сейчас состояние приложения видно в основном вручную
 - нужен отдельный сигнал, что API или сайт недоступны
 
-### 7. Add error monitoring
+### 5. Add error monitoring
 
 Что сделать:
 - подключить Sentry или аналог
@@ -138,7 +111,7 @@
 Почему это важно:
 - сейчас мы видим инциденты в основном через ручную проверку логов
 
-### 8. Add server monitoring
+### 6. Add server monitoring
 
 Что сделать:
 - собрать базовые серверные метрики:
@@ -155,7 +128,7 @@
 - приложение может быть “живым”, но сервер уже деградирует
 - это поможет ловить проблемы до падения
 
-### 9. Add automated backups
+### 7. Add automated backups
 
 Что сделать:
 - ежедневный `pg_dump`
@@ -166,7 +139,7 @@
 - локальные backup-файлы уже делались руками
 - нужен системный, повторяемый процесс
 
-### 10. Improve leaderboard queries
+### 8. Improve leaderboard queries
 
 Что сделать:
 - добавить `offset`
@@ -177,7 +150,7 @@
 - текущего `top/bottom limit` хватает для простого экрана
 - но API уже упирается в следующий уровень функциональности
 
-### 11. Introduce API versioning
+### 9. Introduce API versioning
 
 Что сделать:
 - перевести публичный контракт на `/api/v1/...`
@@ -187,7 +160,7 @@
 - контракт уже живет в мобильном приложении
 - дальше breaking changes будут дороже
 
-### 12. Add anti-fraud and abuse signals
+### 10. Add anti-fraud and abuse signals
 
 Что сделать:
 - логировать подозрительные всплески запросов
@@ -198,7 +171,7 @@
 - базовый rate limiting уже есть
 - следующая ступень это не только ограничение запросов, но и детекция странного поведения
 
-### 13. Add developer ergonomics
+### 11. Add developer ergonomics
 
 Что сделать:
 - вынести dev dependencies в отдельный файл или optional extras
@@ -209,7 +182,7 @@
 - tooling уже есть
 - теперь стоит сделать его проще в использовании для следующего разработчика
 
-### 14. Continue admin console polish
+### 12. Continue admin console polish
 
 Что сделать:
 - добавить change role в owner-only admin management
@@ -224,8 +197,6 @@
 ## Suggested Execution Order
 
 ### Phase 1
-- `/ready`
-- integration tests with real test DB
 - structured logging
 
 ### Phase 2
@@ -243,63 +214,3 @@
 - API versioning
 - developer ergonomics improvements
 - admin console polish
-
-## Recommended Next Task
-
-Если выбирать одно следующее улучшение, лучше всего сделать:
-
-`Add readiness endpoint`
-
-Это самый маленький и самый практичный следующий шаг: он сразу улучшит production deploy, monitoring и понимание реальной готовности backend.
-
-## Completed
-
-Ниже задачи, которые уже закрыты и больше не должны висеть в активной части roadmap.
-
-### Security
-- done: anonymous auth и bearer token flow
-- done: rate limiting для регистрации и обновления рейтинга
-- done: базовая input validation для `username` и payload schemas
-
-### API
-- done: переход на публичный `camelCase` contract
-- done: единый error contract в формате `code + message`
-- done: отдельный toggle участия в рейтинге через `PATCH /me/rating`
-- done: удалены legacy endpoint'ы:
-  - `POST /users/register`
-  - `POST /users/score`
-
-### Data / DB
-- done: подключен `Alembic`
-- done: базовые timestamps уже есть:
-  - `created_at`
-  - `updated_at`
-  - `last_seen_at`
-
-### Reliability / Delivery
-- done: настроен GitHub Actions pipeline
-- done: автоматизирован deploy после merge в `main`
-- done: staging контур поднят отдельно от production:
-  - `rating-service-staging.service`
-  - `/opt/rating-service-staging`
-  - `app_staging`
-  - отдельный `staging.yml` workflow
-- done: deploy script обновляет dependencies в production venv
-- done: deploy script ждет успешный `/health` перед завершением
-- done: `nginx` rate limiting включен для `api.wobbly.site`
-
-### Testing / Tooling
-- done: добавлены `ruff` и `pytest`
-- done: добавлены unit tests
-- done: добавлены integration tests для API routes
-- done: добавлены pre-commit и pre-push hooks
-
-### Docs / Process
-- done: `/api/docs` и `/api/swagger` разведены по отдельным путям
-- done: docs sync включен в CI
-- done: при изменении API docs page обновляется в том же изменении
-- done: проектный handoff и deploy context зафиксированы в `.md`
-- done: non-README docs вынесены в `docs/`
-
-### Cleanup
-- done: удалены compatibility wrappers после разделения `backend/` и `frontend/`

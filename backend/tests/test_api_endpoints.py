@@ -133,6 +133,29 @@ def test_auth_anonymous_returns_camel_case_response(monkeypatch) -> None:
     }
 
 
+def test_auth_anonymous_is_available_under_api_v1(monkeypatch) -> None:
+    client = build_client()
+
+    monkeypatch.setattr(
+        user_service,
+        "create_anonymous_user",
+        lambda: {
+            "user_id": 10,
+            "access_token": "rt_v1",
+            "token_type": "bearer",
+        },
+    )
+
+    response = client.post("/api/v1/auth/anonymous")
+
+    assert response.status_code == 201
+    assert response.json() == {
+        "userId": 10,
+        "accessToken": "rt_v1",
+        "tokenType": "bearer",
+    }
+
+
 def test_get_me_requires_authorization_header() -> None:
     client = build_client()
 
@@ -184,5 +207,26 @@ def test_top_leaderboard_returns_service_payload(monkeypatch) -> None:
     assert response.status_code == 200
     assert response.json() == {
         "items": [{"username": "good_user", "score": 12}],
+        "total": 1,
+    }
+
+
+def test_top_leaderboard_is_available_under_api_v1(monkeypatch) -> None:
+    client = build_client()
+
+    monkeypatch.setattr(
+        user_service,
+        "fetch_leaderboard",
+        lambda order, score_filter, limit: {
+            "items": [{"username": "good_v1", "score": 20}],
+            "total": 1,
+        },
+    )
+
+    response = client.get("/api/v1/leaderboard/top?limit=100")
+
+    assert response.status_code == 200
+    assert response.json() == {
+        "items": [{"username": "good_v1", "score": 20}],
         "total": 1,
     }

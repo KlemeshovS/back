@@ -71,8 +71,6 @@ export function useAdminConsole() {
   const isUserModalOpen = ref(false);
   const isAdminModalOpen = ref(false);
   const isAdminCreateModalOpen = ref(false);
-  const openUserMenuId = ref<number | null>(null);
-  const openAdminMenuId = ref<number | null>(null);
   const userForm = reactive({
     username: "",
     score: 0,
@@ -427,8 +425,6 @@ export function useAdminConsole() {
     isUserModalOpen,
     isAdminModalOpen,
     isAdminCreateModalOpen,
-    openUserMenuId,
-    openAdminMenuId,
     userForm,
     adminCreateForm,
     adminEditForm,
