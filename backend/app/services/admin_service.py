@@ -242,11 +242,18 @@ def get_admin_overview() -> AdminOverviewResponse:
             cur.execute(
                 """
                 SELECT
-                    (SELECT COUNT(*) FROM users) AS total_users,
+                    (
+                        SELECT COUNT(*)
+                        FROM users
+                        WHERE username IS NOT NULL
+                          AND BTRIM(username) <> ''
+                    ) AS total_users,
                     (
                         SELECT COUNT(*)
                         FROM users
                         WHERE is_rating_enabled = TRUE
+                          AND username IS NOT NULL
+                          AND BTRIM(username) <> ''
                     ) AS rating_enabled_users,
                     (SELECT COUNT(*) FROM admin_users) AS total_admins,
                     (SELECT COUNT(*) FROM admin_users WHERE is_active = TRUE) AS active_admins,
@@ -274,7 +281,9 @@ def list_managed_users(search: Optional[str], limit: int, offset: int) -> Manage
                     """
                     SELECT COUNT(*) AS total
                     FROM users
-                    WHERE username ILIKE %s;
+                    WHERE username IS NOT NULL
+                      AND BTRIM(username) <> ''
+                      AND username ILIKE %s;
                     """,
                     (search_term,),
                 )
@@ -290,14 +299,23 @@ def list_managed_users(search: Optional[str], limit: int, offset: int) -> Manage
                         updated_at,
                         last_seen_at
                     FROM users
-                    WHERE username ILIKE %s
+                    WHERE username IS NOT NULL
+                      AND BTRIM(username) <> ''
+                      AND username ILIKE %s
                     ORDER BY id DESC
                     LIMIT %s OFFSET %s;
                     """,
                     (search_term, limit, offset),
                 )
             else:
-                cur.execute("SELECT COUNT(*) AS total FROM users;")
+                cur.execute(
+                    """
+                    SELECT COUNT(*) AS total
+                    FROM users
+                    WHERE username IS NOT NULL
+                      AND BTRIM(username) <> '';
+                    """
+                )
                 total = cur.fetchone()["total"]
                 cur.execute(
                     """
@@ -310,6 +328,8 @@ def list_managed_users(search: Optional[str], limit: int, offset: int) -> Manage
                         updated_at,
                         last_seen_at
                     FROM users
+                    WHERE username IS NOT NULL
+                      AND BTRIM(username) <> ''
                     ORDER BY id DESC
                     LIMIT %s OFFSET %s;
                     """,
@@ -377,6 +397,8 @@ def update_managed_user(
                 )
 
             username = existing_user["username"] if payload.username is None else payload.username
+            if username is not None:
+                username = username.strip() or None
             score = existing_user["score"] if payload.score is None else payload.score
             participate = (
                 existing_user["is_rating_enabled"]
@@ -390,6 +412,9 @@ def update_managed_user(
                     code=ApiErrorCode.USERNAME_REQUIRED_FOR_RATING,
                     message="Username is required to participate in rating",
                 )
+
+            if username is None:
+                score = 0
 
             try:
                 cur.execute(

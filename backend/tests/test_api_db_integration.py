@@ -118,6 +118,89 @@ def test_score_update_persists_to_real_database(db_client) -> None:
     assert response.json() == {"username": "score_user", "score": 42}
 
 
+def test_score_update_rejects_anonymous_users_without_username(db_client) -> None:
+    auth_payload = create_anonymous_user(db_client)
+
+    response = db_client.post(
+        "/me/score",
+        json={"score": 42},
+        headers=auth_headers(auth_payload["accessToken"]),
+    )
+
+    assert response.status_code == 422
+    assert response.json() == {
+        "code": "USERNAME_REQUIRED_FOR_RATING",
+        "message": "Username is required to submit score",
+    }
+
+
+def test_score_update_rejects_users_with_rating_disabled(db_client) -> None:
+    auth_payload = create_anonymous_user(db_client)
+
+    db_client.patch(
+        "/me/profile",
+        json={"username": "disabled_user", "participateInRating": True},
+        headers=auth_headers(auth_payload["accessToken"]),
+    )
+    db_client.patch(
+        "/me/rating",
+        json={"participateInRating": False},
+        headers=auth_headers(auth_payload["accessToken"]),
+    )
+
+    response = db_client.post(
+        "/me/score",
+        json={"score": 42},
+        headers=auth_headers(auth_payload["accessToken"]),
+    )
+
+    assert response.status_code == 422
+    assert response.json() == {
+        "code": "RATING_DISABLED_FOR_SCORE",
+        "message": "Rating must be enabled to submit score",
+    }
+
+
+def test_clearing_username_resets_score_to_zero(db_client) -> None:
+    auth_payload = create_anonymous_user(db_client)
+
+    db_client.patch(
+        "/me/profile",
+        json={"username": "clear_user", "participateInRating": True},
+        headers=auth_headers(auth_payload["accessToken"]),
+    )
+    db_client.post(
+        "/me/score",
+        json={"score": 42},
+        headers=auth_headers(auth_payload["accessToken"]),
+    )
+
+    response = db_client.patch(
+        "/me/profile",
+        json={"username": None, "participateInRating": False},
+        headers=auth_headers(auth_payload["accessToken"]),
+    )
+
+    assert response.status_code == 200
+    assert response.json() == {
+        "id": auth_payload["userId"],
+        "username": None,
+        "participateInRating": False,
+    }
+
+    me_response = db_client.get("/me", headers=auth_headers(auth_payload["accessToken"]))
+    assert me_response.status_code == 200
+    assert me_response.json() == {
+        "id": auth_payload["userId"],
+        "username": None,
+        "participateInRating": False,
+    }
+
+    leaderboard_response = db_client.get("/leaderboard/top?limit=10")
+    assert leaderboard_response.status_code == 200
+    assert leaderboard_response.json() == {"items": [], "total": 0}
+
+
 def test_leaderboard_queries_use_real_database_data(db_client) -> None:
     alpha = create_anonymous_user(db_client)
     beta = create_anonymous_user(db_client)

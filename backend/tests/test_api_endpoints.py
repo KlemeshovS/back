@@ -5,6 +5,7 @@ from typing import Optional
 
 from app.api.dependencies import get_current_user
 from app.api.routes import health
+from app.core.errors import ApiError, ApiErrorCode
 from app.services import user_service
 from tests.helpers import build_client
 
@@ -229,4 +230,66 @@ def test_top_leaderboard_is_available_under_api_v1(monkeypatch) -> None:
     assert response.json() == {
         "items": [{"username": "good_v1", "score": 20}],
         "total": 1,
+    }
+
+
+def test_score_update_rejects_users_without_username(monkeypatch) -> None:
+    client = build_client()
+
+    client.app.dependency_overrides[get_current_user] = lambda: {
+        "id": 7,
+        "username": None,
+        "is_rating_enabled": False,
+    }
+
+    def fake_update_my_score(user_id: int, score: int):
+        raise ApiError(
+            status_code=422,
+            code=ApiErrorCode.USERNAME_REQUIRED_FOR_RATING,
+            message="Username is required to submit score",
+        )
+
+    monkeypatch.setattr(user_service, "update_my_score", fake_update_my_score)
+
+    response = client.post(
+        "/me/score",
+        json={"score": 10},
+        headers={"Authorization": "Bearer token"},
+    )
+
+    assert response.status_code == 422
+    assert response.json() == {
+        "code": "USERNAME_REQUIRED_FOR_RATING",
+        "message": "Username is required to submit score",
+    }
+
+
+def test_score_update_rejects_users_with_rating_disabled(monkeypatch) -> None:
+    client = build_client()
+
+    client.app.dependency_overrides[get_current_user] = lambda: {
+        "id": 7,
+        "username": "player_7",
+        "is_rating_enabled": False,
+    }
+
+    def fake_update_my_score(user_id: int, score: int):
+        raise ApiError(
+            status_code=422,
+            code=ApiErrorCode.RATING_DISABLED_FOR_SCORE,
+            message="Rating must be enabled to submit score",
+        )
+
+    monkeypatch.setattr(user_service, "update_my_score", fake_update_my_score)
+
+    response = client.post(
+        "/me/score",
+        json={"score": 10},
+        headers={"Authorization": "Bearer token"},
+    )
+
+    assert response.status_code == 422
+    assert response.json() == {
+        "code": "RATING_DISABLED_FOR_SCORE",
+        "message": "Rating must be enabled to submit score",
     }
