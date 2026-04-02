@@ -1,18 +1,20 @@
 # Development Workflow
 
 Основа процесса:
-- `develop -> main release flow`
+- `feature -> develop -> release branch -> main`
 - `Conventional Commits 1.0.0`
 
 ## Branching
 
-Мы работаем через основную ветку разработки `develop` и отдельную релизную ветку `main`.
+Мы работаем через основную ветку разработки `develop`, отдельную временную release-ветку и отдельную production-ветку `main`.
 
 Правила:
 - `develop` это основная ветка разработки
 - `develop` всегда должна быть в рабочем состоянии и готова к staging deploy
-- `main` используется только для production release
+- `main` используется только для production release и должна отражать только production-реальность
 - в `main` не вливаем изменения без явной команды пользователя на релиз
+- direct merge `develop -> main` больше не используем
+- production release идет через отдельную release-ветку, собранную из `develop`
 - каждая задача делается в отдельной короткоживущей ветке
 - имя ветки должно отражать `type`, как в Conventional Commits
 - ветка живет недолго и быстро вливается обратно в `develop`
@@ -57,10 +59,12 @@ Commit message оформляем по `Conventional Commits`.
 6. влить изменения обратно в `develop`
 7. дождаться staging pipeline
 8. если staging pipeline зеленый, считать staging deploy завершенным
-9. когда пользователь явно запросил production release, влить `develop` в `main`
-10. дождаться production pipeline
-11. если production pipeline зеленый, считать релиз завершенным
-12. удалить ветку локально и на remote после merge
+9. когда пользователь явно запросил production release, из `develop` подготовить release-ветку через `scripts/prepare_main_release.sh`
+10. в release-ветке убрать staging-only хвосты и проверить production-facing docs
+11. влить release-ветку в `main`
+12. дождаться production pipeline
+13. если production pipeline зеленый, считать релиз завершенным
+14. удалить release-ветку локально и на remote после merge
 
 ## Our Team Rule
 
@@ -70,12 +74,13 @@ Commit message оформляем по `Conventional Commits`.
 - локальные hooks должны быть включены через `./scripts/install_git_hooks.sh`
 - большие задачи режем на несколько маленьких commits, если это помогает чтению истории
 - `develop` держим как самую актуальную ветку разработки
-- `main` держим как production-ready ветку
+- `main` держим как production-only ветку
 - без явного запроса пользователя `main` не обновляем
 - если пользователь не просил production release буквально и явно, любые изменения фиксируем только в `develop`
 - после merge удаляем ветку локально и в GitHub
 - после merge в `develop` ориентируемся сначала на staging GitHub Actions pipeline
 - после merge в `main` ориентируемся сначала на production GitHub Actions pipeline
+- staging-only workflow, systemd/nginx templates и operational docs не должны попадать в `main`
 - admin UI считаем единым frontend shell; различие между `production` и `staging` должно быть только в API-окружении
 - если меняется API-контракт или поведение endpoint'ов, в том же изменении нужно обновлять `https://api.wobbly.site/api/docs`
 - по мере роста API текстовую docs page нужно упрощать и перестраивать так, чтобы она оставалась удобной для чтения
@@ -129,8 +134,18 @@ Commit message оформляем по `Conventional Commits`.
 - deploy access: `root@api.wobbly.site` через `deploy_key`
 - primary deploy path сейчас это GitHub Actions pipeline
 - `develop` деплоится в staging
-- `main` деплоится в production
+- release branch вливается в `main`, и только `main` деплоится в production
 - ручной fallback deploy это `scp`/копирование файлов + `systemctl restart rating-service`
+
+## Release Branch Rule
+
+Перед production release:
+1. перейти на `develop`
+2. убедиться, что дерево чистое
+3. запустить `./scripts/prepare_main_release.sh`
+4. просмотреть release-ветку
+5. закоммитить cleanup staging-only файлов
+6. только потом вливать release-ветку в `main`
 
 Если эти факты не опровергнуты явным изменением в репозитории или на сервере, не надо их перепроверять с нуля.
 

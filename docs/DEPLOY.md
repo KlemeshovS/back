@@ -23,33 +23,24 @@
 - Swagger: `https://api.wobbly.site/api/swagger`
 - text docs: `https://api.wobbly.site/api/docs`
 
-Текущий staging baseline:
-- staging path: `/opt/rating-service-staging`
-- staging service: `rating-service-staging.service`
-- staging DB: `app_staging`
-- staging port: `8001`
-- staging nginx site: `/etc/nginx/sites-available/staging-api.wobbly.site`
-- staging edge protection: `X-Staging-Key` header in `nginx`
-- staging public URL: `https://staging-api.wobbly.site`
-- staging certificate уже выпущен через `certbot --nginx`
+Этот документ production-only.
+
+Staging operational details должны жить только в `docs/STAGING.md` на ветке `develop`.
 
 Admin baseline:
 - admin public URL: `https://admin.wobbly.site`
 - admin UI paths:
   - `/production/`
-  - `/staging/`
-- `admin.wobbly.site/production/` и `admin.wobbly.site/staging/` используют один и тот же UI shell с `127.0.0.1:8000`
+- `admin.wobbly.site/production/` использует production UI shell с `127.0.0.1:8000`
 - admin same-origin API:
   - `/production/api/...` -> production `/admin/...`
-  - `/staging/api/...` -> staging `/admin/...`
 - admin frontend assets теперь идут через:
   - `/assets/...`
   - `/og/...`
 - admin certificate уже выпущен через `certbot --nginx`
-- owner bootstrap уже применен через env на production и staging
+- owner bootstrap уже применен через env на production
 - bootstrap credentials это operational secret и не хранятся в репозитории
-- admin UI в production и staging теперь намеренно одинаковый
-- если UI баг виден на одном admin URL, сначала считать это общим frontend багом, а потом уже проверять различие API-окружений
+- production docs and checks should describe only production-facing behavior
 
 ## Access
 
@@ -151,10 +142,8 @@ journalctl -u rating-service -n 100 --no-pager
 Для `api.wobbly.site` rate limiting config теперь хранится в репозитории:
 - `deploy/nginx/api-rate-limits.conf`
 - `deploy/nginx/api.wobbly.site.conf`
-- staging templates тоже есть в репозитории:
+- production templates в репозитории:
   - `deploy/systemd/rating-service.service`
-  - `deploy/nginx/staging-api.wobbly.site.conf`
-  - `deploy/systemd/rating-service-staging.service`
 
 Текущий production уже использует этот rate limiting слой:
 - `10 requests/second` на IP
@@ -174,10 +163,10 @@ journalctl -u rating-service -n 100 --no-pager
 Теперь стандартный flow такой:
 1. разработка идет в короткой ветке
 2. ветка вливается в `develop`
-3. GitHub Actions запускает `.github/workflows/staging.yml`
-4. job `verify` прогоняет проверки
-5. если проверки успешны, job `deploy-staging` выкатывает текущий `develop` в staging
-6. когда пользователь явно запрашивает production release, `develop` вливается в `main`
+3. staging verify/deploy живет только в `develop`
+4. когда пользователь явно запрашивает production release, из `develop` готовится отдельная release-ветка через `scripts/prepare_main_release.sh`
+5. в release-ветке убираются staging-only workflow/templates/docs
+6. release-ветка вливается в `main`
 7. GitHub Actions запускает `.github/workflows/pipeline.yml`
 8. job `deploy` выкатывает текущий `main` на production
 
@@ -215,17 +204,6 @@ journalctl -u rating-service -n 100 --no-pager
 - `DEPLOY_VENV_PATH`
 - `DEPLOY_SSH_KEY`
 
-Для staging workflow отдельно нужны:
-- `STAGING_DEPLOY_HOST`
-- `STAGING_DEPLOY_USER`
-- `STAGING_DEPLOY_PATH`
-- `STAGING_DEPLOY_SERVICE`
-- `STAGING_DEPLOY_OWNER`
-- `STAGING_DEPLOY_VENV_PATH`
-- `STAGING_DEPLOY_SSH_KEY`
-- `STAGING_PUBLIC_BASE_URL`
-- `STAGING_ACCESS_KEY`
-
 Для текущего production значения такие:
 - `DEPLOY_HOST=api.wobbly.site`
 - `DEPLOY_USER=root`
@@ -237,19 +215,10 @@ journalctl -u rating-service -n 100 --no-pager
 Если `DEPLOY_VENV_PATH` не задан, deploy script использует дефолт:
 - `${DEPLOY_PATH}/.venv`
 
-Для staging сейчас ориентир такой:
-- `STAGING_DEPLOY_HOST=api.wobbly.site`
-- `STAGING_DEPLOY_USER=root`
-- `STAGING_DEPLOY_PATH=/opt/rating-service-staging`
-- `STAGING_DEPLOY_SERVICE=rating-service-staging`
-- `STAGING_DEPLOY_OWNER=ratingapp:ratingapp`
-- `STAGING_DEPLOY_VENV_PATH=/opt/rating-service-staging/.venv`
-- `STAGING_PUBLIC_BASE_URL=https://staging-api.wobbly.site`
-- `STAGING_ACCESS_KEY=<shared secret value>`
+`pipeline.yml` production deploy gate:
+- `http://127.0.0.1:8000/ready`
 
-`pipeline.yml` и `staging.yml` теперь явно используют:
-- production: `http://127.0.0.1:8000/ready`
-- staging: `http://127.0.0.1:8001/ready`
+Все staging secrets и staging deploy значения intentionally documented only in `docs/STAGING.md` on `develop`.
 
 ### Local Scripts Used By CI/CD
 
@@ -260,7 +229,6 @@ Pipeline опирается на локальные скрипты:
 
 Systemd templates в репозитории:
 - `deploy/systemd/rating-service.service`
-- `deploy/systemd/rating-service-staging.service`
 
 Во время deploy script теперь:
 - распаковывает release
@@ -274,22 +242,7 @@ Systemd templates в репозитории:
 Важно:
 - `nginx` конфиги не раскатываются текущим GitHub Actions deploy автоматически
 - изменения в `deploy/nginx/` нужно применять на сервер отдельно через `nginx -t` и `systemctl reload nginx`
-- staging smoke-check использует `X-Staging-Key`, поэтому для успешного workflow нужно заполнить `STAGING_ACCESS_KEY`
 - admin host routing на `admin.wobbly.site` тоже не раскатывается автоматически через pipeline и остается отдельной server-side обязанностью
-
-### Staging Protection
-
-Staging сейчас закрыт через обязательный заголовок `X-Staging-Key` на уровне `nginx`.
-
-Ожидаемый запрос:
-
-```http
-X-Staging-Key: <secret>
-```
-
-Важно:
-- если мобильное приложение тестирует staging API напрямую, staging-сборка должна добавлять этот заголовок во все запросы
-- это проще, чем `basic auth`, потому что не конфликтует с `Authorization: Bearer ...`
 
 ## API Docs Sync Rule
 
@@ -313,7 +266,6 @@ X-Staging-Key: <secret>
 
 После frontend/backend split smoke checks должны проверять не только API и landing, но и admin surface:
 - `https://admin.wobbly.site/production/`
-- `https://admin.wobbly.site/staging/`
 
 ## Common Failure: SSH Key Parsing
 
