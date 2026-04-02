@@ -162,6 +162,13 @@ a {
   padding: 24px 40px 0;
 }
 
+.topbar-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  justify-content: flex-end;
+}
+
 .brand {
   display: inline-flex;
   align-items: center;
@@ -987,6 +994,10 @@ h2 {
 
   .topbar {
     padding-top: 18px;
+  }
+
+  .topbar-actions {
+    gap: 12px;
   }
 
   .hero {
