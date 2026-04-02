@@ -6,6 +6,10 @@
 
 Если задача связана с production, сначала опираемся на этот файл, и только потом идем проверять сервер.
 
+Этот документ описывает production-only truth.
+
+Если задача про staging, нужно читать `docs/STAGING.md` на ветке `develop`.
+
 ## Current Production Topology
 
 Текущий production работает не через docker compose и не через git checkout на сервере.
@@ -88,6 +92,8 @@ ssh -i /Users/klem/Documents/eguene/deploy_key root@api.wobbly.site
 - сырой `curl` по `/api/docs` покажет HTML-оболочку
 - содержимое секций и endpoint descriptions живет в `frontend/src/features/docs/content.ts`
 - если нужно проверить, обновилась ли текстовая документация после API change, смотри и production URL, и `frontend/src/features/docs/content.ts`
+- docs page должна грузить assets через `/assets/...`
+- если `/api/docs` белая, сначала проверить 404 на frontend bundle, а не backend routes
 
 ## Quick Verification Commands
 
@@ -175,6 +181,10 @@ journalctl -u rating-service -n 100 --no-pager
 - repository secrets для deploy уже заведены в GitHub
 - целевой основной путь доставки теперь через GitHub Actions, а не через ручной `scp`
 
+Важно:
+- production release не делается прямым merge `develop -> main`
+- staging operational artifacts не должны попадать в `main`
+
 ### Workflow Behavior
 
 `pipeline.yml` делает следующее:
@@ -217,6 +227,16 @@ journalctl -u rating-service -n 100 --no-pager
 
 `pipeline.yml` production deploy gate:
 - `http://127.0.0.1:8000/ready`
+
+## Production Quick Checklist
+
+После production release быстро проверить:
+- `https://api.wobbly.site/health`
+- `https://api.wobbly.site/ready`
+- `https://api.wobbly.site/api/swagger`
+- `https://api.wobbly.site/api/docs`
+- `https://wobbly.site`
+- `https://admin.wobbly.site/production/`
 
 Все staging secrets и staging deploy значения intentionally documented only in `docs/STAGING.md` on `develop`.
 

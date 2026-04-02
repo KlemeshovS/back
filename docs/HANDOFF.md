@@ -13,6 +13,8 @@
 - text docs: `https://api.wobbly.site/api/docs`
 - expected active development branch: `develop`
 
+Если задача переносится в новый чат, это нужно считать рабочей правдой без повторного расследования.
+
 ## Current Production Truth
 
 Это уже подтвержденные факты:
@@ -46,6 +48,16 @@ Admin baseline в коде уже есть:
 - owner bootstrap уже применен на production
 - staging admin details intentionally live outside production handoff
 - bootstrap credentials это operational secret; в репозиторий их не кладем
+
+Landing baseline:
+- production landing: `https://wobbly.site`
+- текущие production CTA на landing:
+  - App Store
+  - Google Play
+  - Telegram
+- в последних правках с landing убраны блоки:
+  - `О продукте`
+  - `Три быстрых шага`
 
 Важно:
 - production сейчас не живет через `docker compose up`
@@ -107,6 +119,11 @@ Versioning rule:
 - legacy unversioned routes пока остаются как compatibility layer
 - breaking changes нельзя вносить в `v1` без нового version namespace вроде `/api/v2/...`
 
+Completed platform decisions:
+- `/ready` уже является deploy gate
+- public API versioning уже введен через `/api/v1/...`
+- real PostgreSQL integration tests уже добавлены в CI
+
 ## Docs Rule
 
 Если меняется API, в том же изменении нужно обновлять:
@@ -119,6 +136,11 @@ Versioning rule:
 
 Источник правды для человекочитаемой API docs page:
 - `frontend/src/features/docs/content.ts`
+
+Важно:
+- `/api/docs` это frontend route
+- если docs page белая, сначала проверяем asset loading
+- корректные asset paths для docs page должны идти через `/assets/...`, а не `/api/assets/...`
 
 Admin UI файлы:
 - `frontend/src/pages/AdminPage.vue`
@@ -199,6 +221,11 @@ Tooling config:
 - release branch — временная production-prep ветка без staging-only хвостов
 - `main` — production-only branch, которую обновляем только по явной команде пользователя
 
+Release rule:
+- `main` не должна получать staging-only workflow, staging docs и staging infra templates
+- для production release сначала готовим release branch через `scripts/prepare_main_release.sh`
+- если в `main` внезапно есть staging-specific truth, это drift, а не норма
+
 Нюанс docs sync check:
 - в GitHub Actions `verify` использует полный fetch history
 - если `base sha` все равно недоступен локально, `scripts/check_api_docs_sync.sh` пропускает проверку вместо `fatal: bad object`
@@ -251,6 +278,9 @@ Staging-specific secrets и operational details смотри только в `do
 6. `docs/MOBILE_API.md`
 7. `docs/BACKEND_ROADMAP.md`
 8. если задача про защиту API: `docs/ANTI_ABUSE.md`
+
+Если задача про staging:
+- читать `docs/STAGING.md`, но только на ветке `develop`
 
 ## Recommended First Commands
 

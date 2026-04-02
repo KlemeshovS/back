@@ -13,6 +13,7 @@
 - staging public URL: `https://staging-api.wobbly.site`
 - staging nginx protection: `X-Staging-Key`
 - staging workflow: `.github/workflows/staging.yml`
+- staging используется как единственная среда ручной проверки перед production release
 
 ## Staging Admin
 
@@ -40,3 +41,12 @@
 3. `verify` прогоняет проверки
 4. `deploy-staging` выкатывает текущий `develop` в staging
 5. staging используется для проверки перед production release
+
+## Staging Verification Checklist
+
+После staging deploy быстро проверить:
+- `https://staging-api.wobbly.site/health`
+- `https://staging-api.wobbly.site/ready`
+- `https://staging-api.wobbly.site/api/swagger`
+- `https://staging-api.wobbly.site/api/docs`
+- `https://admin.wobbly.site/staging/`

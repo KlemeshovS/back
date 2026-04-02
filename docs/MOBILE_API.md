@@ -1,5 +1,9 @@
 # Mobile API
 
+Этот файл описывает production public contract для мобильного клиента.
+
+Если нужен staging contract для ручной проверки, это operational detail из `develop`, а не основная документация для production release.
+
 ## Base URL
 
 ```text
@@ -7,6 +11,10 @@ https://api.wobbly.site/api/v1
 ```
 
 Legacy unversioned routes пока сохранены для обратной совместимости, но новый mobile-контракт нужно строить уже на `/api/v1/...`.
+
+Правило:
+- новые мобильные версии должны использовать только `/api/v1/...`
+- legacy unversioned routes считаем временным compatibility layer
 
 ## Swagger
 
@@ -19,6 +27,10 @@ https://api.wobbly.site/api/swagger
 ```text
 https://api.wobbly.site/api/docs
 ```
+
+Важно:
+- `/api/docs` это production text docs page
+- если страница открывается пустой, сначала нужно проверить загрузку frontend assets
 
 ## Authorization
 

@@ -69,6 +69,10 @@ Monorepo для `Wobbly`, разделенный на два подпроект�
 - отдельная сводка для переноса контекста лежит в `docs/HANDOFF.md`
 - staging operational details intentionally documented only in `docs/STAGING.md` on `develop`
 - production admin доступна на `https://admin.wobbly.site/production/`
+- landing page на `https://wobbly.site` сейчас ведет пользователя в:
+  - App Store
+  - Google Play
+  - Telegram channel
 - admin console уже включает:
   - overview
   - users table + context menu actions
@@ -87,6 +91,41 @@ Monorepo для `Wobbly`, разделенный на два подпроект�
   - `ADMIN_BOOTSTRAP_LOGIN`
   - `ADMIN_BOOTSTRAP_PASSWORD`
 - bootstrap credentials считаем operational secret и не храним в репозитории
+
+## Chat Transfer Rules
+
+Если работа переносится в новый чат, эти правила нужно считать актуальной базой:
+- основная рабочая ветка: `develop`
+- `main` обновляем только по явной команде пользователя на production release
+- direct merge `develop -> main` больше не используем
+- production release делается через `./scripts/prepare_main_release.sh`
+- `develop` содержит staging operational context
+- `main` должна содержать только production-facing truth
+- если меняется API, в том же изменении нужно обновлять:
+  - `frontend/src/features/docs/content.ts`
+  - при необходимости `docs/MOBILE_API.md`
+  - при необходимости `README.md`
+- перед началом работы всегда сначала проверять:
+  - `git status --short --branch`
+
+Минимальный порядок чтения в новом чате:
+1. `docs/HANDOFF.md`
+2. `README.md`
+3. `docs/DEPLOY.md`
+4. `docs/DEVELOPMENT_WORKFLOW.md`
+5. `docs/MOBILE_API.md`
+
+## Docs Page Rule
+
+`https://api.wobbly.site/api/docs` это frontend page, а не серверный шаблон со статическим текстом.
+
+Источник правды:
+- `frontend/src/features/docs/content.ts`
+
+Что важно помнить:
+- build output лежит в `backend/app/static/`
+- docs page должна грузить frontend assets через корневые пути `/assets/...`
+- если на `/api/docs` белый экран, сначала проверяем загрузку asset-файлов, а не backend route logic
 
 ## Release Flow
 

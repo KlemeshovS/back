@@ -81,6 +81,7 @@ Commit message оформляем по `Conventional Commits`.
 - после merge в `develop` ориентируемся сначала на staging GitHub Actions pipeline
 - после merge в `main` ориентируемся сначала на production GitHub Actions pipeline
 - staging-only workflow, systemd/nginx templates и operational docs не должны попадать в `main`
+- production-facing markdown в `main` должен описывать production, а не staging
 - admin UI считаем единым frontend shell; различие между `production` и `staging` должно быть только в API-окружении
 - если меняется API-контракт или поведение endpoint'ов, в том же изменении нужно обновлять `https://api.wobbly.site/api/docs`
 - по мере роста API текстовую docs page нужно упрощать и перестраивать так, чтобы она оставалась удобной для чтения
@@ -102,6 +103,8 @@ Commit message оформляем по `Conventional Commits`.
 - где лежит код на сервере
 - какой домен обслуживает API
 - через что реально деплоится production
+
+И использовать эти правила как source of truth, пока репозиторий не показывает явное изменение процесса.
 
 ## Handoff Checklist
 
@@ -137,6 +140,12 @@ Commit message оформляем по `Conventional Commits`.
 - release branch вливается в `main`, и только `main` деплоится в production
 - ручной fallback deploy это `scp`/копирование файлов + `systemctl restart rating-service`
 
+И дополнительно:
+- production docs page живет на `https://api.wobbly.site/api/docs`
+- источник правды для docs page: `frontend/src/features/docs/content.ts`
+- production docs page должна грузить assets через `/assets/...`
+- landing page production-facing truth живет на `https://wobbly.site`
+
 ## Release Branch Rule
 
 Перед production release:
@@ -146,6 +155,8 @@ Commit message оформляем по `Conventional Commits`.
 4. просмотреть release-ветку
 5. закоммитить cleanup staging-only файлов
 6. только потом вливать release-ветку в `main`
+
+Если пользователь просит production release "прямо сейчас", это не отменяет release branch rule.
 
 Если эти факты не опровергнуты явным изменением в репозитории или на сервере, не надо их перепроверять с нуля.
 

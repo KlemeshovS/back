@@ -4,6 +4,10 @@
 - production
 - staging
 
+Важно:
+- этот документ нужен в первую очередь на `develop`, потому что включает staging operational context
+- если задача касается production-only release knowledge, сначала читать `docs/DEPLOY.md`
+
 Ниже есть два способа:
 - через терминал (`ssh` + `psql`)
 - через GUI (`DBeaver`)
@@ -191,3 +195,10 @@ WHERE username = 'kostya';
 
 Если нужно удобно фильтровать, смотреть таблицы и вручную редактировать:
 - `DBeaver` + `SSH tunnel`
+
+## Safety Reminder
+
+Для production:
+- сначала `SELECT`
+- потом только `UPDATE` или `DELETE`
+- если правка нужна не для срочного инцидента, лучше сначала зафиксировать ее как задачу или migration, а не делать ad-hoc change в БД
