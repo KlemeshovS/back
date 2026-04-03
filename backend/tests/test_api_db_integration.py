@@ -16,6 +16,18 @@ def create_anonymous_user(client) -> dict:
     return response.json()
 
 
+def test_anonymous_users_do_not_appear_in_admin_user_list(db_client) -> None:
+    from app.services import admin_service
+
+    create_anonymous_user(db_client)
+    create_anonymous_user(db_client)
+
+    response = admin_service.list_managed_users(search=None, limit=50, offset=0)
+
+    assert response.total == 0
+    assert response.items == []
+
+
 def test_anonymous_auth_flow_works_against_real_database(db_client) -> None:
     auth_payload = create_anonymous_user(db_client)
 

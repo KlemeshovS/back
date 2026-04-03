@@ -103,7 +103,7 @@ def create_anonymous_user() -> AnonymousAuthResponse:
             cur.execute(
                 """
                 INSERT INTO users (auth_token_hash, username)
-                VALUES (%s)
+                VALUES (%s, %s)
                 RETURNING id;
                 """,
                 (token_hash, anonymous_username),
