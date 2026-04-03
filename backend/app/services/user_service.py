@@ -7,6 +7,11 @@ from psycopg.errors import UniqueViolation
 
 from app.core.auth import generate_access_token, hash_access_token
 from app.core.errors import ApiError, ApiErrorCode
+from app.core.usernames import (
+    build_anonymous_username,
+    has_public_username,
+    normalize_public_username,
+)
 from app.db.database import get_connection
 from app.domain.schemas import (
     AnonymousAuthResponse,
@@ -16,43 +21,61 @@ from app.domain.schemas import (
 )
 
 
-def _normalize_username(username: Optional[str]) -> Optional[str]:
-    if username is None:
-        return None
-
-    normalized = username.strip()
-    return normalized or None
-
-
 def save_profile(
     user_id: int,
     username: Optional[str],
     participate_in_rating: bool,
 ) -> ProfileResponse:
-    normalized_username = _normalize_username(username)
-
-    if participate_in_rating and not normalized_username:
-        raise ApiError(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            code=ApiErrorCode.USERNAME_REQUIRED_FOR_RATING,
-            message="Username is required to participate in rating",
-        )
-
     try:
         with get_connection() as conn:
             with conn.cursor() as cur:
                 cur.execute(
                     """
+                    SELECT username
+                    FROM users
+                    WHERE id = %s;
+                    """,
+                    (user_id,),
+                )
+                existing_user = cur.fetchone()
+
+                if existing_user is None:
+                    raise ApiError(
+                        status_code=status.HTTP_404_NOT_FOUND,
+                        code=ApiErrorCode.USER_NOT_FOUND,
+                        message="User not found",
+                    )
+
+                existing_public_username = normalize_public_username(existing_user["username"])
+                requested_public_username = normalize_public_username(username)
+
+                if username is None:
+                    normalized_username = (
+                        existing_public_username
+                        if existing_public_username is not None
+                        else existing_user["username"]
+                    )
+                else:
+                    normalized_username = requested_public_username
+
+                if participate_in_rating and not normalized_username:
+                    raise ApiError(
+                        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                        code=ApiErrorCode.USERNAME_REQUIRED_FOR_RATING,
+                        message="Username is required to participate in rating",
+                    )
+
+                cur.execute(
+                    """
                     UPDATE users
                     SET username = %s,
                         is_rating_enabled = %s,
-                        score = CASE WHEN %s IS NULL THEN 0 ELSE score END,
                         updated_at = NOW(),
                         last_seen_at = NOW()
                     WHERE id = %s
                     RETURNING id, username, is_rating_enabled;
                     """,
-                    (normalized_username, participate_in_rating, normalized_username, user_id),
+                    (normalized_username, participate_in_rating, user_id),
                 )
                 user = cur.fetchone()
             conn.commit()
@@ -65,7 +88,7 @@ def save_profile(
 
     return ProfileResponse(
         id=user["id"],
-        username=user["username"],
+        username=normalize_public_username(user["username"]),
         participate_in_rating=user["is_rating_enabled"],
     )
 
@@ -73,16 +96,17 @@ def save_profile(
 def create_anonymous_user() -> AnonymousAuthResponse:
     access_token = generate_access_token()
     token_hash = hash_access_token(access_token)
+    anonymous_username = build_anonymous_username(token_hash)
 
     with get_connection() as conn:
         with conn.cursor() as cur:
             cur.execute(
                 """
-                INSERT INTO users (auth_token_hash)
+                INSERT INTO users (auth_token_hash, username)
                 VALUES (%s)
                 RETURNING id;
                 """,
-                (token_hash,),
+                (token_hash, anonymous_username),
             )
             user = cur.fetchone()
         conn.commit()
@@ -103,7 +127,7 @@ def update_my_score(user_id: int, score: int) -> UserScoreResponse:
             )
             existing_user = cur.fetchone()
 
-            if not existing_user["username"]:
+            if not has_public_username(existing_user["username"]):
                 raise ApiError(
                     status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
                     code=ApiErrorCode.USERNAME_REQUIRED_FOR_RATING,
@@ -131,7 +155,10 @@ def update_my_score(user_id: int, score: int) -> UserScoreResponse:
             user = cur.fetchone()
         conn.commit()
 
-    return UserScoreResponse(**user)
+    return UserScoreResponse(
+        username=normalize_public_username(user["username"]),
+        score=user["score"],
+    )
 
 
 def fetch_leaderboard(order: str, score_filter: str, limit: int) -> LeaderboardResponse:
@@ -144,6 +171,7 @@ def fetch_leaderboard(order: str, score_filter: str, limit: int) -> LeaderboardR
                 WHERE is_rating_enabled = TRUE
                   AND username IS NOT NULL
                   AND BTRIM(username) <> ''
+                  AND username NOT LIKE 'anon_user_%%'
                   AND score {score_filter};
                 """
             )
@@ -155,6 +183,7 @@ def fetch_leaderboard(order: str, score_filter: str, limit: int) -> LeaderboardR
                 WHERE is_rating_enabled = TRUE
                   AND username IS NOT NULL
                   AND BTRIM(username) <> ''
+                  AND username NOT LIKE 'anon_user_%%'
                   AND score {score_filter}
                 ORDER BY score {order}, username ASC
                 LIMIT %s;
@@ -164,6 +193,12 @@ def fetch_leaderboard(order: str, score_filter: str, limit: int) -> LeaderboardR
             rows = cur.fetchall()
 
     return LeaderboardResponse(
-        items=[UserScoreResponse(**row) for row in rows],
+        items=[
+            UserScoreResponse(
+                username=normalize_public_username(row["username"]),
+                score=row["score"],
+            )
+            for row in rows
+        ],
         total=total_row["total"],
     )

@@ -1,4 +1,4 @@
-"""Reset scores for nameless users and disable rating for them.
+"""Backfill internal usernames for nameless users and disable rating for them.
 
 Revision ID: 20260402_000004
 Revises: 20260320_000003
@@ -18,14 +18,28 @@ def upgrade() -> None:
     op.execute(
         """
         UPDATE users
-        SET score = 0,
+        SET username = CONCAT('anon_user_', id::text),
             is_rating_enabled = FALSE,
             updated_at = NOW()
         WHERE username IS NULL
            OR BTRIM(username) = '';
         """
     )
+    op.execute(
+        """
+        ALTER TABLE users
+        ALTER COLUMN username SET NOT NULL;
+        """
+    )
+    op.execute(
+        """
+        ALTER TABLE users
+        ADD CONSTRAINT users_username_not_blank
+        CHECK (BTRIM(username) <> '');
+        """
+    )
 
 
 def downgrade() -> None:
-    pass
+    op.execute("ALTER TABLE users DROP CONSTRAINT IF EXISTS users_username_not_blank;")
+    op.execute("ALTER TABLE users ALTER COLUMN username DROP NOT NULL;")

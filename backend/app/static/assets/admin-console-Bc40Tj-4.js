@@ -45,7 +45,7 @@ Content-Type: application/json`,request:`{
   "id": 26,
   "username": "player_1",
   "participateInRating": true
-}`,list:["Если participateInRating = true, username должен быть заполнен.","username должен быть уникальным.","Разрешены только латиница, цифры, _, ., -."]}]},{id:"rating",title:"PATCH /api/v1/me/rating",cards:[{method:"PATCH",badgeClass:"patch",path:"/api/v1/me/rating",headers:`Authorization: Bearer <accessToken>
+}`,list:["Если participateInRating = true, username должен быть заполнен.","username должен быть уникальным.","Разрешены только латиница, цифры, _, ., -.","Если username уже был сохранен, его нельзя очистить обратно в пустое значение."]}]},{id:"rating",title:"PATCH /api/v1/me/rating",cards:[{method:"PATCH",badgeClass:"patch",path:"/api/v1/me/rating",headers:`Authorization: Bearer <accessToken>
 Content-Type: application/json`,request:`{
   "participateInRating": false
 }`,response:`{

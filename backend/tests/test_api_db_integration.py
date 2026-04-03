@@ -48,6 +48,26 @@ def test_api_v1_anonymous_auth_flow_works_against_real_database(db_client) -> No
     }
 
 
+def test_anonymous_auth_backfills_internal_username_in_database(
+    db_client,
+    integration_database_url,
+) -> None:
+    auth_payload = create_anonymous_user(db_client)
+
+    from psycopg import connect
+
+    with connect(integration_database_url) as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                "SELECT username, is_rating_enabled FROM users WHERE id = %s;",
+                (auth_payload["userId"],),
+            )
+            row = cur.fetchone()
+
+    assert row[0].startswith("anon_user_")
+    assert row[1] is False
+
+
 def test_profile_update_persists_to_real_database(db_client) -> None:
     auth_payload = create_anonymous_user(db_client)
 
@@ -161,7 +181,7 @@ def test_score_update_rejects_users_with_rating_disabled(db_client) -> None:
     }
 
 
-def test_clearing_username_resets_score_to_zero(db_client) -> None:
+def test_clearing_existing_username_is_rejected_and_score_is_preserved(db_client) -> None:
     auth_payload = create_anonymous_user(db_client)
 
     db_client.patch(
@@ -177,28 +197,31 @@ def test_clearing_username_resets_score_to_zero(db_client) -> None:
 
     response = db_client.patch(
         "/me/profile",
-        json={"username": None, "participateInRating": False},
+        json={"username": "   ", "participateInRating": False},
         headers=auth_headers(auth_payload["accessToken"]),
     )
 
-    assert response.status_code == 200
+    assert response.status_code == 422
     assert response.json() == {
-        "id": auth_payload["userId"],
-        "username": None,
-        "participateInRating": False,
+        "code": "USERNAME_CANNOT_BE_CLEARED",
+        "message": "Username cannot be cleared once set",
     }
+
+    score_response = db_client.post(
+        "/me/score",
+        json={"score": 84},
+        headers=auth_headers(auth_payload["accessToken"]),
+    )
+    assert score_response.status_code == 200
+    assert score_response.json() == {"username": "clear_user", "score": 84}
 
     me_response = db_client.get("/me", headers=auth_headers(auth_payload["accessToken"]))
     assert me_response.status_code == 200
     assert me_response.json() == {
         "id": auth_payload["userId"],
-        "username": None,
-        "participateInRating": False,
+        "username": "clear_user",
+        "participateInRating": True,
     }
-
-    leaderboard_response = db_client.get("/leaderboard/top?limit=10")
-    assert leaderboard_response.status_code == 200
-    assert leaderboard_response.json() == {"items": [], "total": 0}
 
 
 def test_leaderboard_queries_use_real_database_data(db_client) -> None:

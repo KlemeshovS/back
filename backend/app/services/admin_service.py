@@ -13,6 +13,7 @@ from app.core.admin_auth import (
     verify_password,
 )
 from app.core.errors import ApiError, ApiErrorCode
+from app.core.usernames import has_public_username, normalize_public_username
 from app.db.database import get_connection
 from app.domain.schemas import (
     AdminAuditLogEntryResponse,
@@ -247,6 +248,7 @@ def get_admin_overview() -> AdminOverviewResponse:
                         FROM users
                         WHERE username IS NOT NULL
                           AND BTRIM(username) <> ''
+                          AND username NOT LIKE 'anon_user_%%'
                     ) AS total_users,
                     (
                         SELECT COUNT(*)
@@ -254,6 +256,7 @@ def get_admin_overview() -> AdminOverviewResponse:
                         WHERE is_rating_enabled = TRUE
                           AND username IS NOT NULL
                           AND BTRIM(username) <> ''
+                          AND username NOT LIKE 'anon_user_%%'
                     ) AS rating_enabled_users,
                     (SELECT COUNT(*) FROM admin_users) AS total_admins,
                     (SELECT COUNT(*) FROM admin_users WHERE is_active = TRUE) AS active_admins,
@@ -283,6 +286,7 @@ def list_managed_users(search: Optional[str], limit: int, offset: int) -> Manage
                     FROM users
                     WHERE username IS NOT NULL
                       AND BTRIM(username) <> ''
+                      AND username NOT LIKE 'anon_user_%%'
                       AND username ILIKE %s;
                     """,
                     (search_term,),
@@ -301,6 +305,7 @@ def list_managed_users(search: Optional[str], limit: int, offset: int) -> Manage
                     FROM users
                     WHERE username IS NOT NULL
                       AND BTRIM(username) <> ''
+                      AND username NOT LIKE 'anon_user_%%'
                       AND username ILIKE %s
                     ORDER BY id DESC
                     LIMIT %s OFFSET %s;
@@ -313,7 +318,8 @@ def list_managed_users(search: Optional[str], limit: int, offset: int) -> Manage
                     SELECT COUNT(*) AS total
                     FROM users
                     WHERE username IS NOT NULL
-                      AND BTRIM(username) <> '';
+                      AND BTRIM(username) <> ''
+                      AND username NOT LIKE 'anon_user_%%';
                     """
                 )
                 total = cur.fetchone()["total"]
@@ -330,6 +336,7 @@ def list_managed_users(search: Optional[str], limit: int, offset: int) -> Manage
                     FROM users
                     WHERE username IS NOT NULL
                       AND BTRIM(username) <> ''
+                      AND username NOT LIKE 'anon_user_%%'
                     ORDER BY id DESC
                     LIMIT %s OFFSET %s;
                     """,
@@ -396,9 +403,9 @@ def update_managed_user(
                     message="User not found",
                 )
 
+            existing_public_username = normalize_public_username(existing_user["username"])
             username = existing_user["username"] if payload.username is None else payload.username
-            if username is not None:
-                username = username.strip() or None
+            username = normalize_public_username(username)
             score = existing_user["score"] if payload.score is None else payload.score
             participate = (
                 existing_user["is_rating_enabled"]
@@ -413,8 +420,15 @@ def update_managed_user(
                     message="Username is required to participate in rating",
                 )
 
-            if username is None:
-                score = 0
+            if existing_public_username and payload.username is not None and username is None:
+                raise ApiError(
+                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                    code=ApiErrorCode.USERNAME_CANNOT_BE_CLEARED,
+                    message="Username cannot be cleared once set",
+                )
+
+            if username is None and existing_public_username is None:
+                username = existing_user["username"]
 
             try:
                 cur.execute(
@@ -773,7 +787,7 @@ def list_audit_logs(limit: int, offset: int) -> AdminAuditLogListResponse:
 def _build_managed_user(row: dict[str, Any]) -> ManagedUserResponse:
     return ManagedUserResponse(
         id=row["id"],
-        username=row["username"],
+        username=normalize_public_username(row["username"]),
         score=row["score"],
         participate_in_rating=row["is_rating_enabled"],
         created_at=row["created_at"],

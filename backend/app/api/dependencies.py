@@ -8,6 +8,7 @@ from app.core.admin_auth import hash_admin_access_token
 from app.core.auth import hash_access_token
 from app.core.errors import ApiError, ApiErrorCode
 from app.core.rate_limit import rate_limiter
+from app.core.usernames import normalize_public_username
 from app.db.database import get_connection
 from app.services import admin_service
 
@@ -81,6 +82,7 @@ def get_current_user(authorization: Optional[str] = Header(default=None)) -> dic
             headers={"WWW-Authenticate": "Bearer"},
         )
 
+    user["username"] = normalize_public_username(user["username"])
     return user
 
 
