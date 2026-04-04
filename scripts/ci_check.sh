@@ -25,14 +25,18 @@ echo "Running Ruff"
 echo "Running pytest"
 "$PYTHON_BIN" -m pytest
 
-echo "Running frontend lint"
-npm --prefix frontend run lint
+if [[ -f "frontend/package.json" ]]; then
+  echo "Running frontend lint"
+  npm --prefix frontend run lint
 
-echo "Running frontend format check"
-npm --prefix frontend run format
+  echo "Running frontend format check"
+  npm --prefix frontend run format
 
-echo "Running frontend build"
-npm --prefix frontend run build
+  echo "Running frontend build"
+  npm --prefix frontend run build
+else
+  echo "Frontend source not present in this repository, skipping frontend checks"
+fi
 
 echo "Validating Docker Compose config"
 docker compose config >/dev/null

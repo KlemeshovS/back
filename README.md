@@ -1,8 +1,8 @@
 # Rating Service MVP
 
-Monorepo для `Wobbly`, разделенный на два подпроекта:
+Backend-репозиторий `Wobbly`:
 - `backend/` — FastAPI API, migrations, tests и runtime
-- `frontend/` — Vue 3 + TypeScript UI для landing, privacy, docs и admin surfaces
+- frontend source code живет в отдельном репозитории: [Wobbly-develop/front](https://github.com/Wobbly-develop/front)
 
 Сейчас проект включает:
 - API для anonymous auth, профиля и рейтингов
@@ -37,14 +37,11 @@ Monorepo для `Wobbly`, разделенный на два подпроект�
 - `scripts/` — CI checks, deploy, docs sync checks
 - `.githooks/` — локальные git hooks
 - `backend/tests/` — unit и integration tests
-- `frontend/src/` — Vue source code
-- `frontend/src/pages/` — landing, privacy, docs, admin screens
-- `frontend/src/features/docs/content.ts` — источник правды для docs page
-- `frontend/src/features/admin/` — admin console state и typed API client
-- `frontend/package.json` — frontend tooling: TypeScript, ESLint, Prettier, Vite
 - `docs/` — operational, mobile, roadmap и handoff документация
 - `.github/workflows/pipeline.yml` — verify + deploy pipeline
 - `backend/pyproject.toml` — lint/test tooling config
+- frontend source code:
+  - [Wobbly-develop/front](https://github.com/Wobbly-develop/front) — landing, privacy, docs и admin UI source code
 
 ## Current Project Snapshot
 
@@ -102,7 +99,7 @@ Monorepo для `Wobbly`, разделенный на два подпроект�
 - `develop` содержит staging operational context
 - `main` должна содержать только production-facing truth
 - если меняется API, в том же изменении нужно обновлять:
-  - `frontend/src/features/docs/content.ts`
+  - frontend repo: `src/features/docs/content.ts`
   - при необходимости `docs/MOBILE_API.md`
   - при необходимости `README.md`
 - перед началом работы всегда сначала проверять:
@@ -120,7 +117,7 @@ Monorepo для `Wobbly`, разделенный на два подпроект�
 `https://api.wobbly.site/api/docs` это frontend page, а не серверный шаблон со статическим текстом.
 
 Источник правды:
-- `frontend/src/features/docs/content.ts`
+- frontend repo: `src/features/docs/content.ts`
 
 Что важно помнить:
 - build output лежит в `backend/app/static/`
@@ -414,12 +411,12 @@ TEST_DATABASE_URL=postgresql://app:app@127.0.0.1:5432/app ./.venv/bin/pytest bac
 - API: `http://localhost:8000`
 - Swagger: `http://localhost:8000/api/swagger`
 - Text docs: `http://localhost:8000/api/docs`
-- Frontend dev server: обычно `http://localhost:5173`
+- Frontend dev server: обычно `http://localhost:5173` в отдельном frontend-репозитории
 
 ## Docs Rule
 
 Если меняется API, в том же изменении нужно обновлять:
-- `frontend/src/features/docs/content.ts`
+- frontend repo: `src/features/docs/content.ts`
 - при необходимости `docs/MOBILE_API.md`
 - при необходимости `README.md`
 - Swagger UI: `http://localhost:8000/api/swagger`
@@ -443,9 +440,9 @@ TEST_DATABASE_URL=postgresql://app:app@127.0.0.1:5432/app ./.venv/bin/pytest bac
 - conventions: trunk-based development + Conventional Commits
 - branch flow: `develop` для активной разработки, `main` только для production releases по явному запросу
 - если задача про admin console, первыми смотреть:
-  - `frontend/src/pages/AdminPage.vue`
-  - `frontend/src/features/admin/useAdminConsole.ts`
-  - `frontend/src/features/admin/api.ts`
+  - frontend repo: `src/pages/AdminPage.vue`
+  - frontend repo: `src/features/admin/useAdminConsole.ts`
+  - frontend repo: `src/features/admin/api.ts`
   - `backend/app/api/routes/admin.py`
   - `backend/app/services/admin_service.py`
 - актуальная рабочая ветка обычно `develop`; не обновлять `main`, если не идет осознанный production release
@@ -457,7 +454,7 @@ TEST_DATABASE_URL=postgresql://app:app@127.0.0.1:5432/app ./.venv/bin/pytest bac
 - schema changes теперь должны идти через Alembic migrations
 
 Если меняется поведение API, обычно нужно обновлять:
-- `frontend/src/features/docs/content.ts`
+- frontend repo: `src/features/docs/content.ts`
 - при необходимости `docs/MOBILE_API.md`
 - при необходимости `README.md`
 
@@ -468,5 +465,5 @@ TEST_DATABASE_URL=postgresql://app:app@127.0.0.1:5432/app ./.venv/bin/pytest bac
 ```
 
 Что делают hooks:
-- `pre-commit` — `ruff --fix`, `ruff`, Python syntax, frontend ESLint/Prettier
-- `pre-push` — `pytest`, frontend build
+- `pre-commit` — `ruff --fix`, `ruff`, Python syntax, frontend ESLint/Prettier, если frontend source есть в этом репозитории
+- `pre-push` — `pytest`, frontend build, если frontend source есть в этом репозитории

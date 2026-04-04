@@ -27,13 +27,22 @@ fi
 
 API_CHANGED=false
 DOCS_CHANGED=false
+FRONTEND_SOURCE_PRESENT=false
+
+if [[ -f "frontend/package.json" ]]; then
+  FRONTEND_SOURCE_PRESENT=true
+fi
 
 while IFS= read -r file; do
   if [[ "$file" == backend/app/api/routes/* || "$file" == "backend/app/api/dependencies.py" || "$file" == "backend/app/api/app.py" || "$file" == backend/app/services/* || "$file" == backend/app/domain/* || "$file" == backend/app/core/* ]]; then
     API_CHANGED=true
   fi
 
-  if [[ "$file" == "frontend/src/features/docs/content.ts" || "$file" == "frontend/src/pages/ApiDocsPage.vue" || "$file" == "docs/MOBILE_API.md" || "$file" == "README.md" ]]; then
+  if [[ "$file" == "docs/MOBILE_API.md" || "$file" == "README.md" ]]; then
+    DOCS_CHANGED=true
+  fi
+
+  if [[ "$FRONTEND_SOURCE_PRESENT" == "true" && ( "$file" == "frontend/src/features/docs/content.ts" || "$file" == "frontend/src/pages/ApiDocsPage.vue" ) ]]; then
     DOCS_CHANGED=true
   fi
 done <<< "$CHANGED_FILES"

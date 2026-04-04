@@ -86,7 +86,7 @@ Commit message оформляем по `Conventional Commits`.
 - если меняется API-контракт или поведение endpoint'ов, в том же изменении нужно обновлять `https://api.wobbly.site/api/docs`
 - по мере роста API текстовую docs page нужно упрощать и перестраивать так, чтобы она оставалась удобной для чтения
 - API-изменение без обновления docs считается незавершенным
-- источником правды для docs page в текущей структуре считается `frontend/src/features/docs/content.ts`
+- источником правды для docs page в текущей структуре считается frontend repo `src/features/docs/content.ts`
 
 ## Start Here
 
@@ -142,7 +142,7 @@ Commit message оформляем по `Conventional Commits`.
 
 И дополнительно:
 - production docs page живет на `https://api.wobbly.site/api/docs`
-- источник правды для docs page: `frontend/src/features/docs/content.ts`
+- источник правды для docs page: frontend repo `src/features/docs/content.ts`
 - production docs page должна грузить assets через `/assets/...`
 - landing page production-facing truth живет на `https://wobbly.site`
 
@@ -192,13 +192,13 @@ Commit message оформляем по `Conventional Commits`.
 - business logic должна идти в `backend/app/services/`
 - schemas должны идти в `backend/app/domain/`
 - core utilities должны идти в `backend/app/core/`
-- frontend changes должны идти в `frontend/src/`
-- page-level Vue screens должны жить в `frontend/src/pages/`
-- admin UI state и typed API calls должны жить в `frontend/src/features/admin/`
+- frontend changes должны идти в отдельный frontend-репозиторий [Wobbly-develop/front](https://github.com/Wobbly-develop/front)
+- page-level Vue screens должны жить там же, в `src/pages/`
+- admin UI state и typed API calls должны жить там же, в `src/features/admin/`
 - admin UI задачи должны в первую очередь смотреть в:
-  - `frontend/src/pages/AdminPage.vue`
-  - `frontend/src/features/admin/useAdminConsole.ts`
-  - `frontend/src/features/admin/api.ts`
+  - frontend repo: `src/pages/AdminPage.vue`
+  - frontend repo: `src/features/admin/useAdminConsole.ts`
+  - frontend repo: `src/features/admin/api.ts`
   - `backend/app/api/routes/admin.py`
   - `backend/app/services/admin_service.py`
 
@@ -216,7 +216,7 @@ Commit message оформляем по `Conventional Commits`.
 - `ruff check --fix`
 - повторную проверку `ruff`
 - Python syntax checks
-- frontend ESLint/Prettier checks
+- frontend ESLint/Prettier checks, если frontend source присутствует в этом репозитории
 
 Подключение hooks:
 
@@ -229,11 +229,11 @@ Commit message оформляем по `Conventional Commits`.
   - `ruff check --fix`
   - повторная проверка `ruff`
   - Python syntax checks
-  - frontend ESLint
-  - frontend Prettier
+  - frontend ESLint, если frontend source присутствует в этом репозитории
+  - frontend Prettier, если frontend source присутствует в этом репозитории
 - `pre-push`:
   - `pytest`
-  - frontend build
+  - frontend build, если frontend source присутствует в этом репозитории
 
 В CI остаются:
 - `docker compose config`

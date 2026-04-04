@@ -84,14 +84,15 @@ ssh -i /Users/klem/Documents/eguene/deploy_key root@api.wobbly.site
 Человекочитаемая API docs page на `https://api.wobbly.site/api/docs` собирается клиентским JavaScript.
 
 Файлы:
-- `frontend/src/pages/ApiDocsPage.vue`
-- `frontend/src/features/docs/content.ts`
+- frontend repo: [Wobbly-develop/front](https://github.com/Wobbly-develop/front)
+- `src/pages/ApiDocsPage.vue`
+- `src/features/docs/content.ts`
 - build output в `backend/app/static/`
 
 Это важно для проверки:
 - сырой `curl` по `/api/docs` покажет HTML-оболочку
-- содержимое секций и endpoint descriptions живет в `frontend/src/features/docs/content.ts`
-- если нужно проверить, обновилась ли текстовая документация после API change, смотри и production URL, и `frontend/src/features/docs/content.ts`
+- содержимое секций и endpoint descriptions живет в frontend-репозитории, в `src/features/docs/content.ts`
+- если нужно проверить, обновилась ли текстовая документация после API change, смотри и production URL, и frontend repo `src/features/docs/content.ts`
 - docs page должна грузить assets через `/assets/...`
 - если `/api/docs` белая, сначала проверить 404 на frontend bundle, а не backend routes
 
@@ -198,7 +199,7 @@ journalctl -u rating-service -n 100 --no-pager
 - перед deploy читает `backend/VERSION` и создает tag `backend/v<version>`, если его еще нет
 - затем создает или обновляет GitHub Release для этого tag
 - release notes собираются из commit history между backend release tags через `scripts/generate_backend_release_notes.sh`
-- `verify` ставит Python и Node tooling, гоняет backend checks, frontend lint/build, Docker config validation и docs sync check
+- `verify` ставит Python tooling, а Node/frontend steps запускает только если frontend source присутствует в этом репозитории
 - `verify` checkout'ит репозиторий с полной историей, чтобы docs sync check мог сравнивать `base sha` и `head sha`
 - `deploy` собирает release archive, копирует его на production и перезапускает `rating-service`
 
@@ -351,7 +352,7 @@ Systemd templates в репозитории:
 - auth and shared behavior могут жить в `backend/app/core/`
 
 Если поведение API меняется, вместе с этим должны обновляться:
-- `frontend/src/features/docs/content.ts`
+- frontend repo: `src/features/docs/content.ts`
 - при необходимости `docs/MOBILE_API.md`
 - при необходимости `README.md`
 

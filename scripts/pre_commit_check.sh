@@ -17,7 +17,7 @@ if ! "$PYTHON_BIN" -m ruff --version >/dev/null 2>&1; then
   exit 1
 fi
 
-if ! command -v node >/dev/null 2>&1; then
+if [[ -f "frontend/package.json" ]] && ! command -v node >/dev/null 2>&1; then
   echo "node is required for frontend checks."
   exit 1
 fi
@@ -34,10 +34,14 @@ echo "Running Python syntax checks"
 "$PYTHON_BIN" -c "import ast, pathlib; ast.parse(pathlib.Path('backend/app/domain/schemas.py').read_text())"
 "$PYTHON_BIN" -c "import ast, pathlib; ast.parse(pathlib.Path('backend/app/services/user_service.py').read_text())"
 
-echo "Running frontend lint"
-npm --prefix frontend run lint
+if [[ -f "frontend/package.json" ]]; then
+  echo "Running frontend lint"
+  npm --prefix frontend run lint
 
-echo "Running frontend format check"
-npm --prefix frontend run format
+  echo "Running frontend format check"
+  npm --prefix frontend run format
+else
+  echo "Frontend source not present in this repository, skipping frontend pre-commit checks"
+fi
 
 echo "Pre-commit checks completed"
