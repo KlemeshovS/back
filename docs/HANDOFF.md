@@ -1,18 +1,15 @@
 # Handoff
 
-Этот файл нужен для быстрого старта нового чата именно по backend-репозиторию.
+Быстрый старт для нового человека в backend-репозитории.
 
 ## Репозитории
 
 - backend: `https://github.com/Wobbly-develop/back`
 - frontend: `https://github.com/Wobbly-develop/front`
 
-Важно:
-- frontend source code больше не живет в backend-репозитории
-- если нужно менять landing, docs page или admin UI source, идти нужно в frontend-репозиторий
-- backend-репозиторий хранит только собранный bundle в `backend/app/static`
+Frontend source больше не живет здесь. Если задача про landing, docs page или admin UI, нужно идти во frontend-репозиторий.
 
-## Быстрая правда по проекту
+## Самое важное
 
 - production API: `https://api.wobbly.site`
 - production site: `https://wobbly.site`
@@ -20,17 +17,25 @@
 - production path: `/opt/rating-service`
 - production service: `rating-service.service`
 - reverse proxy: `nginx`
-- active development branch: `develop`
+- основная ветка разработки: `develop`
 
-## Что считается source of truth
+## Что читать
 
-- backend code: этот репозиторий
-- frontend source: `Wobbly-develop/front`
-- production deploy details: [docs/DEPLOY.md](/Users/klem/Documents/eguene/docs/DEPLOY.md)
-- release/process rules: [docs/DEVELOPMENT_WORKFLOW.md](/Users/klem/Documents/eguene/docs/DEVELOPMENT_WORKFLOW.md)
-- mobile contract: [docs/MOBILE_API.md](/Users/klem/Documents/eguene/docs/MOBILE_API.md)
+1. [README.md](/Users/klem/Documents/eguene/README.md)
+2. [docs/DEVELOPMENT_WORKFLOW.md](/Users/klem/Documents/eguene/docs/DEVELOPMENT_WORKFLOW.md)
+3. [docs/DEPLOY.md](/Users/klem/Documents/eguene/docs/DEPLOY.md)
+4. [docs/MOBILE_API.md](/Users/klem/Documents/eguene/docs/MOBILE_API.md)
 
-## Backend release flow
+## Где искать код
+
+Сначала смотреть:
+- `backend/app/api/routes/`
+- `backend/app/services/`
+- `backend/app/domain/`
+- `backend/app/core/`
+- `backend/tests/`
+
+## Release и rollback
 
 Production release:
 1. работа идет в `develop`
@@ -44,37 +49,16 @@ Rollback:
 - GitHub Actions -> `Rollback Backend Release`
 - tag вида `backend/v0.2.0`
 
-## Что не нужно переисследовать
+## Что уже известно и не надо переоткрывать
 
-- production path уже известен: `/opt/rating-service`
-- production service уже известен: `rating-service.service`
+- production path: `/opt/rating-service`
+- production service: `rating-service.service`
 - deploy идет через GitHub Actions
 - readiness gate: `/ready`
 - backend versioning уже включен
 
-## Если задача про frontend
-
-Идти в `https://github.com/Wobbly-develop/front`.
-
-Смотреть в первую очередь:
-- `src/pages/LandingPage.vue`
-- `src/pages/ApiDocsPage.vue`
-- `src/pages/AdminPage.vue`
-- `src/features/docs/content.ts`
-- `src/features/admin/`
-
-## Если задача про backend
-
-Смотреть в первую очередь:
-- `backend/app/api/routes/`
-- `backend/app/services/`
-- `backend/app/domain/`
-- `backend/app/core/`
-- `backend/tests/`
-
 ## Перед началом работы
 
-1. Прочитать этот файл
-2. Прочитать [README.md](/Users/klem/Documents/eguene/README.md)
-3. Если задача про production, прочитать [docs/DEPLOY.md](/Users/klem/Documents/eguene/docs/DEPLOY.md)
-4. Проверить `git status --short --branch`
+1. проверить `git status --short --branch`
+2. убедиться, что вы на нужной ветке
+3. поднять локальную БД и backend по `README.md`

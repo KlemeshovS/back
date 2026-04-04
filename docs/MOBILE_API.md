@@ -1,8 +1,8 @@
 # Mobile API
 
-Этот файл описывает production public contract для мобильного клиента.
+Production public contract для mobile-клиента.
 
-Если нужен staging contract для ручной проверки, это operational detail из `develop`, а не основная документация для production release.
+Если нужна ручная staging-проверка, это operational detail из `develop`, а не основной контракт.
 
 ## Base URL
 
@@ -10,31 +10,16 @@
 https://api.wobbly.site/api/v1
 ```
 
-Legacy unversioned routes пока сохранены для обратной совместимости, но новый mobile-контракт нужно строить уже на `/api/v1/...`.
+Legacy unversioned routes пока остаются для обратной совместимости, но новые mobile-версии должны использовать `/api/v1/...`.
 
-Правило:
-- новые мобильные версии должны использовать только `/api/v1/...`
-- legacy unversioned routes считаем временным compatibility layer
+## Полезные production URLs
 
-## Swagger
-
-```text
-https://api.wobbly.site/api/swagger
-```
-
-## Text Docs
-
-```text
-https://api.wobbly.site/api/docs
-```
-
-Важно:
-- `/api/docs` это production text docs page
-- если страница открывается пустой, сначала нужно проверить загрузку frontend assets
+- Swagger: `https://api.wobbly.site/api/swagger`
+- text docs: `https://api.wobbly.site/api/docs`
 
 ## Authorization
 
-Для защищенных методов нужно передавать:
+Для защищенных методов:
 
 ```http
 Authorization: Bearer <accessToken>
@@ -46,178 +31,80 @@ Authorization: Bearer <accessToken>
 - `PATCH /api/v1/me/rating`
 - `POST /api/v1/me/score`
 
-После включения `TrustedHostMiddleware`, ограниченного CORS и `nginx` rate limiting мобильному приложению ничего менять не нужно, если оно:
-- использует `https://api.wobbly.site`
-- использует versioned routes под `/api/v1/...`
-- не подменяет вручную заголовок `Host`
-- передает `Authorization: Bearer <accessToken>` в защищенные методы
+## Базовый mobile flow
 
-## Storage On Mobile App Side
+### Первый запуск
 
-Нужно сохранять локально:
-- `accessToken`
-- `userId`
-
-Можно дополнительно кешировать:
-- `username`
-- `participateInRating`
-
-Источником истины лучше считать ответ `GET /api/v1/me`.
-
-## Integration Flow
-
-### First Launch
-
-1. Проверить, есть ли локально `accessToken`
-2. Если токена нет:
+1. проверить, есть ли локально `accessToken`
+2. если токена нет:
    - вызвать `POST /api/v1/auth/anonymous`
    - сохранить `accessToken`
    - сохранить `userId`
 
-### Regular App Start
+### Обычный старт приложения
 
-1. Если токен есть:
+1. если токен есть:
    - вызвать `GET /api/v1/me`
    - получить текущий профиль
 
-### Profile Screen
+### Профиль и рейтинг
 
-Когда пользователь вводит имя и включает участие в рейтинге:
-- вызвать `PATCH /api/v1/me/profile`
+- `PATCH /api/v1/me/profile` — сохранить `username` и участие
+- `PATCH /api/v1/me/rating` — отдельно включить или выключить участие
+- `POST /api/v1/me/score` — обновить score
 
-Если нужно отдельно включить или выключить себя из рейтингов:
-- вызвать `PATCH /api/v1/me/rating`
-
-### Score Update
-
-Когда приложение хочет отправить рейтинг:
-- вызвать `POST /api/v1/me/score`
-
-### Leaderboard Screen
+### Таблицы рейтинга
 
 - `GET /api/v1/leaderboard/top?limit=100`
-
-### Anti-Leaderboard Screen
-
 - `GET /api/v1/leaderboard/bottom?limit=100`
 
-## Endpoints
+## Правила backend
+
+- участие в рейтинге можно включить только если есть `username`
+- `username` должен быть уникальным
+- разрешены латинские буквы, цифры, `_`, `.`, `-`
+- если `username` уже был сохранен, его нельзя очистить в пустое значение
+- если участие выключено, пользователь может смотреть рейтинги, но не участвует
+- `score` не нужно передавать вместе с `userId` или `username`
+
+## Endpoint summary
 
 ### `POST /api/v1/auth/anonymous`
 
-Создает anonymous user и возвращает токен.
-
-Request:
-
-```json
-{}
-```
-
-Response:
-
-```json
-{
-  "userId": 26,
-  "accessToken": "rt_xxxxx",
-  "tokenType": "bearer"
-}
-```
+Создает anonymous user и возвращает bearer token.
 
 ### `GET /api/v1/me`
 
-Возвращает профиль текущего авторизованного пользователя.
+Возвращает профиль текущего пользователя.
 
-Response:
-
-```json
-{
-  "id": 26,
-  "username": null,
-  "participateInRating": false
-}
-```
+Поля ответа:
+- `id`
+- `username`
+- `participateInRating`
 
 ### `PATCH /api/v1/me/profile`
 
-Обновляет имя и участие в рейтинге.
-
-Request:
-
-```json
-{
-  "username": "player_1",
-  "participateInRating": true
-}
-```
-
-Response:
-
-```json
-{
-  "id": 26,
-  "username": "player_1",
-  "participateInRating": true
-}
-```
-
-Правила:
-- если `participateInRating = true`, `username` должен быть заполнен
-- `username` должен быть уникальным
-- разрешены только латинские буквы, цифры, `_`, `.`, `-`
-- если username уже был сохранен, его нельзя очистить обратно в пустое значение
+Сохраняет `username` и `participateInRating`.
 
 ### `PATCH /api/v1/me/rating`
 
-Позволяет отдельно включать и выключать участие текущего пользователя в рейтинге.
-
-Request:
-
-```json
-{
-  "participateInRating": false
-}
-```
-
-Response:
-
-```json
-{
-  "id": 26,
-  "username": "player_1",
-  "participateInRating": false
-}
-```
-
-Важно:
-- если отправить `"participateInRating": true` без сохраненного `username`, backend вернет `422`
-- если отправить `"participateInRating": false`, пользователь исключается из leaderboard
+Отдельно включает или выключает участие в рейтинге.
 
 ### `POST /api/v1/me/score`
 
-Обновляет рейтинг текущего авторизованного пользователя.
+Обновляет score текущего пользователя.
 
-Request:
+## Что хранить на mobile
 
-```json
-{
-  "score": 123
-}
-```
+Обязательно:
+- `accessToken`
+- `userId`
 
-Response:
+Опционально:
+- `username`
+- `participateInRating`
 
-```json
-{
-  "username": "player_1",
-  "score": 123
-}
-```
-
-Важно:
-- мобильное приложение не должно передавать `userId`
-- мобильное приложение не должно передавать `username`
-- backend сам определяет пользователя по токену
-- отправлять `score` можно только если у пользователя уже есть `username`
+Источником истины для профиля считать `GET /api/v1/me`.
 - отправлять `score` можно только если у пользователя включено участие в рейтинге
 
 ### `GET /api/v1/leaderboard/top?limit=100`

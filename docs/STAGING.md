@@ -1,10 +1,10 @@
 # Staging
 
-Этот файл описывает staging-среду и должен считаться develop-only operational document.
+Staging operational doc. Этот файл нужен только на `develop`.
 
-Если документ попал в `main`, это ошибка release flow.
+Если он попал в `main`, release flow сломан.
 
-## Staging Baseline
+## Базовые параметры
 
 - staging path: `/opt/rating-service-staging`
 - staging service: `rating-service-staging.service`
@@ -13,16 +13,13 @@
 - staging public URL: `https://staging-api.wobbly.site`
 - staging nginx protection: `X-Staging-Key`
 - staging workflow: `.github/workflows/staging.yml`
-- staging используется как единственная среда ручной проверки перед production release
 
-## Staging Admin
+## Staging admin
 
-- admin UI: `https://admin.wobbly.site/staging/`
-- same-origin admin API:
-  - `/staging/api/...`
-- staging используется для ручной проверки UI/API до production release
+- UI: `https://admin.wobbly.site/staging/`
+- same-origin admin API: `/staging/api/...`
 
-## Staging Secrets
+## Staging secrets
 
 - `STAGING_DEPLOY_HOST`
 - `STAGING_DEPLOY_USER`
@@ -34,17 +31,16 @@
 - `STAGING_PUBLIC_BASE_URL`
 - `STAGING_ACCESS_KEY`
 
-## Staging Release Flow
+## Flow
 
-1. feature branch вливается в `develop`
+1. изменения вливаются в `develop`
 2. GitHub Actions запускает `.github/workflows/staging.yml`
 3. `verify` прогоняет проверки
-4. `deploy-staging` выкатывает текущий `develop` в staging
-5. staging используется для проверки перед production release
+4. `deploy-staging` выкатывает текущий `develop`
+5. staging используется для ручной проверки перед production release
 
-## Staging Verification Checklist
+## Быстрая проверка
 
-После staging deploy быстро проверить:
 - `https://staging-api.wobbly.site/health`
 - `https://staging-api.wobbly.site/ready`
 - `https://staging-api.wobbly.site/api/swagger`
