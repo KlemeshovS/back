@@ -27,7 +27,7 @@
 
 Инженерная база уже тоже есть:
 - backend разнесен на `backend/app/api`, `backend/app/services`, `backend/app/core`, `backend/app/db`, `backend/app/domain`
-- frontend вынесен в отдельный `frontend/` подпроект на Vue + TypeScript
+- frontend source code вынесен в отдельный репозиторий `Wobbly-develop/front`
 - подключен `Alembic`
 - добавлены `ruff`, `pytest`, Vue/TypeScript tooling, ESLint, Prettier, pre-commit и pre-push hooks
 - есть unit tests и integration tests

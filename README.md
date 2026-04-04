@@ -331,10 +331,16 @@ docker compose up --build
 После запуска API будет доступно на:
 - `http://localhost:8000`
 
-Frontend dev server:
+Frontend source code теперь живет в отдельном репозитории:
+- [Wobbly-develop/front](https://github.com/Wobbly-develop/front)
+
+Frontend локально запускается там:
 
 ```bash
-npm --prefix frontend run dev
+git clone https://github.com/Wobbly-develop/front.git
+cd front
+npm ci
+npm run dev
 ```
 
 Полная локальная проверка:
@@ -346,9 +352,7 @@ npm --prefix frontend run dev
 Она включает:
 - `ruff check backend/app backend/tests scripts`
 - `pytest`
-- `npm --prefix frontend run lint`
-- `npm --prefix frontend run format`
-- `npm --prefix frontend run build`
+- frontend checks, если frontend source присутствует в этом репозитории
 - `docker compose config`
 - docs sync check
 
@@ -385,8 +389,10 @@ docker compose up --build
 Frontend в отдельном dev-режиме:
 
 ```bash
-npm --prefix frontend install
-npm --prefix frontend run dev
+git clone https://github.com/Wobbly-develop/front.git
+cd front
+npm ci
+npm run dev
 ```
 
 Backend локально без Docker:
