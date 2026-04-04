@@ -226,6 +226,15 @@ Release rule:
 - для production release сначала готовим release branch через `scripts/prepare_main_release.sh`
 - если в `main` внезапно есть staging-specific truth, это drift, а не норма
 
+Backend release versioning:
+- источник правды для backend version: `backend/VERSION`
+- production pipeline создает tag `backend/v<version>` на merge commit в `main`
+- rollback / redeploy конкретной backend version делается через `.github/workflows/deploy-backend-release.yml`
+- текущая production backend version на сервере должна писаться в:
+  - `/opt/rating-service/.backend-release-version`
+  - `/opt/rating-service/.backend-release-ref`
+  - `/opt/rating-service/.backend-release-tag`
+
 Нюанс docs sync check:
 - в GitHub Actions `verify` использует полный fetch history
 - если `base sha` все равно недоступен локально, `scripts/check_api_docs_sync.sh` пропускает проверку вместо `fatal: bad object`

@@ -170,14 +170,17 @@ journalctl -u rating-service -n 100 --no-pager
 1. разработка идет в короткой ветке
 2. ветка вливается в `develop`
 3. staging verify/deploy живет только в `develop`
-4. когда пользователь явно запрашивает production release, из `develop` готовится отдельная release-ветка через `scripts/prepare_main_release.sh`
-5. в release-ветке убираются staging-only workflow/templates/docs
-6. release-ветка вливается в `main`
-7. GitHub Actions запускает `.github/workflows/pipeline.yml`
-8. job `deploy` выкатывает текущий `main` на production
+4. когда пользователь явно запрашивает production release, выбирается новая backend version в `backend/VERSION`
+5. из `develop` готовится отдельная release-ветка через `scripts/prepare_main_release.sh codex/release-main <backend-version>`
+6. в release-ветке убираются staging-only workflow/templates/docs
+7. release-ветка вливается в `main`
+8. GitHub Actions запускает `.github/workflows/pipeline.yml`
+9. pipeline создает tag `backend/v<version>`
+10. job `deploy` выкатывает текущий `main` на production
 
 Текущее состояние:
 - workflow уже лежит в репозитории: `.github/workflows/pipeline.yml`
+- manual backend deploy / rollback workflow лежит в репозитории: `.github/workflows/deploy-backend-release.yml`
 - repository secrets для deploy уже заведены в GitHub
 - целевой основной путь доставки теперь через GitHub Actions, а не через ручной `scp`
 
@@ -190,9 +193,17 @@ journalctl -u rating-service -n 100 --no-pager
 `pipeline.yml` делает следующее:
 - на `pull_request` в `main` запускает только `verify`
 - на `push` в `main` запускает `verify`, а затем `deploy`
+- перед deploy читает `backend/VERSION` и создает tag `backend/v<version>`, если его еще нет
 - `verify` ставит Python и Node tooling, гоняет backend checks, frontend lint/build, Docker config validation и docs sync check
 - `verify` checkout'ит репозиторий с полной историей, чтобы docs sync check мог сравнивать `base sha` и `head sha`
 - `deploy` собирает release archive, копирует его на production и перезапускает `rating-service`
+
+`deploy-backend-release.yml` делает следующее:
+- запускается вручную через `workflow_dispatch`
+- принимает `git_ref` вида `backend/v0.1.0` или commit SHA
+- checkout'ит именно этот ref
+- выкатывает выбранную backend version на production
+- подходит для rollback и ручной установки конкретной backend версии
 
 ### Database Migrations
 
@@ -246,6 +257,7 @@ Pipeline опирается на локальные скрипты:
 - `scripts/ci_check.sh`
 - `scripts/check_api_docs_sync.sh`
 - `scripts/deploy_release.sh`
+- `scripts/read_backend_version.sh`
 
 Systemd templates в репозитории:
 - `deploy/systemd/rating-service.service`
@@ -253,6 +265,11 @@ Systemd templates в репозитории:
 Во время deploy script теперь:
 - распаковывает release
 - обновляет Python dependencies в production venv через `pip install -r backend/requirements.txt`
+- сохраняет immutable backend archive в `/opt/rating-service/.releases/`
+- пишет metadata текущего backend deploy в:
+  - `/opt/rating-service/.backend-release-version`
+  - `/opt/rating-service/.backend-release-ref`
+  - `/opt/rating-service/.backend-release-tag`
 - только потом перезапускает `rating-service`
 - ждет не только `systemctl is-active`, но и успешный ответ healthcheck URL
 - если `/ready` не поднимается вовремя, печатает свежие `journalctl` логи сервиса и завершает deploy с ошибкой

@@ -151,12 +151,23 @@ Commit message оформляем по `Conventional Commits`.
 Перед production release:
 1. перейти на `develop`
 2. убедиться, что дерево чистое
-3. запустить `./scripts/prepare_main_release.sh`
-4. просмотреть release-ветку
-5. закоммитить cleanup staging-only файлов
-6. только потом вливать release-ветку в `main`
+3. выбрать новую backend version
+4. запустить `./scripts/prepare_main_release.sh codex/release-main <backend-version>`
+5. просмотреть release-ветку
+6. закоммитить cleanup staging-only файлов и новую backend version
+7. только потом вливать release-ветку в `main`
+8. после merge production pipeline сам создаст tag `backend/v<version>`
 
 Если пользователь просит production release "прямо сейчас", это не отменяет release branch rule.
+
+## Backend Release Rule
+
+Для backend теперь действует отдельное release-правило:
+- backend version хранится в `backend/VERSION`
+- version меняем только перед production release
+- production tag должен иметь вид `backend/v<version>`
+- одну и ту же backend version нельзя повторно использовать для другого production commit
+- rollback и точечный redeploy делаем через workflow `Deploy Backend Release` по конкретному `git_ref`
 
 Если эти факты не опровергнуты явным изменением в репозитории или на сервере, не надо их перепроверять с нуля.
 

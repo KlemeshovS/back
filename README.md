@@ -134,10 +134,29 @@ Production release больше не делается прямым merge `develo
 Новый flow:
 1. завершить работу в `develop`
 2. убедиться, что staging-проверка завершена
-3. на `develop` запустить `./scripts/prepare_main_release.sh`
-4. получить временную release-ветку без staging-only workflow/templates/docs
-5. проверить production-facing docs и surfaces
-6. влить release-ветку в `main`
+3. выбрать новую backend version
+4. на `develop` запустить `./scripts/prepare_main_release.sh codex/release-main <backend-version>`
+5. получить временную release-ветку без staging-only workflow/templates/docs и с новым `backend/VERSION`
+6. проверить production-facing docs и surfaces
+7. влить release-ветку в `main`
+8. production pipeline сам создаст tag `backend/v<version>` и выполнит deploy
+
+### Backend Release Versioning
+
+Для backend теперь есть отдельный release-контур:
+- источник правды для версии: `backend/VERSION`
+- production tag: `backend/v<version>`
+- manual rollback / redeploy workflow: `.github/workflows/deploy-backend-release.yml`
+- immutable backend archives на сервере сохраняются в `/opt/rating-service/.releases/`
+- metadata текущего production deploy пишется в:
+  - `/opt/rating-service/.backend-release-version`
+  - `/opt/rating-service/.backend-release-ref`
+  - `/opt/rating-service/.backend-release-tag`
+
+Это дает:
+- понятную backend version для каждого production release
+- возможность откатываться на конкретный backend tag или commit
+- возможность быстро проверить, какая backend version сейчас реально стоит на production
 
 ## API
 
