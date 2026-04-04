@@ -181,6 +181,7 @@ journalctl -u rating-service -n 100 --no-pager
 Текущее состояние:
 - workflow уже лежит в репозитории: `.github/workflows/pipeline.yml`
 - manual backend deploy / rollback workflow лежит в репозитории: `.github/workflows/deploy-backend-release.yml`
+- UI-friendly rollback workflow лежит в репозитории: `.github/workflows/rollback-backend-release.yml`
 - repository secrets для deploy уже заведены в GitHub
 - целевой основной путь доставки теперь через GitHub Actions, а не через ручной `scp`
 
@@ -204,6 +205,12 @@ journalctl -u rating-service -n 100 --no-pager
 - checkout'ит именно этот ref
 - выкатывает выбранную backend version на production
 - подходит для rollback и ручной установки конкретной backend версии
+
+`rollback-backend-release.yml` делает следующее:
+- запускается вручную через `workflow_dispatch`
+- принимает только release tag вида `backend/v0.1.0`
+- предназначен именно для простого rollback через GitHub UI
+- после выполнения пишет summary с восстановленной backend version
 
 ### Database Migrations
 
@@ -248,6 +255,51 @@ journalctl -u rating-service -n 100 --no-pager
 - `https://api.wobbly.site/api/docs`
 - `https://wobbly.site`
 - `https://admin.wobbly.site/production/`
+
+### Current Backend Release Metadata
+
+На production текущую backend version можно посмотреть так:
+
+```bash
+ssh -i /Users/klem/Documents/eguene/deploy_key root@api.wobbly.site 'cat /opt/rating-service/.backend-release-version'
+```
+
+Текущий production tag:
+
+```bash
+ssh -i /Users/klem/Documents/eguene/deploy_key root@api.wobbly.site 'cat /opt/rating-service/.backend-release-tag'
+```
+
+Текущий production commit ref:
+
+```bash
+ssh -i /Users/klem/Documents/eguene/deploy_key root@api.wobbly.site 'cat /opt/rating-service/.backend-release-ref'
+```
+
+### Rollback Backend Release
+
+Если нужно откатить backend:
+1. открыть GitHub Actions
+2. для обычного rollback выбрать workflow `Rollback Backend Release`
+3. передать `release_tag`
+
+Если нужен deploy не по tag, а по произвольному ref:
+1. открыть GitHub Actions
+2. выбрать workflow `Deploy Backend Release`
+3. передать `git_ref`
+
+Допустимые значения `release_tag`:
+- `backend/v0.1.0`
+- `backend/v0.2.0`
+
+Допустимые значения `git_ref`:
+- `backend/v0.1.0`
+- `backend/v0.2.0`
+- конкретный commit SHA
+
+Предпочтительный rollback path:
+- сначала использовать workflow `Rollback Backend Release` с release tag `backend/v...`
+- commit SHA использовать только если tag еще не заведен или нужен точечный hotfix rollback
 
 Все staging secrets и staging deploy значения intentionally documented only in `docs/STAGING.md` on `develop`.
 

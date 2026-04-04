@@ -147,6 +147,7 @@ Production release больше не делается прямым merge `develo
 - источник правды для версии: `backend/VERSION`
 - production tag: `backend/v<version>`
 - manual rollback / redeploy workflow: `.github/workflows/deploy-backend-release.yml`
+- UI-friendly rollback workflow: `.github/workflows/rollback-backend-release.yml`
 - immutable backend archives на сервере сохраняются в `/opt/rating-service/.releases/`
 - metadata текущего production deploy пишется в:
   - `/opt/rating-service/.backend-release-version`
@@ -157,6 +158,35 @@ Production release больше не делается прямым merge `develo
 - понятную backend version для каждого production release
 - возможность откатываться на конкретный backend tag или commit
 - возможность быстро проверить, какая backend version сейчас реально стоит на production
+
+### Backend Release Checklist
+
+Подготовить production release:
+
+```bash
+git checkout develop
+git pull
+./scripts/prepare_main_release.sh codex/release-main 0.2.0
+git status --short --branch
+git commit -am "chore(release): prepare backend v0.2.0"
+```
+
+После этого:
+- проверить release branch
+- влить ее в `main`
+- дождаться production pipeline
+
+Посмотреть, что сейчас стоит на production:
+
+```bash
+ssh -i /Users/klem/Documents/eguene/deploy_key root@api.wobbly.site 'cat /opt/rating-service/.backend-release-version && echo "---" && cat /opt/rating-service/.backend-release-tag && echo "---" && cat /opt/rating-service/.backend-release-ref'
+```
+
+Откатить backend на конкретную версию:
+- открыть GitHub Actions
+- для простого rollback выбрать workflow `Rollback Backend Release`
+- передать `release_tag`, например `backend/v0.1.0`
+- для нестандартного redeploy по commit использовать workflow `Deploy Backend Release`
 
 ## API
 

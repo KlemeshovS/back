@@ -1,10 +1,10 @@
-name: Deploy Backend Release
+name: Rollback Backend Release
 
 on:
   workflow_dispatch:
     inputs:
-      git_ref:
-        description: Git ref to deploy (for example backend/v0.1.0 or a commit SHA)
+      release_tag:
+        description: Backend release tag to restore (for example backend/v0.1.0)
         required: true
         type: string
 
@@ -12,15 +12,22 @@ permissions:
   contents: read
 
 jobs:
-  deploy:
+  rollback:
     runs-on: ubuntu-latest
     environment: production
 
     steps:
-      - name: Checkout target release
+      - name: Validate release tag format
+        run: |
+          if [[ ! "${{ inputs.release_tag }}" =~ ^backend/v[0-9]+(\.[0-9]+){2}([.-][0-9A-Za-z]+)*$ ]]; then
+            echo "release_tag must look like backend/v0.1.0"
+            exit 1
+          fi
+
+      - name: Checkout target backend release
         uses: actions/checkout@v6
         with:
-          ref: ${{ inputs.git_ref }}
+          ref: ${{ inputs.release_tag }}
 
       - name: Setup Node
         uses: actions/setup-node@v6
@@ -37,13 +44,13 @@ jobs:
         run: |
           ssh-keyscan -H "${{ secrets.DEPLOY_HOST }}" >> ~/.ssh/known_hosts
 
-      - name: Resolve backend version
+      - name: Resolve backend version from rollback tag
         id: version
         run: |
           VERSION="$(./scripts/read_backend_version.sh)"
           echo "backend_version=${VERSION}" >> "$GITHUB_OUTPUT"
 
-      - name: Deploy selected backend release
+      - name: Deploy selected rollback release
         env:
           DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
           DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
@@ -75,13 +82,13 @@ jobs:
             done
           done
 
-      - name: Report deployed backend release
+      - name: Report rollback result
         run: |
           {
-            echo "## Backend Release Deploy"
+            echo "## Backend Release Rollback"
             echo ""
-            echo "- Requested ref: \`${{ inputs.git_ref }}\`"
-            echo "- Deployed backend version: \`${{ steps.version.outputs.backend_version }}\`"
+            echo "- Restored release tag: \`${{ inputs.release_tag }}\`"
+            echo "- Restored backend version: \`${{ steps.version.outputs.backend_version }}\`"
             echo "- Production URLs checked:"
             echo "  - https://api.wobbly.site/api/docs"
             echo "  - https://api.wobbly.site/api/swagger"
