@@ -19,6 +19,8 @@
 - `rating-service.service`
 - `uvicorn`
 - код приложения лежит в `/opt/rating-service`
+- production frontend лежит в `/opt/wobbly-front-production/current`
+- staging frontend лежит в `/opt/wobbly-front-staging/current`
 - схема БД управляется через `Alembic`
 
 Сетевые адреса:
@@ -36,6 +38,7 @@ Admin baseline:
 - admin UI paths:
   - `/production/`
 - `admin.wobbly.site/production/` должен обслуживаться отдельным production frontend bundle
+- `admin.wobbly.site/staging/` должен обслуживаться отдельным staging frontend bundle
 - admin same-origin API:
   - `/production/api/...` -> production `/admin/...`
 - admin frontend assets теперь идут через:
@@ -98,6 +101,7 @@ ssh -i /Users/klem/Documents/eguene/deploy_key root@api.wobbly.site
 - если нужно проверить, обновилась ли текстовая документация после API change, смотри и production URL, и frontend repo `src/features/docs/content.ts`
 - docs page должна грузить assets через `/assets/...`
 - если `/api/docs` белая, сначала проверить 404 на frontend bundle, а не backend routes
+- если браузер продолжает показывать старый HTML или `Welcome to nginx!`, сначала сделать hard reload или открыть страницу в incognito: после разделения front/back браузер может держать старую SPA-оболочку в disk cache
 
 ## Quick Verification Commands
 
@@ -148,6 +152,7 @@ journalctl -u rating-service -n 100 --no-pager
 Текущие домены обслуживаются через nginx:
 - `api.wobbly.site`
 - `wobbly.site`
+- `admin.wobbly.site`
 
 Для `api.wobbly.site` rate limiting config теперь хранится в репозитории:
 - `deploy/nginx/api-rate-limits.conf`
@@ -341,6 +346,7 @@ Systemd templates в репозитории:
 - `nginx` конфиги не раскатываются текущим GitHub Actions deploy автоматически
 - изменения в `deploy/nginx/` нужно применять на сервер отдельно через `nginx -t` и `systemctl reload nginx`
 - admin host routing на `admin.wobbly.site` тоже не раскатывается автоматически через pipeline и остается отдельной server-side обязанностью
+- live production сейчас уже переключен на независимую схему frontend/backend; репозиторий должен оставаться с ней синхронен
 
 ## API Docs Sync Rule
 

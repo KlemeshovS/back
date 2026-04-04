@@ -18,6 +18,7 @@ Staging operational doc. Этот файл нужен только на `develop
 
 - UI: `https://admin.wobbly.site/staging/`
 - same-origin admin API: `/staging/api/...`
+- staging frontend deploy dir: `/opt/wobbly-front-staging/current`
 
 ## Staging secrets
 
@@ -38,6 +39,10 @@ Staging operational doc. Этот файл нужен только на `develop
 3. `verify` прогоняет проверки
 4. `deploy-staging` выкатывает текущий `develop`
 5. staging используется для ручной проверки перед production release
+
+Важно:
+- staging frontend и staging backend теперь живут отдельно
+- staging frontend выкатывается из frontend-репозитория, backend staging — из backend-репозитория
 
 ## Быстрая проверка
 

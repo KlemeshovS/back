@@ -31,7 +31,8 @@ Backend-репозиторий проекта `Wobbly`.
 Исходники landing, docs page и admin UI находятся в [Wobbly-develop/front](https://github.com/Wobbly-develop/front).
 
 В этом репозитории frontend не разрабатывается и не деплоится. На сервере backend и frontend должны жить раздельно:
-- backend: `/opt/rating-service`
+- production backend: `/opt/rating-service`
+- staging backend: `/opt/rating-service-staging`
 - production frontend: `/opt/wobbly-front-production/current`
 - staging frontend: `/opt/wobbly-front-staging/current`
 
@@ -133,6 +134,10 @@ Git hooks:
 - Swagger: `https://api.wobbly.site/api/swagger`
 - text docs: `https://api.wobbly.site/api/docs`
 - admin: `https://admin.wobbly.site/production/`
+
+Важно:
+- `wobbly.site`, `/api/docs` и `admin` теперь раздаются nginx напрямую из frontend deploy dirs
+- backend отвечает только за API и admin API routes
 
 ## Что читать дальше
 
