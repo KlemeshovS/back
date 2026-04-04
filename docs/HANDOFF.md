@@ -6,7 +6,7 @@
 
 ## Project Snapshot
 
-- repository: `https://github.com/KlemeshovS/wobbly_back`
+- repository: `https://github.com/Wobbly-develop/wobbly_back`
 - main site: `https://wobbly.site`
 - API: `https://api.wobbly.site`
 - Swagger: `https://api.wobbly.site/api/swagger`
