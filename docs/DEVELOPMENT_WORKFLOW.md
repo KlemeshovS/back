@@ -81,15 +81,16 @@ Commit message оформляем по `Conventional Commits`.
 - после merge в `develop` ориентируемся сначала на staging GitHub Actions pipeline
 - после merge в `main` ориентируемся сначала на production GitHub Actions pipeline
 - staging-only workflow, systemd/nginx templates и operational docs не должны попадать в `main`
+- production-facing markdown в `main` должен описывать production, а не staging
 - admin UI считаем единым frontend shell; различие между `production` и `staging` должно быть только в API-окружении
 - если меняется API-контракт или поведение endpoint'ов, в том же изменении нужно обновлять `https://api.wobbly.site/api/docs`
 - по мере роста API текстовую docs page нужно упрощать и перестраивать так, чтобы она оставалась удобной для чтения
 - API-изменение без обновления docs считается незавершенным
 - источником правды для docs page в текущей структуре считается `frontend/src/features/docs/content.ts`
 
-## Handoff Rule
+## Start Here
 
-Если работа переносится в новый чат, сначала нужно прочитать:
+Для быстрого входа в проект сначала нужно прочитать:
 - `docs/HANDOFF.md`
 - `README.md`
 - `docs/BACKEND_ROADMAP.md`
@@ -103,9 +104,11 @@ Commit message оформляем по `Conventional Commits`.
 - какой домен обслуживает API
 - через что реально деплоится production
 
-## Handoff Checklist
+И использовать эти правила как source of truth, пока репозиторий не показывает явное изменение процесса.
 
-Перед тем как начинать новый анализ после переноса контекста:
+## Start Checklist
+
+Перед началом работы:
 1. прочитать `docs/HANDOFF.md`
 2. прочитать основные `.md` файлы
 3. сверить локальное состояние через `git status --short --branch`
@@ -137,15 +140,46 @@ Commit message оформляем по `Conventional Commits`.
 - release branch вливается в `main`, и только `main` деплоится в production
 - ручной fallback deploy это `scp`/копирование файлов + `systemctl restart rating-service`
 
+И дополнительно:
+- production docs page живет на `https://api.wobbly.site/api/docs`
+- источник правды для docs page: `frontend/src/features/docs/content.ts`
+- production docs page должна грузить assets через `/assets/...`
+- landing page production-facing truth живет на `https://wobbly.site`
+
 ## Release Branch Rule
 
 Перед production release:
 1. перейти на `develop`
 2. убедиться, что дерево чистое
-3. запустить `./scripts/prepare_main_release.sh`
-4. просмотреть release-ветку
-5. закоммитить cleanup staging-only файлов
-6. только потом вливать release-ветку в `main`
+3. выбрать новую backend version
+4. запустить `./scripts/prepare_main_release.sh <release-branch> <backend-version>`
+5. просмотреть release-ветку
+6. закоммитить cleanup staging-only файлов и новую backend version
+7. только потом вливать release-ветку в `main`
+8. после merge production pipeline сам создаст tag `backend/v<version>`
+
+Если пользователь просит production release "прямо сейчас", это не отменяет release branch rule.
+
+## Backend Release Rule
+
+Для backend теперь действует отдельное release-правило:
+- backend version хранится в `backend/VERSION`
+- version меняем только перед production release
+- production tag должен иметь вид `backend/v<version>`
+- одну и ту же backend version нельзя повторно использовать для другого production commit
+- rollback и точечный redeploy делаем через workflow `Deploy Backend Release` по конкретному `git_ref`
+
+Короткий production release path:
+1. на `develop` выбрать новую backend version
+2. запустить `./scripts/prepare_main_release.sh <release-branch> <backend-version>`
+3. закоммитить release branch
+4. влить ее в `main`
+5. дождаться тега `backend/v<version>` и production deploy
+
+Короткий rollback path:
+1. открыть GitHub Actions
+2. выбрать workflow `Deploy Backend Release`
+3. передать старый `backend/v<version>`
 
 Если эти факты не опровергнуты явным изменением в репозитории или на сервере, не надо их перепроверять с нуля.
 

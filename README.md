@@ -48,7 +48,7 @@ Monorepo для `Wobbly`, разделенный на два подпроект�
 
 ## Current Project Snapshot
 
-Если работа переносится в новый чат, это нужно считать актуальной базой проекта:
+Это актуальная базовая сводка по проекту:
 - production API: `https://api.wobbly.site`
 - production Swagger: `https://api.wobbly.site/api/swagger`
 - production text docs: `https://api.wobbly.site/api/docs`
@@ -69,6 +69,10 @@ Monorepo для `Wobbly`, разделенный на два подпроект�
 - отдельная сводка для переноса контекста лежит в `docs/HANDOFF.md`
 - staging operational details intentionally documented only in `docs/STAGING.md` on `develop`
 - production admin доступна на `https://admin.wobbly.site/production/`
+- landing page на `https://wobbly.site` сейчас ведет пользователя в:
+  - App Store
+  - Google Play
+  - Telegram channel
 - admin console уже включает:
   - overview
   - users table + context menu actions
@@ -88,6 +92,41 @@ Monorepo для `Wobbly`, разделенный на два подпроект�
   - `ADMIN_BOOTSTRAP_PASSWORD`
 - bootstrap credentials считаем operational secret и не храним в репозитории
 
+## Working Rules
+
+Эти правила нужно считать актуальной базой процесса:
+- основная рабочая ветка: `develop`
+- `main` обновляем только по явной команде пользователя на production release
+- direct merge `develop -> main` больше не используем
+- production release делается через `./scripts/prepare_main_release.sh`
+- `develop` содержит staging operational context
+- `main` должна содержать только production-facing truth
+- если меняется API, в том же изменении нужно обновлять:
+  - `frontend/src/features/docs/content.ts`
+  - при необходимости `docs/MOBILE_API.md`
+  - при необходимости `README.md`
+- перед началом работы всегда сначала проверять:
+  - `git status --short --branch`
+
+Минимальный порядок чтения для быстрого входа в проект:
+1. `docs/HANDOFF.md`
+2. `README.md`
+3. `docs/DEPLOY.md`
+4. `docs/DEVELOPMENT_WORKFLOW.md`
+5. `docs/MOBILE_API.md`
+
+## Docs Page Rule
+
+`https://api.wobbly.site/api/docs` это frontend page, а не серверный шаблон со статическим текстом.
+
+Источник правды:
+- `frontend/src/features/docs/content.ts`
+
+Что важно помнить:
+- build output лежит в `backend/app/static/`
+- docs page должна грузить frontend assets через корневые пути `/assets/...`
+- если на `/api/docs` белый экран, сначала проверяем загрузку asset-файлов, а не backend route logic
+
 ## Release Flow
 
 Production release больше не делается прямым merge `develop -> main`.
@@ -95,10 +134,62 @@ Production release больше не делается прямым merge `develo
 Новый flow:
 1. завершить работу в `develop`
 2. убедиться, что staging-проверка завершена
-3. на `develop` запустить `./scripts/prepare_main_release.sh`
-4. получить временную release-ветку без staging-only workflow/templates/docs
-5. проверить production-facing docs и surfaces
-6. влить release-ветку в `main`
+3. выбрать новую backend version
+4. на `develop` запустить `./scripts/prepare_main_release.sh <release-branch> <backend-version>`
+5. получить временную release-ветку без staging-only workflow/templates/docs и с новым `backend/VERSION`
+6. проверить production-facing docs и surfaces
+7. влить release-ветку в `main`
+8. production pipeline сам создаст tag `backend/v<version>` и выполнит deploy
+
+### Backend Release Versioning
+
+Для backend теперь есть отдельный release-контур:
+- источник правды для версии: `backend/VERSION`
+- production tag: `backend/v<version>`
+- GitHub Release: `Backend v<version>`
+- manual rollback / redeploy workflow: `.github/workflows/deploy-backend-release.yml`
+- UI-friendly rollback workflow: `.github/workflows/rollback-backend-release.yml`
+- immutable backend archives на сервере сохраняются в `/opt/rating-service/.releases/`
+- metadata текущего production deploy пишется в:
+  - `/opt/rating-service/.backend-release-version`
+  - `/opt/rating-service/.backend-release-ref`
+  - `/opt/rating-service/.backend-release-tag`
+
+Это дает:
+- понятную backend version для каждого production release
+- видимый список backend-версий в GitHub UI на вкладке Releases
+- release notes по commit history между backend-тегами
+- возможность откатываться на конкретный backend tag или commit
+- возможность быстро проверить, какая backend version сейчас реально стоит на production
+
+### Backend Release Checklist
+
+Подготовить production release:
+
+```bash
+git checkout develop
+git pull
+./scripts/prepare_main_release.sh release/main 0.2.0
+git status --short --branch
+git commit -am "chore(release): prepare backend v0.2.0"
+```
+
+После этого:
+- проверить release branch
+- влить ее в `main`
+- дождаться production pipeline
+
+Посмотреть, что сейчас стоит на production:
+
+```bash
+ssh -i /Users/klem/Documents/eguene/deploy_key root@api.wobbly.site 'cat /opt/rating-service/.backend-release-version && echo "---" && cat /opt/rating-service/.backend-release-tag && echo "---" && cat /opt/rating-service/.backend-release-ref'
+```
+
+Откатить backend на конкретную версию:
+- открыть GitHub Actions
+- для простого rollback выбрать workflow `Rollback Backend Release`
+- передать `release_tag`, например `backend/v0.1.0`
+- для нестандартного redeploy по commit использовать workflow `Deploy Backend Release`
 
 ## API
 
@@ -273,6 +364,58 @@ TEST_DATABASE_URL=postgresql://app:app@127.0.0.1:5432/app ./.venv/bin/pytest bac
 
 В CI эти тесты идут через отдельный изолированный PostgreSQL service.
 
+## Локальная разработка
+
+Минимальный рабочий цикл:
+1. перейти на `develop`
+2. обновить ветку и создать короткоживущую рабочую ветку
+3. поднять локальную среду
+4. внести изменение
+5. прогнать локальные проверки
+6. сделать commit
+7. вернуть изменения в `develop`
+
+Базовые команды:
+
+```bash
+git checkout develop
+git pull
+git checkout -b feat/my-change
+cp .env.example .env
+docker compose up --build
+```
+
+Frontend в отдельном dev-режиме:
+
+```bash
+npm --prefix frontend install
+npm --prefix frontend run dev
+```
+
+Backend локально без Docker:
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r backend/requirements-dev.txt
+uvicorn backend.app.main:app --reload
+```
+
+Полезные локальные команды:
+
+```bash
+./scripts/ci_check.sh
+./scripts/install_git_hooks.sh
+docker compose up -d db
+TEST_DATABASE_URL=postgresql://app:app@127.0.0.1:5432/app ./.venv/bin/pytest backend/tests/test_api_db_integration.py
+```
+
+Где что проверять локально:
+- API: `http://localhost:8000`
+- Swagger: `http://localhost:8000/api/swagger`
+- Text docs: `http://localhost:8000/api/docs`
+- Frontend dev server: обычно `http://localhost:5173`
+
 ## Docs Rule
 
 Если меняется API, в том же изменении нужно обновлять:
@@ -305,7 +448,7 @@ TEST_DATABASE_URL=postgresql://app:app@127.0.0.1:5432/app ./.venv/bin/pytest bac
   - `frontend/src/features/admin/api.ts`
   - `backend/app/api/routes/admin.py`
   - `backend/app/services/admin_service.py`
-- для нового чата важно: актуальная рабочая ветка обычно `develop`; не предлагать merge в `main`, если пользователь явно не запросил production release
+- актуальная рабочая ветка обычно `develop`; не обновлять `main`, если не идет осознанный production release
 - если меняется API, нужно обновлять текстовую docs page на `https://api.wobbly.site/api/docs` в том же изменении
 - CI дополнительно проверяет, что API-изменения не уходят без обновления `/api/docs`
 - linters and tests: `ruff`, `pytest`
@@ -327,13 +470,3 @@ TEST_DATABASE_URL=postgresql://app:app@127.0.0.1:5432/app ./.venv/bin/pytest bac
 Что делают hooks:
 - `pre-commit` — `ruff --fix`, `ruff`, Python syntax, frontend ESLint/Prettier
 - `pre-push` — `pytest`, frontend build
-
-## Context Transfer
-
-Если работа переносится в новый чат, новый чат должен сначала прочитать:
-- `docs/HANDOFF.md`
-- `README.md`
-- `docs/BACKEND_ROADMAP.md`
-- `docs/MOBILE_API.md`
-- `docs/DEPLOY.md`
-- `docs/DEVELOPMENT_WORKFLOW.md`

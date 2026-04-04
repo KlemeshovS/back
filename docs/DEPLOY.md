@@ -2,9 +2,13 @@
 
 ## Read This First
 
-Этот файл нужен для того, чтобы следующий чат или новый участник команды не тратил время на повторное расследование production-схемы.
+Этот файл нужен для того, чтобы следующий участник команды не тратил время на повторное расследование production-схемы.
 
 Если задача связана с production, сначала опираемся на этот файл, и только потом идем проверять сервер.
+
+Этот документ описывает production-only truth.
+
+Если задача про staging, нужно читать `docs/STAGING.md` на ветке `develop`.
 
 ## Current Production Topology
 
@@ -88,6 +92,8 @@ ssh -i /Users/klem/Documents/eguene/deploy_key root@api.wobbly.site
 - сырой `curl` по `/api/docs` покажет HTML-оболочку
 - содержимое секций и endpoint descriptions живет в `frontend/src/features/docs/content.ts`
 - если нужно проверить, обновилась ли текстовая документация после API change, смотри и production URL, и `frontend/src/features/docs/content.ts`
+- docs page должна грузить assets через `/assets/...`
+- если `/api/docs` белая, сначала проверить 404 на frontend bundle, а не backend routes
 
 ## Quick Verification Commands
 
@@ -164,25 +170,50 @@ journalctl -u rating-service -n 100 --no-pager
 1. разработка идет в короткой ветке
 2. ветка вливается в `develop`
 3. staging verify/deploy живет только в `develop`
-4. когда пользователь явно запрашивает production release, из `develop` готовится отдельная release-ветка через `scripts/prepare_main_release.sh`
-5. в release-ветке убираются staging-only workflow/templates/docs
-6. release-ветка вливается в `main`
-7. GitHub Actions запускает `.github/workflows/pipeline.yml`
-8. job `deploy` выкатывает текущий `main` на production
+4. когда пользователь явно запрашивает production release, выбирается новая backend version в `backend/VERSION`
+5. из `develop` готовится отдельная release-ветка через `scripts/prepare_main_release.sh <release-branch> <backend-version>`
+6. в release-ветке убираются staging-only workflow/templates/docs
+7. release-ветка вливается в `main`
+8. GitHub Actions запускает `.github/workflows/pipeline.yml`
+9. pipeline создает tag `backend/v<version>`
+10. job `deploy` выкатывает текущий `main` на production
 
 Текущее состояние:
 - workflow уже лежит в репозитории: `.github/workflows/pipeline.yml`
+- manual backend deploy / rollback workflow лежит в репозитории: `.github/workflows/deploy-backend-release.yml`
+- UI-friendly rollback workflow лежит в репозитории: `.github/workflows/rollback-backend-release.yml`
+- production pipeline также создает GitHub Release `Backend v<version>`
 - repository secrets для deploy уже заведены в GitHub
 - целевой основной путь доставки теперь через GitHub Actions, а не через ручной `scp`
+
+Важно:
+- production release не делается прямым merge `develop -> main`
+- staging operational artifacts не должны попадать в `main`
 
 ### Workflow Behavior
 
 `pipeline.yml` делает следующее:
 - на `pull_request` в `main` запускает только `verify`
 - на `push` в `main` запускает `verify`, а затем `deploy`
+- перед deploy читает `backend/VERSION` и создает tag `backend/v<version>`, если его еще нет
+- затем создает или обновляет GitHub Release для этого tag
+- release notes собираются из commit history между backend release tags через `scripts/generate_backend_release_notes.sh`
 - `verify` ставит Python и Node tooling, гоняет backend checks, frontend lint/build, Docker config validation и docs sync check
 - `verify` checkout'ит репозиторий с полной историей, чтобы docs sync check мог сравнивать `base sha` и `head sha`
 - `deploy` собирает release archive, копирует его на production и перезапускает `rating-service`
+
+`deploy-backend-release.yml` делает следующее:
+- запускается вручную через `workflow_dispatch`
+- принимает `git_ref` вида `backend/v0.1.0` или commit SHA
+- checkout'ит именно этот ref
+- выкатывает выбранную backend version на production
+- подходит для rollback и ручной установки конкретной backend версии
+
+`rollback-backend-release.yml` делает следующее:
+- запускается вручную через `workflow_dispatch`
+- принимает только release tag вида `backend/v0.1.0`
+- предназначен именно для простого rollback через GitHub UI
+- после выполнения пишет summary с восстановленной backend version
 
 ### Database Migrations
 
@@ -218,6 +249,61 @@ journalctl -u rating-service -n 100 --no-pager
 `pipeline.yml` production deploy gate:
 - `http://127.0.0.1:8000/ready`
 
+## Production Quick Checklist
+
+После production release быстро проверить:
+- `https://api.wobbly.site/health`
+- `https://api.wobbly.site/ready`
+- `https://api.wobbly.site/api/swagger`
+- `https://api.wobbly.site/api/docs`
+- `https://wobbly.site`
+- `https://admin.wobbly.site/production/`
+
+### Current Backend Release Metadata
+
+На production текущую backend version можно посмотреть так:
+
+```bash
+ssh -i /Users/klem/Documents/eguene/deploy_key root@api.wobbly.site 'cat /opt/rating-service/.backend-release-version'
+```
+
+Текущий production tag:
+
+```bash
+ssh -i /Users/klem/Documents/eguene/deploy_key root@api.wobbly.site 'cat /opt/rating-service/.backend-release-tag'
+```
+
+Текущий production commit ref:
+
+```bash
+ssh -i /Users/klem/Documents/eguene/deploy_key root@api.wobbly.site 'cat /opt/rating-service/.backend-release-ref'
+```
+
+### Rollback Backend Release
+
+Если нужно откатить backend:
+1. открыть GitHub Actions
+2. для обычного rollback выбрать workflow `Rollback Backend Release`
+3. передать `release_tag`
+
+Если нужен deploy не по tag, а по произвольному ref:
+1. открыть GitHub Actions
+2. выбрать workflow `Deploy Backend Release`
+3. передать `git_ref`
+
+Допустимые значения `release_tag`:
+- `backend/v0.1.0`
+- `backend/v0.2.0`
+
+Допустимые значения `git_ref`:
+- `backend/v0.1.0`
+- `backend/v0.2.0`
+- конкретный commit SHA
+
+Предпочтительный rollback path:
+- сначала использовать workflow `Rollback Backend Release` с release tag `backend/v...`
+- commit SHA использовать только если tag еще не заведен или нужен точечный hotfix rollback
+
 Все staging secrets и staging deploy значения intentionally documented only in `docs/STAGING.md` on `develop`.
 
 ### Local Scripts Used By CI/CD
@@ -226,6 +312,8 @@ Pipeline опирается на локальные скрипты:
 - `scripts/ci_check.sh`
 - `scripts/check_api_docs_sync.sh`
 - `scripts/deploy_release.sh`
+- `scripts/generate_backend_release_notes.sh`
+- `scripts/read_backend_version.sh`
 
 Systemd templates в репозитории:
 - `deploy/systemd/rating-service.service`
@@ -233,6 +321,11 @@ Systemd templates в репозитории:
 Во время deploy script теперь:
 - распаковывает release
 - обновляет Python dependencies в production venv через `pip install -r backend/requirements.txt`
+- сохраняет immutable backend archive в `/opt/rating-service/.releases/`
+- пишет metadata текущего backend deploy в:
+  - `/opt/rating-service/.backend-release-version`
+  - `/opt/rating-service/.backend-release-ref`
+  - `/opt/rating-service/.backend-release-tag`
 - только потом перезапускает `rating-service`
 - ждет не только `systemctl is-active`, но и успешный ответ healthcheck URL
 - если `/ready` не поднимается вовремя, печатает свежие `journalctl` логи сервиса и завершает deploy с ошибкой
@@ -346,7 +439,7 @@ curl -I https://wobbly.site
 
 ## Handoff Summary
 
-Если контекст переносится в новый чат, этот блок можно считать краткой operational truth:
+Этот блок можно считать краткой operational truth:
 - production code lives in `/opt/rating-service`
 - service name is `rating-service.service`
 - public reverse proxy is `nginx`

@@ -12,6 +12,9 @@ concurrency:
   group: production-pipeline
   cancel-in-progress: true
 
+permissions:
+  contents: write
+
 jobs:
   verify:
     runs-on: ubuntu-latest
@@ -83,6 +86,47 @@ jobs:
         uses: actions/setup-node@v6
         with:
           node-version: "22"
+
+      - name: Ensure backend release tag exists
+        id: backend_tag
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION="$(./scripts/read_backend_version.sh)"
+          TAG="backend/v${VERSION}"
+          echo "backend_version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "backend_tag=${TAG}" >> "$GITHUB_OUTPUT"
+          git fetch --tags
+
+          if git rev-parse "$TAG" >/dev/null 2>&1; then
+            EXISTING_SHA="$(git rev-list -n 1 "$TAG")"
+            if [ "$EXISTING_SHA" != "${GITHUB_SHA}" ]; then
+              echo "Tag $TAG already exists on another commit: $EXISTING_SHA"
+              exit 1
+            fi
+            echo "Tag $TAG already points to ${GITHUB_SHA}"
+          else
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git tag -a "$TAG" -m "Backend release v${VERSION}"
+            git push origin "$TAG"
+          fi
+
+      - name: Ensure GitHub backend release exists
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="${{ steps.backend_tag.outputs.backend_tag }}"
+          VERSION="${{ steps.backend_tag.outputs.backend_version }}"
+          TITLE="Backend v${VERSION}"
+          NOTES_FILE="$(mktemp)"
+          ./scripts/generate_backend_release_notes.sh "$TAG" "${GITHUB_SHA}" > "$NOTES_FILE"
+
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release edit "$TAG" --title "$TITLE" --notes-file "$NOTES_FILE"
+          else
+            gh release create "$TAG" --title "$TITLE" --notes-file "$NOTES_FILE"
+          fi
 
       - name: Write SSH key
         run: |

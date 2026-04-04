@@ -35,6 +35,9 @@
 - production deploy идет через `verify -> deploy`
 - staging deploy flow уже подготовлен через `develop -> verify -> deploy-staging`
 - базовый anti-abuse слой уже есть на уровне `TrustedHostMiddleware`, CORS и `nginx` rate limiting
+- `/ready` уже используется как deploy gate
+- public API versioning уже введен через `/api/v1/...`
+- real PostgreSQL integration tests уже добавлены в CI
 
 Это уже не просто MVP. Сейчас следующий фокус должен быть не на базовом CRUD, а на надежности, наблюдаемости и эволюции модели данных.
 
@@ -150,17 +153,7 @@
 - текущего `top/bottom limit` хватает для простого экрана
 - но API уже упирается в следующий уровень функциональности
 
-### 9. Introduce API versioning
-
-Что сделать:
-- перевести публичный контракт на `/api/v1/...`
-- оставить ясный путь для будущих несовместимых изменений
-
-Почему это важно:
-- контракт уже живет в мобильном приложении
-- дальше breaking changes будут дороже
-
-### 10. Add anti-fraud and abuse signals
+### 9. Add anti-fraud and abuse signals
 
 Что сделать:
 - логировать подозрительные всплески запросов
@@ -171,7 +164,7 @@
 - базовый rate limiting уже есть
 - следующая ступень это не только ограничение запросов, но и детекция странного поведения
 
-### 11. Add developer ergonomics
+### 10. Add developer ergonomics
 
 Что сделать:
 - вынести dev dependencies в отдельный файл или optional extras
@@ -182,7 +175,7 @@
 - tooling уже есть
 - теперь стоит сделать его проще в использовании для следующего разработчика
 
-### 12. Continue admin console polish
+### 11. Continue admin console polish
 
 Что сделать:
 - добавить change role в owner-only admin management
@@ -211,6 +204,5 @@
 - richer leaderboard queries
 
 ### Phase 4
-- API versioning
 - developer ergonomics improvements
 - admin console polish

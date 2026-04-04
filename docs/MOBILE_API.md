@@ -1,5 +1,9 @@
 # Mobile API
 
+Этот файл описывает production public contract для мобильного клиента.
+
+Если нужен staging contract для ручной проверки, это operational detail из `develop`, а не основная документация для production release.
+
 ## Base URL
 
 ```text
@@ -7,6 +11,10 @@ https://api.wobbly.site/api/v1
 ```
 
 Legacy unversioned routes пока сохранены для обратной совместимости, но новый mobile-контракт нужно строить уже на `/api/v1/...`.
+
+Правило:
+- новые мобильные версии должны использовать только `/api/v1/...`
+- legacy unversioned routes считаем временным compatibility layer
 
 ## Swagger
 
@@ -19,6 +27,10 @@ https://api.wobbly.site/api/swagger
 ```text
 https://api.wobbly.site/api/docs
 ```
+
+Важно:
+- `/api/docs` это production text docs page
+- если страница открывается пустой, сначала нужно проверить загрузку frontend assets
 
 ## Authorization
 
@@ -152,6 +164,7 @@ Response:
 - если `participateInRating = true`, `username` должен быть заполнен
 - `username` должен быть уникальным
 - разрешены только латинские буквы, цифры, `_`, `.`, `-`
+- если username уже был сохранен, его нельзя очистить обратно в пустое значение
 
 ### `PATCH /api/v1/me/rating`
 
@@ -204,6 +217,8 @@ Response:
 - мобильное приложение не должно передавать `userId`
 - мобильное приложение не должно передавать `username`
 - backend сам определяет пользователя по токену
+- отправлять `score` можно только если у пользователя уже есть `username`
+- отправлять `score` можно только если у пользователя включено участие в рейтинге
 
 ### `GET /api/v1/leaderboard/top?limit=100`
 
@@ -269,9 +284,9 @@ Response:
 - `VALIDATION_ERROR` — тело запроса не прошло валидацию: не хватает полей или формат данных неверный
 - `INTERNAL_SERVER_ERROR` — внутренняя ошибка backend
 
-## Chat Transfer Note
+## Start Here
 
-Если работа по мобильной интеграции переносится в новый чат, сначала нужно прочитать:
+Если начинается работа по мобильной интеграции, сначала нужно прочитать:
 - `docs/HANDOFF.md`
 - `README.md`
 - `docs/MOBILE_API.md`

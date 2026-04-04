@@ -1,0 +1,97 @@
+name: Rollback Backend Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: Backend release tag to restore (for example backend/v0.1.0)
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  rollback:
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+      - name: Validate release tag format
+        run: |
+          if [[ ! "${{ inputs.release_tag }}" =~ ^backend/v[0-9]+(\.[0-9]+){2}([.-][0-9A-Za-z]+)*$ ]]; then
+            echo "release_tag must look like backend/v0.1.0"
+            exit 1
+          fi
+
+      - name: Checkout target backend release
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ inputs.release_tag }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: "22"
+
+      - name: Write SSH key
+        run: |
+          mkdir -p ~/.ssh
+          printf '%s\n' "${{ secrets.DEPLOY_SSH_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+
+      - name: Add server host key
+        run: |
+          ssh-keyscan -H "${{ secrets.DEPLOY_HOST }}" >> ~/.ssh/known_hosts
+
+      - name: Resolve backend version from rollback tag
+        id: version
+        run: |
+          VERSION="$(./scripts/read_backend_version.sh)"
+          echo "backend_version=${VERSION}" >> "$GITHUB_OUTPUT"
+
+      - name: Deploy selected rollback release
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
+          DEPLOY_SERVICE: ${{ secrets.DEPLOY_SERVICE }}
+          DEPLOY_OWNER: ${{ secrets.DEPLOY_OWNER }}
+          DEPLOY_VENV_PATH: ${{ secrets.DEPLOY_VENV_PATH }}
+          DEPLOY_HEALTHCHECK_URL: http://127.0.0.1:8000/ready
+          SSH_KEY_PATH: /home/runner/.ssh/deploy_key
+        run: ./scripts/deploy_release.sh
+
+      - name: Smoke check production URLs
+        run: |
+          for url in \
+            https://api.wobbly.site/api/docs \
+            https://api.wobbly.site/api/swagger \
+            https://wobbly.site \
+            https://admin.wobbly.site/production/
+          do
+            for attempt in 1 2 3 4 5 6 7 8 9 10; do
+              if curl -fsS "$url" >/dev/null; then
+                break
+              fi
+              if [ "$attempt" -eq 10 ]; then
+                echo "Smoke check failed for $url"
+                exit 1
+              fi
+              sleep 3
+            done
+          done
+
+      - name: Report rollback result
+        run: |
+          {
+            echo "## Backend Release Rollback"
+            echo ""
+            echo "- Restored release tag: \`${{ inputs.release_tag }}\`"
+            echo "- Restored backend version: \`${{ steps.version.outputs.backend_version }}\`"
+            echo "- Production URLs checked:"
+            echo "  - https://api.wobbly.site/api/docs"
+            echo "  - https://api.wobbly.site/api/swagger"
+            echo "  - https://wobbly.site"
+            echo "  - https://admin.wobbly.site/production/"
+          } >> "$GITHUB_STEP_SUMMARY"

@@ -4,7 +4,7 @@ from datetime import datetime
 from enum import Enum
 from typing import Optional
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
 def to_camel(value: str) -> str:
@@ -22,6 +22,28 @@ USERNAME_PATTERN = r"^[A-Za-z0-9_.-]+$"
 Username = str
 
 
+def validate_username_input(value: Optional[str]) -> Optional[str]:
+    if value is None:
+        return None
+
+    trimmed = value.strip()
+    if trimmed == "":
+        return ""
+
+    if len(trimmed) < 3:
+        raise ValueError("String should have at least 3 characters")
+
+    if len(trimmed) > 64:
+        raise ValueError("String should have at most 64 characters")
+
+    import re
+
+    if re.fullmatch(USERNAME_PATTERN, trimmed) is None:
+        raise ValueError("String should match pattern '^[A-Za-z0-9_.-]+$'")
+
+    return trimmed
+
+
 class AdminRole(str, Enum):
     OWNER = "owner"
     ADMIN = "admin"
@@ -34,13 +56,10 @@ class AnonymousAuthResponse(ApiModel):
 
 
 class ProfileUpdateRequest(ApiModel):
-    username: Optional[str] = Field(
-        default=None,
-        min_length=3,
-        max_length=64,
-        pattern=USERNAME_PATTERN,
-    )
+    username: Optional[str] = None
     participate_in_rating: bool
+
+    _validate_username = field_validator("username")(validate_username_input)
 
 
 class RatingParticipationUpdateRequest(ApiModel):
@@ -133,14 +152,11 @@ class ManagedUserListResponse(ApiModel):
 
 
 class ManagedUserUpdateRequest(ApiModel):
-    username: Optional[str] = Field(
-        default=None,
-        min_length=3,
-        max_length=64,
-        pattern=USERNAME_PATTERN,
-    )
+    username: Optional[str] = None
     score: Optional[int] = Field(default=None, ge=-2_147_483_648, le=2_147_483_647)
     participate_in_rating: Optional[bool] = None
+
+    _validate_username = field_validator("username")(validate_username_input)
 
 
 class AdminUserResponse(ApiModel):
