@@ -146,6 +146,7 @@ Production release больше не делается прямым merge `develo
 Для backend теперь есть отдельный release-контур:
 - источник правды для версии: `backend/VERSION`
 - production tag: `backend/v<version>`
+- GitHub Release: `Backend v<version>`
 - manual rollback / redeploy workflow: `.github/workflows/deploy-backend-release.yml`
 - UI-friendly rollback workflow: `.github/workflows/rollback-backend-release.yml`
 - immutable backend archives на сервере сохраняются в `/opt/rating-service/.releases/`
@@ -156,6 +157,7 @@ Production release больше не делается прямым merge `develo
 
 Это дает:
 - понятную backend version для каждого production release
+- видимый список backend-версий в GitHub UI на вкладке Releases
 - возможность откатываться на конкретный backend tag или commit
 - возможность быстро проверить, какая backend version сейчас реально стоит на production
 

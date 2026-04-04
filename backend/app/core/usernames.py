@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from typing import Optional
 
-
 ANONYMOUS_USERNAME_PREFIX = "anon_user_"
 
 

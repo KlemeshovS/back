@@ -182,6 +182,7 @@ journalctl -u rating-service -n 100 --no-pager
 - workflow уже лежит в репозитории: `.github/workflows/pipeline.yml`
 - manual backend deploy / rollback workflow лежит в репозитории: `.github/workflows/deploy-backend-release.yml`
 - UI-friendly rollback workflow лежит в репозитории: `.github/workflows/rollback-backend-release.yml`
+- production pipeline также создает GitHub Release `Backend v<version>`
 - repository secrets для deploy уже заведены в GitHub
 - целевой основной путь доставки теперь через GitHub Actions, а не через ручной `scp`
 
@@ -195,6 +196,7 @@ journalctl -u rating-service -n 100 --no-pager
 - на `pull_request` в `main` запускает только `verify`
 - на `push` в `main` запускает `verify`, а затем `deploy`
 - перед deploy читает `backend/VERSION` и создает tag `backend/v<version>`, если его еще нет
+- затем создает или обновляет GitHub Release для этого tag
 - `verify` ставит Python и Node tooling, гоняет backend checks, frontend lint/build, Docker config validation и docs sync check
 - `verify` checkout'ит репозиторий с полной историей, чтобы docs sync check мог сравнивать `base sha` и `head sha`
 - `deploy` собирает release archive, копирует его на production и перезапускает `rating-service`

@@ -13,7 +13,7 @@ from app.core.admin_auth import (
     verify_password,
 )
 from app.core.errors import ApiError, ApiErrorCode
-from app.core.usernames import has_public_username, normalize_public_username
+from app.core.usernames import normalize_public_username
 from app.db.database import get_connection
 from app.domain.schemas import (
     AdminAuditLogEntryResponse,

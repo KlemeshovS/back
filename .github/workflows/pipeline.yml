@@ -88,11 +88,14 @@ jobs:
           node-version: "22"
 
       - name: Ensure backend release tag exists
+        id: backend_tag
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           VERSION="$(./scripts/read_backend_version.sh)"
           TAG="backend/v${VERSION}"
+          echo "backend_version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "backend_tag=${TAG}" >> "$GITHUB_OUTPUT"
           git fetch --tags
 
           if git rev-parse "$TAG" >/dev/null 2>&1; then
@@ -107,6 +110,35 @@ jobs:
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
             git tag -a "$TAG" -m "Backend release v${VERSION}"
             git push origin "$TAG"
+          fi
+
+      - name: Ensure GitHub backend release exists
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="${{ steps.backend_tag.outputs.backend_tag }}"
+          VERSION="${{ steps.backend_tag.outputs.backend_version }}"
+          TITLE="Backend v${VERSION}"
+          NOTES_FILE="$(mktemp)"
+
+          {
+            echo "## Backend Release"
+            echo ""
+            echo "- Version: \`${VERSION}\`"
+            echo "- Tag: \`${TAG}\`"
+            echo "- Commit: \`${GITHUB_SHA}\`"
+            echo ""
+            echo "### Production surfaces"
+            echo "- https://api.wobbly.site/api/docs"
+            echo "- https://api.wobbly.site/api/swagger"
+            echo "- https://wobbly.site"
+            echo "- https://admin.wobbly.site/production/"
+          } > "$NOTES_FILE"
+
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release edit "$TAG" --title "$TITLE" --notes-file "$NOTES_FILE"
+          else
+            gh release create "$TAG" --title "$TITLE" --notes-file "$NOTES_FILE"
           fi
 
       - name: Write SSH key
