@@ -197,6 +197,7 @@ journalctl -u rating-service -n 100 --no-pager
 - на `push` в `main` запускает `verify`, а затем `deploy`
 - перед deploy читает `backend/VERSION` и создает tag `backend/v<version>`, если его еще нет
 - затем создает или обновляет GitHub Release для этого tag
+- release notes собираются из commit history между backend release tags через `scripts/generate_backend_release_notes.sh`
 - `verify` ставит Python и Node tooling, гоняет backend checks, frontend lint/build, Docker config validation и docs sync check
 - `verify` checkout'ит репозиторий с полной историей, чтобы docs sync check мог сравнивать `base sha` и `head sha`
 - `deploy` собирает release archive, копирует его на production и перезапускает `rating-service`
@@ -311,6 +312,7 @@ Pipeline опирается на локальные скрипты:
 - `scripts/ci_check.sh`
 - `scripts/check_api_docs_sync.sh`
 - `scripts/deploy_release.sh`
+- `scripts/generate_backend_release_notes.sh`
 - `scripts/read_backend_version.sh`
 
 Systemd templates в репозитории:

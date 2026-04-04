@@ -120,20 +120,7 @@ jobs:
           VERSION="${{ steps.backend_tag.outputs.backend_version }}"
           TITLE="Backend v${VERSION}"
           NOTES_FILE="$(mktemp)"
-
-          {
-            echo "## Backend Release"
-            echo ""
-            echo "- Version: \`${VERSION}\`"
-            echo "- Tag: \`${TAG}\`"
-            echo "- Commit: \`${GITHUB_SHA}\`"
-            echo ""
-            echo "### Production surfaces"
-            echo "- https://api.wobbly.site/api/docs"
-            echo "- https://api.wobbly.site/api/swagger"
-            echo "- https://wobbly.site"
-            echo "- https://admin.wobbly.site/production/"
-          } > "$NOTES_FILE"
+          ./scripts/generate_backend_release_notes.sh "$TAG" "${GITHUB_SHA}" > "$NOTES_FILE"
 
           if gh release view "$TAG" >/dev/null 2>&1; then
             gh release edit "$TAG" --title "$TITLE" --notes-file "$NOTES_FILE"

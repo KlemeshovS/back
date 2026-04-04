@@ -158,6 +158,7 @@ Production release больше не делается прямым merge `develo
 Это дает:
 - понятную backend version для каждого production release
 - видимый список backend-версий в GitHub UI на вкладке Releases
+- release notes по commit history между backend-тегами
 - возможность откатываться на конкретный backend tag или commit
 - возможность быстро проверить, какая backend version сейчас реально стоит на production
 

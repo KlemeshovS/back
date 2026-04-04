@@ -50,20 +50,36 @@ def save_profile(
                 requested_public_username = normalize_public_username(username)
 
                 if username is None:
-                    normalized_username = (
+                    public_username_for_rules = existing_public_username
+                    stored_username = (
                         existing_public_username
                         if existing_public_username is not None
                         else existing_user["username"]
                     )
                 else:
-                    normalized_username = requested_public_username
+                    public_username_for_rules = requested_public_username
+                    stored_username = requested_public_username
 
-                if participate_in_rating and not normalized_username:
+                if participate_in_rating and not public_username_for_rules:
                     raise ApiError(
                         status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
                         code=ApiErrorCode.USERNAME_REQUIRED_FOR_RATING,
                         message="Username is required to participate in rating",
                     )
+
+                if (
+                    existing_public_username
+                    and username is not None
+                    and requested_public_username is None
+                ):
+                    raise ApiError(
+                        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                        code=ApiErrorCode.USERNAME_CANNOT_BE_CLEARED,
+                        message="Username cannot be cleared once set",
+                    )
+
+                if stored_username is None and existing_public_username is None:
+                    stored_username = existing_user["username"]
 
                 cur.execute(
                     """
@@ -75,7 +91,7 @@ def save_profile(
                     WHERE id = %s
                     RETURNING id, username, is_rating_enabled;
                     """,
-                    (normalized_username, participate_in_rating, user_id),
+                    (stored_username, participate_in_rating, user_id),
                 )
                 user = cur.fetchone()
             conn.commit()
