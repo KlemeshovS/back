@@ -48,7 +48,7 @@ Monorepo для `Wobbly`, разделенный на два подпроект�
 
 ## Current Project Snapshot
 
-Если работа переносится в новый чат, это нужно считать актуальной базой проекта:
+Это актуальная базовая сводка по проекту:
 - production API: `https://api.wobbly.site`
 - production Swagger: `https://api.wobbly.site/api/swagger`
 - production text docs: `https://api.wobbly.site/api/docs`
@@ -92,9 +92,9 @@ Monorepo для `Wobbly`, разделенный на два подпроект�
   - `ADMIN_BOOTSTRAP_PASSWORD`
 - bootstrap credentials считаем operational secret и не храним в репозитории
 
-## Chat Transfer Rules
+## Working Rules
 
-Если работа переносится в новый чат, эти правила нужно считать актуальной базой:
+Эти правила нужно считать актуальной базой процесса:
 - основная рабочая ветка: `develop`
 - `main` обновляем только по явной команде пользователя на production release
 - direct merge `develop -> main` больше не используем
@@ -108,7 +108,7 @@ Monorepo для `Wobbly`, разделенный на два подпроект�
 - перед началом работы всегда сначала проверять:
   - `git status --short --branch`
 
-Минимальный порядок чтения в новом чате:
+Минимальный порядок чтения для быстрого входа в проект:
 1. `docs/HANDOFF.md`
 2. `README.md`
 3. `docs/DEPLOY.md`
@@ -135,7 +135,7 @@ Production release больше не делается прямым merge `develo
 1. завершить работу в `develop`
 2. убедиться, что staging-проверка завершена
 3. выбрать новую backend version
-4. на `develop` запустить `./scripts/prepare_main_release.sh codex/release-main <backend-version>`
+4. на `develop` запустить `./scripts/prepare_main_release.sh <release-branch> <backend-version>`
 5. получить временную release-ветку без staging-only workflow/templates/docs и с новым `backend/VERSION`
 6. проверить production-facing docs и surfaces
 7. влить release-ветку в `main`
@@ -169,7 +169,7 @@ Production release больше не делается прямым merge `develo
 ```bash
 git checkout develop
 git pull
-./scripts/prepare_main_release.sh codex/release-main 0.2.0
+./scripts/prepare_main_release.sh release/main 0.2.0
 git status --short --branch
 git commit -am "chore(release): prepare backend v0.2.0"
 ```
@@ -364,6 +364,58 @@ TEST_DATABASE_URL=postgresql://app:app@127.0.0.1:5432/app ./.venv/bin/pytest bac
 
 В CI эти тесты идут через отдельный изолированный PostgreSQL service.
 
+## Локальная разработка
+
+Минимальный рабочий цикл:
+1. перейти на `develop`
+2. обновить ветку и создать короткоживущую рабочую ветку
+3. поднять локальную среду
+4. внести изменение
+5. прогнать локальные проверки
+6. сделать commit
+7. вернуть изменения в `develop`
+
+Базовые команды:
+
+```bash
+git checkout develop
+git pull
+git checkout -b feat/my-change
+cp .env.example .env
+docker compose up --build
+```
+
+Frontend в отдельном dev-режиме:
+
+```bash
+npm --prefix frontend install
+npm --prefix frontend run dev
+```
+
+Backend локально без Docker:
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r backend/requirements-dev.txt
+uvicorn backend.app.main:app --reload
+```
+
+Полезные локальные команды:
+
+```bash
+./scripts/ci_check.sh
+./scripts/install_git_hooks.sh
+docker compose up -d db
+TEST_DATABASE_URL=postgresql://app:app@127.0.0.1:5432/app ./.venv/bin/pytest backend/tests/test_api_db_integration.py
+```
+
+Где что проверять локально:
+- API: `http://localhost:8000`
+- Swagger: `http://localhost:8000/api/swagger`
+- Text docs: `http://localhost:8000/api/docs`
+- Frontend dev server: обычно `http://localhost:5173`
+
 ## Docs Rule
 
 Если меняется API, в том же изменении нужно обновлять:
@@ -396,7 +448,7 @@ TEST_DATABASE_URL=postgresql://app:app@127.0.0.1:5432/app ./.venv/bin/pytest bac
   - `frontend/src/features/admin/api.ts`
   - `backend/app/api/routes/admin.py`
   - `backend/app/services/admin_service.py`
-- для нового чата важно: актуальная рабочая ветка обычно `develop`; не предлагать merge в `main`, если пользователь явно не запросил production release
+- актуальная рабочая ветка обычно `develop`; не обновлять `main`, если не идет осознанный production release
 - если меняется API, нужно обновлять текстовую docs page на `https://api.wobbly.site/api/docs` в том же изменении
 - CI дополнительно проверяет, что API-изменения не уходят без обновления `/api/docs`
 - linters and tests: `ruff`, `pytest`
@@ -418,13 +470,3 @@ TEST_DATABASE_URL=postgresql://app:app@127.0.0.1:5432/app ./.venv/bin/pytest bac
 Что делают hooks:
 - `pre-commit` — `ruff --fix`, `ruff`, Python syntax, frontend ESLint/Prettier
 - `pre-push` — `pytest`, frontend build
-
-## Context Transfer
-
-Если работа переносится в новый чат, новый чат должен сначала прочитать:
-- `docs/HANDOFF.md`
-- `README.md`
-- `docs/BACKEND_ROADMAP.md`
-- `docs/MOBILE_API.md`
-- `docs/DEPLOY.md`
-- `docs/DEVELOPMENT_WORKFLOW.md`

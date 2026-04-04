@@ -2,7 +2,7 @@
 
 ## Read This First
 
-Этот файл нужен для того, чтобы следующий чат или новый участник команды не тратил время на повторное расследование production-схемы.
+Этот файл нужен для того, чтобы следующий участник команды не тратил время на повторное расследование production-схемы.
 
 Если задача связана с production, сначала опираемся на этот файл, и только потом идем проверять сервер.
 
@@ -171,7 +171,7 @@ journalctl -u rating-service -n 100 --no-pager
 2. ветка вливается в `develop`
 3. staging verify/deploy живет только в `develop`
 4. когда пользователь явно запрашивает production release, выбирается новая backend version в `backend/VERSION`
-5. из `develop` готовится отдельная release-ветка через `scripts/prepare_main_release.sh codex/release-main <backend-version>`
+5. из `develop` готовится отдельная release-ветка через `scripts/prepare_main_release.sh <release-branch> <backend-version>`
 6. в release-ветке убираются staging-only workflow/templates/docs
 7. release-ветка вливается в `main`
 8. GitHub Actions запускает `.github/workflows/pipeline.yml`
@@ -439,7 +439,7 @@ curl -I https://wobbly.site
 
 ## Handoff Summary
 
-Если контекст переносится в новый чат, этот блок можно считать краткой operational truth:
+Этот блок можно считать краткой operational truth:
 - production code lives in `/opt/rating-service`
 - service name is `rating-service.service`
 - public reverse proxy is `nginx`

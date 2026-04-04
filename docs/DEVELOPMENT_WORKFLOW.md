@@ -88,9 +88,9 @@ Commit message оформляем по `Conventional Commits`.
 - API-изменение без обновления docs считается незавершенным
 - источником правды для docs page в текущей структуре считается `frontend/src/features/docs/content.ts`
 
-## Handoff Rule
+## Start Here
 
-Если работа переносится в новый чат, сначала нужно прочитать:
+Для быстрого входа в проект сначала нужно прочитать:
 - `docs/HANDOFF.md`
 - `README.md`
 - `docs/BACKEND_ROADMAP.md`
@@ -106,9 +106,9 @@ Commit message оформляем по `Conventional Commits`.
 
 И использовать эти правила как source of truth, пока репозиторий не показывает явное изменение процесса.
 
-## Handoff Checklist
+## Start Checklist
 
-Перед тем как начинать новый анализ после переноса контекста:
+Перед началом работы:
 1. прочитать `docs/HANDOFF.md`
 2. прочитать основные `.md` файлы
 3. сверить локальное состояние через `git status --short --branch`
@@ -152,7 +152,7 @@ Commit message оформляем по `Conventional Commits`.
 1. перейти на `develop`
 2. убедиться, что дерево чистое
 3. выбрать новую backend version
-4. запустить `./scripts/prepare_main_release.sh codex/release-main <backend-version>`
+4. запустить `./scripts/prepare_main_release.sh <release-branch> <backend-version>`
 5. просмотреть release-ветку
 6. закоммитить cleanup staging-only файлов и новую backend version
 7. только потом вливать release-ветку в `main`
@@ -168,6 +168,18 @@ Commit message оформляем по `Conventional Commits`.
 - production tag должен иметь вид `backend/v<version>`
 - одну и ту же backend version нельзя повторно использовать для другого production commit
 - rollback и точечный redeploy делаем через workflow `Deploy Backend Release` по конкретному `git_ref`
+
+Короткий production release path:
+1. на `develop` выбрать новую backend version
+2. запустить `./scripts/prepare_main_release.sh <release-branch> <backend-version>`
+3. закоммитить release branch
+4. влить ее в `main`
+5. дождаться тега `backend/v<version>` и production deploy
+
+Короткий rollback path:
+1. открыть GitHub Actions
+2. выбрать workflow `Deploy Backend Release`
+3. передать старый `backend/v<version>`
 
 Если эти факты не опровергнуты явным изменением в репозитории или на сервере, не надо их перепроверять с нуля.
 
