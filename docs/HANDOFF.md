@@ -8,6 +8,10 @@
 - frontend: `https://github.com/Wobbly-develop/front`
 
 Frontend source больше не живет здесь. Если задача про landing, docs page или admin UI, нужно идти во frontend-репозиторий.
+На сервере frontend тоже должен жить отдельно от backend:
+- backend: `/opt/rating-service`
+- production frontend: `/opt/wobbly-front-production/current`
+- staging frontend: `/opt/wobbly-front-staging/current`
 
 ## Самое важное
 

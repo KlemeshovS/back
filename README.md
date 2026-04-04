@@ -12,7 +12,6 @@ Backend-репозиторий проекта `Wobbly`.
 - backend tests и CI
 - production/staging deploy backend
 - backend release versioning, tags и rollback
-- уже собранный frontend bundle в `backend/app/static`
 
 ## Структура
 
@@ -31,7 +30,10 @@ Backend-репозиторий проекта `Wobbly`.
 
 Исходники landing, docs page и admin UI находятся в [Wobbly-develop/front](https://github.com/Wobbly-develop/front).
 
-В этом репозитории frontend не разрабатывается. Здесь лежит только уже собранный bundle в `backend/app/static`.
+В этом репозитории frontend не разрабатывается и не деплоится. На сервере backend и frontend должны жить раздельно:
+- backend: `/opt/rating-service`
+- production frontend: `/opt/wobbly-front-production/current`
+- staging frontend: `/opt/wobbly-front-staging/current`
 
 ## Быстрый старт
 
