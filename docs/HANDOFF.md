@@ -7,6 +7,7 @@
 ## Project Snapshot
 
 - repository: `https://github.com/Wobbly-develop/wobbly_back`
+- frontend repository: `https://github.com/Wobbly-develop/front`
 - main site: `https://wobbly.site`
 - API: `https://api.wobbly.site`
 - Swagger: `https://api.wobbly.site/api/swagger`
@@ -14,6 +15,10 @@
 - expected active development branch: `develop`
 
 Если задача переносится в новый чат, это нужно считать рабочей правдой без повторного расследования.
+
+Важно:
+- frontend source code теперь живет в отдельном репозитории `Wobbly-develop/front`
+- если ниже в этом файле встречаются пути вида `frontend/...`, их нужно читать как пути внутри frontend-репозитория, а не внутри backend-репозитория
 
 ## Current Production Truth
 
