@@ -61,8 +61,14 @@ jobs:
             echo "API_DOCS_HEAD_REF=${{ github.sha }}" >> "$GITHUB_ENV"
           fi
 
-      - name: Run project checks
-        run: ./scripts/ci_check.sh
+      - name: Run format checks
+        run: ./scripts/format_check.sh
+
+      - name: Run lint checks
+        run: ./scripts/lint.sh
+
+      - name: Run backend tests
+        run: ./scripts/test.sh
 
   deploy:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'

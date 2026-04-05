@@ -55,6 +55,14 @@
 ./scripts/ci_check.sh
 ```
 
+Отдельные стадии:
+
+```bash
+./scripts/format_check.sh
+./scripts/lint.sh
+./scripts/test.sh
+```
+
 Подключение hooks:
 
 ```bash

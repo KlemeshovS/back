@@ -13,9 +13,7 @@ def test_profile_update_rejects_invalid_username() -> None:
 
 
 def test_rating_participation_update_accepts_boolean_toggle() -> None:
-    payload = RatingParticipationUpdateRequest.model_validate(
-        {"participateInRating": False}
-    )
+    payload = RatingParticipationUpdateRequest.model_validate({"participateInRating": False})
 
     assert payload.participate_in_rating is False
 

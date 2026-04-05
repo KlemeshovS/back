@@ -87,10 +87,19 @@ docker compose up -d db
 
 Она запускает:
 - Python syntax checks
-- `ruff`
+- `ruff format --check`
+- `ruff check`
 - `pytest`
 - `docker compose config`
 - API docs sync check
+
+Поштучно:
+
+```bash
+./scripts/format_check.sh
+./scripts/lint.sh
+./scripts/test.sh
+```
 
 Точечный прогон real DB integration tests:
 

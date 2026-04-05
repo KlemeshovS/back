@@ -65,4 +65,3 @@ def db_client(migrated_test_database: str) -> Iterator[TestClient]:
 
     with TestClient(create_app(init_database=False)) as client:
         yield client
-
