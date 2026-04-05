@@ -119,6 +119,8 @@ Git hooks:
 - `develop` — основная ветка разработки
 - `main` — production-only ветка
 - production release делается через release branch, а не прямым `develop -> main`
+- в `main` идем только по прямой просьбе владельца
+- любой push или merge в `main` считается релизом
 
 Путь релиза:
 1. закончить работу в `develop`

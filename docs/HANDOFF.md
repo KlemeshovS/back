@@ -22,6 +22,8 @@ Frontend source больше не живет здесь. Если задача �
 - production service: `rating-service.service`
 - reverse proxy: `nginx`
 - основная ветка разработки: `develop`
+- в `main` идем только по прямой просьбе владельца
+- любой push в `main` считается релизом
 
 ## Что читать
 
@@ -64,5 +66,5 @@ Rollback:
 ## Перед началом работы
 
 1. проверить `git status --short --branch`
-2. убедиться, что вы на нужной ветке
+2. убедиться, что обычная работа идет в `develop`
 3. поднять локальную БД и backend по `README.md`

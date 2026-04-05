@@ -8,6 +8,9 @@
 - `main` — production-only ветка
 - задачи делаются в коротких ветках от `develop`
 - прямой `develop -> main` не используем
+- любые обычные изменения ведутся через `develop`
+- в `main` пушим только по прямой просьбе владельца
+- любой push в `main` считается релизом
 
 ## Именование веток
 
@@ -101,5 +104,7 @@ Hooks используют:
 ## Production rule
 
 - `main` обновляется только через production release
+- `main` обновляется только по прямой просьбе владельца
+- любой merge или push в `main` считается релизом
 - release tags: `backend/v<version>`
 - rollback делается через GitHub Actions, не вручную на сервере
