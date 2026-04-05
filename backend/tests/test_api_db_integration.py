@@ -3,6 +3,7 @@ from __future__ import annotations
 import pytest
 from psycopg import connect
 
+from app.core.apple_auth import AppleIdentity
 from app.core.auth import hash_access_token
 from app.core.google_auth import GoogleIdentity
 
@@ -493,6 +494,123 @@ def test_google_auth_reuses_existing_internal_user(
             cur.execute("SELECT COUNT(*) FROM users;")
             users_count = cur.fetchone()[0]
             cur.execute("SELECT COUNT(*) FROM user_identities WHERE provider = 'google';")
+            identities_count = cur.fetchone()[0]
+
+    assert users_count == 1
+    assert identities_count == 1
+
+
+def test_apple_auth_creates_identity_and_authenticated_session(
+    db_client,
+    integration_database_url,
+    monkeypatch,
+) -> None:
+    from app.services import social_auth_service
+
+    monkeypatch.setattr(
+        social_auth_service,
+        "verify_apple_id_token",
+        lambda token: AppleIdentity(
+            subject="apple-sub-1",
+            email="relay@privaterelay.appleid.com",
+            email_verified=True,
+            is_private_email=True,
+            payload={
+                "iss": "https://appleid.apple.com",
+                "aud": "ios-client",
+                "is_private_email": True,
+            },
+        ),
+    )
+
+    response = db_client.post("/auth/apple", json={"idToken": "apple-token"})
+
+    assert response.status_code == 200
+    payload = response.json()
+
+    with connect(integration_database_url) as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                SELECT id, account_status, auth_token_hash
+                FROM users
+                WHERE id = %s;
+                """,
+                (payload["userId"],),
+            )
+            user_row = cur.fetchone()
+            cur.execute(
+                """
+                SELECT
+                    provider,
+                    provider_user_id,
+                    provider_email,
+                    provider_email_verified,
+                    provider_payload
+                FROM user_identities
+                WHERE user_id = %s;
+                """,
+                (payload["userId"],),
+            )
+            identity_row = cur.fetchone()
+            cur.execute(
+                """
+                SELECT session_type, provider, revoked_at IS NULL AS active
+                FROM user_sessions
+                WHERE user_id = %s
+                ORDER BY id DESC
+                LIMIT 1;
+                """,
+                (payload["userId"],),
+            )
+            session_row = cur.fetchone()
+
+    assert user_row[1] == "active"
+    assert identity_row[0:4] == (
+        "apple",
+        "apple-sub-1",
+        "relay@privaterelay.appleid.com",
+        True,
+    )
+    assert identity_row[4]["is_private_email"] is True
+    assert session_row == ("authenticated", "apple", True)
+
+
+def test_apple_auth_reuses_existing_internal_user(
+    db_client,
+    integration_database_url,
+    monkeypatch,
+) -> None:
+    from app.services import social_auth_service
+
+    monkeypatch.setattr(
+        social_auth_service,
+        "verify_apple_id_token",
+        lambda token: AppleIdentity(
+            subject="apple-sub-2",
+            email="relay@privaterelay.appleid.com",
+            email_verified=True,
+            is_private_email=True,
+            payload={
+                "iss": "https://appleid.apple.com",
+                "aud": "ios-client",
+                "is_private_email": True,
+            },
+        ),
+    )
+
+    first = db_client.post("/auth/apple", json={"idToken": "first"})
+    second = db_client.post("/auth/apple", json={"idToken": "second"})
+
+    assert first.status_code == 200
+    assert second.status_code == 200
+    assert first.json()["userId"] == second.json()["userId"]
+
+    with connect(integration_database_url) as conn:
+        with conn.cursor() as cur:
+            cur.execute("SELECT COUNT(*) FROM users;")
+            users_count = cur.fetchone()[0]
+            cur.execute("SELECT COUNT(*) FROM user_identities WHERE provider = 'apple';")
             identities_count = cur.fetchone()[0]
 
     assert users_count == 1

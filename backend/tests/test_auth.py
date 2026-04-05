@@ -1,3 +1,6 @@
+from __future__ import annotations
+
+from app.core.apple_auth import build_apple_placeholder_username
 from app.core.auth import generate_access_token, hash_access_token
 from app.core.google_auth import build_google_placeholder_username
 
@@ -20,3 +23,9 @@ def test_build_google_placeholder_username_is_stable() -> None:
     subject = "google-subject-123"
 
     assert build_google_placeholder_username(subject) == build_google_placeholder_username(subject)
+
+
+def test_build_apple_placeholder_username_is_stable() -> None:
+    subject = "apple-subject-123"
+
+    assert build_apple_placeholder_username(subject) == build_apple_placeholder_username(subject)

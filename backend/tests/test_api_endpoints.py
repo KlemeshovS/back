@@ -203,6 +203,52 @@ def test_auth_google_is_available_under_api_v1(monkeypatch) -> None:
     }
 
 
+def test_auth_apple_returns_camel_case_response(monkeypatch) -> None:
+    client = build_client()
+
+    monkeypatch.setattr(
+        social_auth_service,
+        "authenticate_apple",
+        lambda id_token: {
+            "user_id": 13,
+            "access_token": "rt_apple",
+            "token_type": "bearer",
+        },
+    )
+
+    response = client.post("/auth/apple", json={"idToken": "apple-id-token"})
+
+    assert response.status_code == 200
+    assert response.json() == {
+        "userId": 13,
+        "accessToken": "rt_apple",
+        "tokenType": "bearer",
+    }
+
+
+def test_auth_apple_is_available_under_api_v1(monkeypatch) -> None:
+    client = build_client()
+
+    monkeypatch.setattr(
+        social_auth_service,
+        "authenticate_apple",
+        lambda id_token: {
+            "user_id": 14,
+            "access_token": "rt_apple_v1",
+            "token_type": "bearer",
+        },
+    )
+
+    response = client.post("/api/v1/auth/apple", json={"idToken": "apple-id-token"})
+
+    assert response.status_code == 200
+    assert response.json() == {
+        "userId": 14,
+        "accessToken": "rt_apple_v1",
+        "tokenType": "bearer",
+    }
+
+
 def test_get_me_requires_authorization_header() -> None:
     client = build_client()
 

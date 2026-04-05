@@ -60,6 +60,10 @@ class GoogleAuthRequest(ApiModel):
     id_token: str = Field(min_length=10, max_length=4096)
 
 
+class AppleAuthRequest(ApiModel):
+    id_token: str = Field(min_length=10, max_length=4096)
+
+
 class AuthSessionResponse(ApiModel):
     user_id: int
     access_token: str
