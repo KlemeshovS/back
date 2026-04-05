@@ -4,6 +4,7 @@ import pytest
 from psycopg import connect
 
 from app.core.auth import hash_access_token
+from app.core.google_auth import GoogleIdentity
 
 pytestmark = pytest.mark.integration_db
 
@@ -400,3 +401,99 @@ def test_real_database_flows_cover_constraint_and_validation_errors(db_client) -
         "code": "USERNAME_REQUIRED_FOR_RATING",
         "message": "Username is required to participate in rating",
     }
+
+
+def test_google_auth_creates_identity_and_authenticated_session(
+    db_client,
+    integration_database_url,
+    monkeypatch,
+) -> None:
+    from app.services import social_auth_service
+
+    monkeypatch.setattr(
+        social_auth_service,
+        "verify_google_id_token",
+        lambda token: GoogleIdentity(
+            subject="google-sub-1",
+            email="user@example.com",
+            email_verified=True,
+            payload={"iss": "https://accounts.google.com", "aud": "mobile-client"},
+        ),
+    )
+
+    response = db_client.post("/auth/google", json={"idToken": "google-token"})
+
+    assert response.status_code == 200
+    payload = response.json()
+
+    with connect(integration_database_url) as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                SELECT id, account_status, auth_token_hash
+                FROM users
+                WHERE id = %s;
+                """,
+                (payload["userId"],),
+            )
+            user_row = cur.fetchone()
+            cur.execute(
+                """
+                SELECT provider, provider_user_id, provider_email, provider_email_verified
+                FROM user_identities
+                WHERE user_id = %s;
+                """,
+                (payload["userId"],),
+            )
+            identity_row = cur.fetchone()
+            cur.execute(
+                """
+                SELECT session_type, provider, revoked_at IS NULL AS active
+                FROM user_sessions
+                WHERE user_id = %s
+                ORDER BY id DESC
+                LIMIT 1;
+                """,
+                (payload["userId"],),
+            )
+            session_row = cur.fetchone()
+
+    assert user_row[1] == "active"
+    assert identity_row == ("google", "google-sub-1", "user@example.com", True)
+    assert session_row == ("authenticated", "google", True)
+
+
+def test_google_auth_reuses_existing_internal_user(
+    db_client,
+    integration_database_url,
+    monkeypatch,
+) -> None:
+    from app.services import social_auth_service
+
+    monkeypatch.setattr(
+        social_auth_service,
+        "verify_google_id_token",
+        lambda token: GoogleIdentity(
+            subject="google-sub-2",
+            email="same@example.com",
+            email_verified=True,
+            payload={"iss": "https://accounts.google.com", "aud": "mobile-client"},
+        ),
+    )
+
+    first = db_client.post("/auth/google", json={"idToken": "first"})
+    second = db_client.post("/auth/google", json={"idToken": "second"})
+
+    assert first.status_code == 200
+    assert second.status_code == 200
+    assert first.json()["userId"] == second.json()["userId"]
+
+    with connect(integration_database_url) as conn:
+        with conn.cursor() as cur:
+            cur.execute("SELECT COUNT(*) FROM users;")
+            users_count = cur.fetchone()[0]
+            cur.execute("SELECT COUNT(*) FROM user_identities WHERE provider = 'google';")
+            identities_count = cur.fetchone()[0]
+
+    assert users_count == 1
+    assert identities_count == 1

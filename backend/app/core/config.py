@@ -33,6 +33,7 @@ class Settings(BaseSettings):
         default="",
         validation_alias="ADMIN_BOOTSTRAP_PASSWORD",
     )
+    google_client_ids: str = Field(default="", validation_alias="GOOGLE_CLIENT_IDS")
 
     model_config = SettingsConfigDict(
         env_file=".env",
@@ -53,6 +54,10 @@ class Settings(BaseSettings):
     @property
     def cors_allowed_origins_list(self) -> list[str]:
         return self._parse_csv(self.cors_allowed_origins)
+
+    @property
+    def google_client_ids_list(self) -> list[str]:
+        return self._parse_csv(self.google_client_ids)
 
 
 settings = Settings()

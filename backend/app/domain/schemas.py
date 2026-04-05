@@ -56,6 +56,16 @@ class AnonymousAuthResponse(ApiModel):
     token_type: str = "bearer"
 
 
+class GoogleAuthRequest(ApiModel):
+    id_token: str = Field(min_length=10, max_length=4096)
+
+
+class AuthSessionResponse(ApiModel):
+    user_id: int
+    access_token: str
+    token_type: str = "bearer"
+
+
 class ProfileUpdateRequest(ApiModel):
     username: Optional[str] = None
     participate_in_rating: bool

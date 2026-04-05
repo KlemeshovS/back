@@ -6,7 +6,7 @@ from typing import Optional
 from app.api.dependencies import get_current_user
 from app.api.routes import health
 from app.core.errors import ApiError, ApiErrorCode
-from app.services import user_service
+from app.services import social_auth_service, user_service
 from tests.helpers import build_client
 
 
@@ -153,6 +153,52 @@ def test_auth_anonymous_is_available_under_api_v1(monkeypatch) -> None:
     assert response.json() == {
         "userId": 10,
         "accessToken": "rt_v1",
+        "tokenType": "bearer",
+    }
+
+
+def test_auth_google_returns_camel_case_response(monkeypatch) -> None:
+    client = build_client()
+
+    monkeypatch.setattr(
+        social_auth_service,
+        "authenticate_google",
+        lambda id_token: {
+            "user_id": 11,
+            "access_token": "rt_google",
+            "token_type": "bearer",
+        },
+    )
+
+    response = client.post("/auth/google", json={"idToken": "google-id-token"})
+
+    assert response.status_code == 200
+    assert response.json() == {
+        "userId": 11,
+        "accessToken": "rt_google",
+        "tokenType": "bearer",
+    }
+
+
+def test_auth_google_is_available_under_api_v1(monkeypatch) -> None:
+    client = build_client()
+
+    monkeypatch.setattr(
+        social_auth_service,
+        "authenticate_google",
+        lambda id_token: {
+            "user_id": 12,
+            "access_token": "rt_google_v1",
+            "token_type": "bearer",
+        },
+    )
+
+    response = client.post("/api/v1/auth/google", json={"idToken": "google-id-token"})
+
+    assert response.status_code == 200
+    assert response.json() == {
+        "userId": 12,
+        "accessToken": "rt_google_v1",
         "tokenType": "bearer",
     }
 

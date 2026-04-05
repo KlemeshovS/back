@@ -1,4 +1,5 @@
 from app.core.auth import generate_access_token, hash_access_token
+from app.core.google_auth import build_google_placeholder_username
 
 
 def test_generate_access_token_has_expected_prefix() -> None:
@@ -13,3 +14,9 @@ def test_hash_access_token_is_stable() -> None:
 
     assert hash_access_token(token) == hash_access_token(token)
     assert hash_access_token(token) != hash_access_token("rt_other_token")
+
+
+def test_build_google_placeholder_username_is_stable() -> None:
+    subject = "google-subject-123"
+
+    assert build_google_placeholder_username(subject) == build_google_placeholder_username(subject)
