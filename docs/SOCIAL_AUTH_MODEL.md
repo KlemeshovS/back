@@ -134,8 +134,11 @@ Anonymous auth создает полноценную запись в `users`, а
 
 - token больше не хранится в `users`
 - token хранится в `user_sessions`
-- access token — короткоживущий ключ доступа
-- refresh token — опционально, но желательно для нормальной auth-модели
+- access token — opaque bearer token, который backend хранит только в виде hash
+- refresh token — отдельный opaque bearer token, который backend хранит только в виде hash
+- access token используется для обычных API вызовов и `GET /auth/session`
+- refresh token используется только для `POST /auth/refresh`
+- `POST /auth/logout` отзывает текущую session
 
 ## 4. Guest state
 

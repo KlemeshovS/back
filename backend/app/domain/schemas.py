@@ -71,7 +71,24 @@ class YandexAuthRequest(ApiModel):
 class AuthSessionResponse(ApiModel):
     user_id: int
     access_token: str
+    refresh_token: Optional[str] = None
     token_type: str = "bearer"
+
+
+class RefreshSessionRequest(ApiModel):
+    refresh_token: str = Field(min_length=10, max_length=4096)
+
+
+class LogoutResponse(ApiModel):
+    status: str = "loggedOut"
+
+
+class SessionRestoreResponse(ApiModel):
+    user_id: int
+    username: Optional[str] = None
+    participate_in_rating: bool
+    session_type: str
+    provider: Optional[str] = None
 
 
 class ProfileUpdateRequest(ApiModel):

@@ -720,3 +720,98 @@ def test_yandex_auth_reuses_existing_internal_user(
 
     assert users_count == 1
     assert identities_count == 1
+
+
+def test_authenticated_session_restore_refresh_and_logout_flow(
+    db_client,
+    integration_database_url,
+    monkeypatch,
+) -> None:
+    from app.services import social_auth_service
+
+    monkeypatch.setattr(
+        social_auth_service,
+        "verify_google_id_token",
+        lambda token: GoogleIdentity(
+            subject="google-sub-session-1",
+            email="session@example.com",
+            email_verified=True,
+            payload={"iss": "https://accounts.google.com", "aud": "mobile-client"},
+        ),
+    )
+
+    login_response = db_client.post("/auth/google", json={"idToken": "google-token"})
+
+    assert login_response.status_code == 200
+    login_payload = login_response.json()
+    assert login_payload["refreshToken"].startswith("rf_")
+
+    restore_response = db_client.get(
+        "/auth/session",
+        headers=auth_headers(login_payload["accessToken"]),
+    )
+
+    assert restore_response.status_code == 200
+    assert restore_response.json()["sessionType"] == "authenticated"
+    assert restore_response.json()["provider"] == "google"
+
+    refresh_response = db_client.post(
+        "/auth/refresh",
+        json={"refreshToken": login_payload["refreshToken"]},
+    )
+
+    assert refresh_response.status_code == 200
+    refreshed_payload = refresh_response.json()
+    assert refreshed_payload["userId"] == login_payload["userId"]
+    assert refreshed_payload["accessToken"] != login_payload["accessToken"]
+    assert refreshed_payload["refreshToken"] != login_payload["refreshToken"]
+
+    old_access_response = db_client.get(
+        "/me",
+        headers=auth_headers(login_payload["accessToken"]),
+    )
+    assert old_access_response.status_code == 401
+    assert old_access_response.json() == {
+        "code": "INVALID_TOKEN",
+        "message": "Invalid token",
+    }
+
+    new_access_response = db_client.get(
+        "/me",
+        headers=auth_headers(refreshed_payload["accessToken"]),
+    )
+    assert new_access_response.status_code == 200
+    assert new_access_response.json()["id"] == login_payload["userId"]
+
+    logout_response = db_client.post(
+        "/auth/logout",
+        headers=auth_headers(refreshed_payload["accessToken"]),
+    )
+    assert logout_response.status_code == 200
+    assert logout_response.json() == {"status": "loggedOut"}
+
+    revoked_response = db_client.get(
+        "/me",
+        headers=auth_headers(refreshed_payload["accessToken"]),
+    )
+    assert revoked_response.status_code == 401
+    assert revoked_response.json() == {
+        "code": "INVALID_TOKEN",
+        "message": "Invalid token",
+    }
+
+    with connect(integration_database_url) as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                SELECT refresh_token_hash IS NOT NULL, expires_at IS NOT NULL
+                FROM user_sessions
+                WHERE user_id = %s
+                ORDER BY id DESC
+                LIMIT 1;
+                """,
+                (login_payload["userId"],),
+            )
+            session_row = cur.fetchone()
+
+    assert session_row == (True, True)

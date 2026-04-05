@@ -3,10 +3,10 @@ from __future__ import annotations
 from contextlib import contextmanager
 from typing import Optional
 
-from app.api.dependencies import get_current_user
+from app.api.dependencies import get_current_user, get_current_user_session
 from app.api.routes import health
 from app.core.errors import ApiError, ApiErrorCode
-from app.services import social_auth_service, user_service
+from app.services import session_service, social_auth_service, user_service
 from tests.helpers import build_client
 
 
@@ -166,6 +166,7 @@ def test_auth_google_returns_camel_case_response(monkeypatch) -> None:
         lambda id_token: {
             "user_id": 11,
             "access_token": "rt_google",
+            "refresh_token": "rf_google",
             "token_type": "bearer",
         },
     )
@@ -176,6 +177,7 @@ def test_auth_google_returns_camel_case_response(monkeypatch) -> None:
     assert response.json() == {
         "userId": 11,
         "accessToken": "rt_google",
+        "refreshToken": "rf_google",
         "tokenType": "bearer",
     }
 
@@ -189,6 +191,7 @@ def test_auth_google_is_available_under_api_v1(monkeypatch) -> None:
         lambda id_token: {
             "user_id": 12,
             "access_token": "rt_google_v1",
+            "refresh_token": "rf_google_v1",
             "token_type": "bearer",
         },
     )
@@ -199,6 +202,7 @@ def test_auth_google_is_available_under_api_v1(monkeypatch) -> None:
     assert response.json() == {
         "userId": 12,
         "accessToken": "rt_google_v1",
+        "refreshToken": "rf_google_v1",
         "tokenType": "bearer",
     }
 
@@ -212,6 +216,7 @@ def test_auth_apple_returns_camel_case_response(monkeypatch) -> None:
         lambda id_token: {
             "user_id": 13,
             "access_token": "rt_apple",
+            "refresh_token": "rf_apple",
             "token_type": "bearer",
         },
     )
@@ -222,6 +227,7 @@ def test_auth_apple_returns_camel_case_response(monkeypatch) -> None:
     assert response.json() == {
         "userId": 13,
         "accessToken": "rt_apple",
+        "refreshToken": "rf_apple",
         "tokenType": "bearer",
     }
 
@@ -235,6 +241,7 @@ def test_auth_apple_is_available_under_api_v1(monkeypatch) -> None:
         lambda id_token: {
             "user_id": 14,
             "access_token": "rt_apple_v1",
+            "refresh_token": "rf_apple_v1",
             "token_type": "bearer",
         },
     )
@@ -245,6 +252,7 @@ def test_auth_apple_is_available_under_api_v1(monkeypatch) -> None:
     assert response.json() == {
         "userId": 14,
         "accessToken": "rt_apple_v1",
+        "refreshToken": "rf_apple_v1",
         "tokenType": "bearer",
     }
 
@@ -258,6 +266,7 @@ def test_auth_yandex_returns_camel_case_response(monkeypatch) -> None:
         lambda access_token: {
             "user_id": 15,
             "access_token": "rt_yandex",
+            "refresh_token": "rf_yandex",
             "token_type": "bearer",
         },
     )
@@ -268,6 +277,7 @@ def test_auth_yandex_returns_camel_case_response(monkeypatch) -> None:
     assert response.json() == {
         "userId": 15,
         "accessToken": "rt_yandex",
+        "refreshToken": "rf_yandex",
         "tokenType": "bearer",
     }
 
@@ -281,6 +291,7 @@ def test_auth_yandex_is_available_under_api_v1(monkeypatch) -> None:
         lambda access_token: {
             "user_id": 16,
             "access_token": "rt_yandex_v1",
+            "refresh_token": "rf_yandex_v1",
             "token_type": "bearer",
         },
     )
@@ -291,8 +302,81 @@ def test_auth_yandex_is_available_under_api_v1(monkeypatch) -> None:
     assert response.json() == {
         "userId": 16,
         "accessToken": "rt_yandex_v1",
+        "refreshToken": "rf_yandex_v1",
         "tokenType": "bearer",
     }
+
+
+def test_auth_session_restore_returns_current_session(monkeypatch) -> None:
+    client = build_client()
+
+    client.app.dependency_overrides[get_current_user_session] = lambda: {
+        "id": 21,
+        "username": "restored_user",
+        "is_rating_enabled": True,
+        "session_type": "authenticated",
+        "provider": "google",
+    }
+
+    response = client.get("/auth/session", headers={"Authorization": "Bearer token"})
+
+    assert response.status_code == 200
+    assert response.json() == {
+        "userId": 21,
+        "username": "restored_user",
+        "participateInRating": True,
+        "sessionType": "authenticated",
+        "provider": "google",
+    }
+
+
+def test_auth_refresh_returns_new_session_tokens(monkeypatch) -> None:
+    client = build_client()
+
+    monkeypatch.setattr(
+        session_service,
+        "refresh_authenticated_session",
+        lambda refresh_token: {
+            "user_id": 22,
+            "access_token": "rt_refreshed",
+            "refresh_token": "rf_refreshed",
+            "token_type": "bearer",
+        },
+    )
+
+    response = client.post("/auth/refresh", json={"refreshToken": "rf_old_token"})
+
+    assert response.status_code == 200
+    assert response.json() == {
+        "userId": 22,
+        "accessToken": "rt_refreshed",
+        "refreshToken": "rf_refreshed",
+        "tokenType": "bearer",
+    }
+
+
+def test_auth_logout_returns_status(monkeypatch) -> None:
+    client = build_client()
+
+    client.app.dependency_overrides[get_current_user_session] = lambda: {
+        "id": 23,
+        "username": "logout_user",
+        "is_rating_enabled": False,
+        "session_type": "authenticated",
+        "provider": "google",
+        "session_id": 55,
+    }
+
+    monkeypatch.setattr(
+        session_service,
+        "logout_session",
+        lambda current_session: {"status": "loggedOut"},
+    )
+
+    response = client.post("/auth/logout", headers={"Authorization": "Bearer token"})
+
+    assert response.status_code == 200
+    assert response.json() == {"status": "loggedOut"}
 
 
 def test_get_me_requires_authorization_header() -> None:

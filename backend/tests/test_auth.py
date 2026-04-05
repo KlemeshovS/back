@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from app.core.apple_auth import build_apple_placeholder_username
-from app.core.auth import generate_access_token, hash_access_token
+from app.core.auth import generate_access_token, generate_refresh_token, hash_access_token
 from app.core.google_auth import build_google_placeholder_username
 from app.core.yandex_auth import build_yandex_placeholder_username
 
@@ -10,6 +10,13 @@ def test_generate_access_token_has_expected_prefix() -> None:
     token = generate_access_token()
 
     assert token.startswith("rt_")
+    assert len(token) > 10
+
+
+def test_generate_refresh_token_has_expected_prefix() -> None:
+    token = generate_refresh_token()
+
+    assert token.startswith("rf_")
     assert len(token) > 10
 
 

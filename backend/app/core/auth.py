@@ -6,5 +6,9 @@ def generate_access_token() -> str:
     return f"rt_{token_urlsafe(32)}"
 
 
+def generate_refresh_token() -> str:
+    return f"rf_{token_urlsafe(48)}"
+
+
 def hash_access_token(token: str) -> str:
     return sha256(token.encode("utf-8")).hexdigest()

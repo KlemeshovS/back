@@ -3,17 +3,15 @@ from __future__ import annotations
 import json
 
 from app.core.apple_auth import build_apple_placeholder_username, verify_apple_id_token
-from app.core.auth import generate_access_token, hash_access_token
 from app.core.google_auth import build_google_placeholder_username, verify_google_id_token
 from app.core.yandex_auth import build_yandex_placeholder_username, verify_yandex_access_token
 from app.db.database import get_connection
 from app.domain.schemas import AuthSessionResponse
+from app.services.session_service import issue_authenticated_session
 
 
 def authenticate_google(id_token: str) -> AuthSessionResponse:
     identity = verify_google_id_token(id_token)
-    access_token = generate_access_token()
-    token_hash = hash_access_token(access_token)
 
     with get_connection() as conn:
         with conn.cursor() as cur:
@@ -34,16 +32,12 @@ def authenticate_google(id_token: str) -> AuthSessionResponse:
                     """
                     INSERT INTO users (
                         username,
-                        auth_token_hash,
                         account_status
                     )
-                    VALUES (%s, %s, 'active')
+                    VALUES (%s, 'active')
                     RETURNING id;
                     """,
-                    (
-                        build_google_placeholder_username(identity.subject),
-                        token_hash,
-                    ),
+                    (build_google_placeholder_username(identity.subject),),
                 )
                 user = cur.fetchone()
                 user_id = user["id"]
@@ -72,13 +66,12 @@ def authenticate_google(id_token: str) -> AuthSessionResponse:
                 cur.execute(
                     """
                     UPDATE users
-                    SET auth_token_hash = %s,
-                        account_status = 'active',
+                    SET account_status = 'active',
                         updated_at = NOW(),
                         last_seen_at = NOW()
                     WHERE id = %s;
                     """,
-                    (token_hash, user_id),
+                    (user_id,),
                 )
                 cur.execute(
                     """
@@ -99,38 +92,13 @@ def authenticate_google(id_token: str) -> AuthSessionResponse:
                         identity.subject,
                     ),
                 )
-
-            cur.execute(
-                """
-                UPDATE user_sessions
-                SET revoked_at = NOW()
-                WHERE user_id = %s
-                  AND session_type = 'authenticated'
-                  AND revoked_at IS NULL;
-                """,
-                (user_id,),
-            )
-            cur.execute(
-                """
-                INSERT INTO user_sessions (
-                    user_id,
-                    access_token_hash,
-                    session_type,
-                    provider
-                )
-                VALUES (%s, %s, 'authenticated', 'google');
-                """,
-                (user_id, token_hash),
-            )
         conn.commit()
 
-    return AuthSessionResponse(user_id=user_id, access_token=access_token)
+    return issue_authenticated_session(user_id, "google")
 
 
 def authenticate_apple(id_token: str) -> AuthSessionResponse:
     identity = verify_apple_id_token(id_token)
-    access_token = generate_access_token()
-    token_hash = hash_access_token(access_token)
 
     with get_connection() as conn:
         with conn.cursor() as cur:
@@ -151,16 +119,12 @@ def authenticate_apple(id_token: str) -> AuthSessionResponse:
                     """
                     INSERT INTO users (
                         username,
-                        auth_token_hash,
                         account_status
                     )
-                    VALUES (%s, %s, 'active')
+                    VALUES (%s, 'active')
                     RETURNING id;
                     """,
-                    (
-                        build_apple_placeholder_username(identity.subject),
-                        token_hash,
-                    ),
+                    (build_apple_placeholder_username(identity.subject),),
                 )
                 user = cur.fetchone()
                 user_id = user["id"]
@@ -189,13 +153,12 @@ def authenticate_apple(id_token: str) -> AuthSessionResponse:
                 cur.execute(
                     """
                     UPDATE users
-                    SET auth_token_hash = %s,
-                        account_status = 'active',
+                    SET account_status = 'active',
                         updated_at = NOW(),
                         last_seen_at = NOW()
                     WHERE id = %s;
                     """,
-                    (token_hash, user_id),
+                    (user_id,),
                 )
                 cur.execute(
                     """
@@ -216,38 +179,13 @@ def authenticate_apple(id_token: str) -> AuthSessionResponse:
                         identity.subject,
                     ),
                 )
-
-            cur.execute(
-                """
-                UPDATE user_sessions
-                SET revoked_at = NOW()
-                WHERE user_id = %s
-                  AND session_type = 'authenticated'
-                  AND revoked_at IS NULL;
-                """,
-                (user_id,),
-            )
-            cur.execute(
-                """
-                INSERT INTO user_sessions (
-                    user_id,
-                    access_token_hash,
-                    session_type,
-                    provider
-                )
-                VALUES (%s, %s, 'authenticated', 'apple');
-                """,
-                (user_id, token_hash),
-            )
         conn.commit()
 
-    return AuthSessionResponse(user_id=user_id, access_token=access_token)
+    return issue_authenticated_session(user_id, "apple")
 
 
 def authenticate_yandex(access_token: str) -> AuthSessionResponse:
     identity = verify_yandex_access_token(access_token)
-    session_access_token = generate_access_token()
-    token_hash = hash_access_token(session_access_token)
 
     with get_connection() as conn:
         with conn.cursor() as cur:
@@ -268,16 +206,12 @@ def authenticate_yandex(access_token: str) -> AuthSessionResponse:
                     """
                     INSERT INTO users (
                         username,
-                        auth_token_hash,
                         account_status
                     )
-                    VALUES (%s, %s, 'active')
+                    VALUES (%s, 'active')
                     RETURNING id;
                     """,
-                    (
-                        build_yandex_placeholder_username(identity.subject),
-                        token_hash,
-                    ),
+                    (build_yandex_placeholder_username(identity.subject),),
                 )
                 user = cur.fetchone()
                 user_id = user["id"]
@@ -306,13 +240,12 @@ def authenticate_yandex(access_token: str) -> AuthSessionResponse:
                 cur.execute(
                     """
                     UPDATE users
-                    SET auth_token_hash = %s,
-                        account_status = 'active',
+                    SET account_status = 'active',
                         updated_at = NOW(),
                         last_seen_at = NOW()
                     WHERE id = %s;
                     """,
-                    (token_hash, user_id),
+                    (user_id,),
                 )
                 cur.execute(
                     """
@@ -333,29 +266,6 @@ def authenticate_yandex(access_token: str) -> AuthSessionResponse:
                         identity.subject,
                     ),
                 )
-
-            cur.execute(
-                """
-                UPDATE user_sessions
-                SET revoked_at = NOW()
-                WHERE user_id = %s
-                  AND session_type = 'authenticated'
-                  AND revoked_at IS NULL;
-                """,
-                (user_id,),
-            )
-            cur.execute(
-                """
-                INSERT INTO user_sessions (
-                    user_id,
-                    access_token_hash,
-                    session_type,
-                    provider
-                )
-                VALUES (%s, %s, 'authenticated', 'yandex');
-                """,
-                (user_id, token_hash),
-            )
         conn.commit()
 
-    return AuthSessionResponse(user_id=user_id, access_token=session_access_token)
+    return issue_authenticated_session(user_id, "yandex")

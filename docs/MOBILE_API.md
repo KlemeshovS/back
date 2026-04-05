@@ -27,9 +27,11 @@ Authorization: Bearer <accessToken>
 
 Защищенные методы:
 - `GET /api/v1/me`
+- `GET /api/v1/auth/session`
 - `PATCH /api/v1/me/profile`
 - `PATCH /api/v1/me/rating`
 - `POST /api/v1/me/score`
+- `POST /api/v1/auth/logout`
 
 ## Базовый mobile flow
 
@@ -52,6 +54,12 @@ Authorization: Bearer <accessToken>
 - `PATCH /api/v1/me/profile` — сохранить `username` и участие
 - `PATCH /api/v1/me/rating` — отдельно включить или выключить участие
 - `POST /api/v1/me/score` — обновить score
+
+### Внутренняя session model для social auth
+
+- `GET /api/v1/auth/session` — восстановить текущую сессию по `accessToken`
+- `POST /api/v1/auth/refresh` — обменять `refreshToken` на новую пару токенов
+- `POST /api/v1/auth/logout` — завершить текущую сессию
 
 ### Таблицы рейтинга
 
@@ -81,6 +89,34 @@ Authorization: Bearer <accessToken>
 - `id`
 - `username`
 - `participateInRating`
+
+### `GET /api/v1/auth/session`
+
+Возвращает текущую серверную сессию и базовое состояние пользователя.
+
+Поля ответа:
+- `userId`
+- `username`
+- `participateInRating`
+- `sessionType`
+- `provider`
+
+### `POST /api/v1/auth/refresh`
+
+Обновляет пару токенов по `refreshToken`.
+
+Тело запроса:
+- `refreshToken`
+
+Поля ответа:
+- `userId`
+- `accessToken`
+- `refreshToken`
+- `tokenType`
+
+### `POST /api/v1/auth/logout`
+
+Завершает текущую сессию.
 
 ### `PATCH /api/v1/me/profile`
 

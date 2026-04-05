@@ -36,6 +36,10 @@ class Settings(BaseSettings):
     google_client_ids: str = Field(default="", validation_alias="GOOGLE_CLIENT_IDS")
     apple_client_ids: str = Field(default="", validation_alias="APPLE_CLIENT_IDS")
     yandex_client_ids: str = Field(default="", validation_alias="YANDEX_CLIENT_IDS")
+    auth_refresh_token_ttl_seconds: int = Field(
+        default=2_592_000,
+        validation_alias="AUTH_REFRESH_TOKEN_TTL_SECONDS",
+    )
 
     model_config = SettingsConfigDict(
         env_file=".env",
