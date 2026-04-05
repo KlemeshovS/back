@@ -51,14 +51,6 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r backend/requirements.txt pytest ruff httpx
 
-      - name: Setup Node
-        uses: actions/setup-node@v6
-        with:
-          node-version: "22"
-
-      - name: Install frontend dependencies
-        run: npm ci --prefix frontend
-
       - name: Determine docs sync base ref
         run: |
           if [ "${{ github.event_name }}" = "pull_request" ]; then
@@ -69,8 +61,14 @@ jobs:
             echo "API_DOCS_HEAD_REF=${{ github.sha }}" >> "$GITHUB_ENV"
           fi
 
-      - name: Run project checks
-        run: ./scripts/ci_check.sh
+      - name: Run format checks
+        run: ./scripts/format_check.sh
+
+      - name: Run lint checks
+        run: ./scripts/lint.sh
+
+      - name: Run backend tests
+        run: ./scripts/test.sh
 
   deploy:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
@@ -81,11 +79,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
-
-      - name: Setup Node
-        uses: actions/setup-node@v6
-        with:
-          node-version: "22"
 
       - name: Ensure backend release tag exists
         id: backend_tag

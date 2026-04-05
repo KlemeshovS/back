@@ -25,11 +25,6 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
 cd "$ROOT_DIR"
 
-if [[ -f "${ROOT_DIR}/frontend/package.json" ]]; then
-  npm --prefix "${ROOT_DIR}/frontend" ci
-  npm --prefix "${ROOT_DIR}/frontend" run build
-fi
-
 export COPYFILE_DISABLE=1
 
 tar \
@@ -44,8 +39,7 @@ tar \
   --exclude=".venv" \
   --exclude=".pytest_cache" \
   --exclude=".ruff_cache" \
-  --exclude="frontend/node_modules" \
-  --exclude="frontend/dist" \
+  --exclude="frontend" \
   -czf "$TMP_ARCHIVE" .
 
 ssh -o BatchMode=yes -i "$SSH_KEY_PATH" "${DEPLOY_USER}@${DEPLOY_HOST}" "mkdir -p '${REMOTE_BACKUP_DIR}' '${REMOTE_RELEASE_DIR}'"
@@ -56,11 +50,6 @@ ssh -o BatchMode=yes -i "$SSH_KEY_PATH" "${DEPLOY_USER}@${DEPLOY_HOST}" "\
     cp '${DEPLOY_PATH}/backend/app/main.py' '${REMOTE_BACKUP_DIR}/main.py'; \
   elif [ -f '${DEPLOY_PATH}/app/main.py' ]; then \
     cp '${DEPLOY_PATH}/app/main.py' '${REMOTE_BACKUP_DIR}/main.py'; \
-  fi && \
-  if [ -f '${DEPLOY_PATH}/backend/app/static/index.html' ]; then \
-    cp '${DEPLOY_PATH}/backend/app/static/index.html' '${REMOTE_BACKUP_DIR}/index.html'; \
-  elif [ -f '${DEPLOY_PATH}/app/static/pages/landing.html' ]; then \
-    cp '${DEPLOY_PATH}/app/static/pages/landing.html' '${REMOTE_BACKUP_DIR}/landing.html'; \
   fi && \
   cp '${REMOTE_TMP_ARCHIVE}' '${REMOTE_RELEASE_DIR}/${ARCHIVE_NAME}' && \
   tar -xzf '${REMOTE_TMP_ARCHIVE}' -C '${DEPLOY_PATH}' && \

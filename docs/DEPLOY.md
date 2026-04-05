@@ -19,6 +19,8 @@
 - `rating-service.service`
 - `uvicorn`
 - код приложения лежит в `/opt/rating-service`
+- production frontend лежит в `/opt/wobbly-front-production/current`
+- staging frontend лежит в `/opt/wobbly-front-staging/current`
 - схема БД управляется через `Alembic`
 
 Сетевые адреса:
@@ -35,7 +37,8 @@ Admin baseline:
 - admin public URL: `https://admin.wobbly.site`
 - admin UI paths:
   - `/production/`
-- `admin.wobbly.site/production/` использует production UI shell с `127.0.0.1:8000`
+- `admin.wobbly.site/production/` должен обслуживаться отдельным production frontend bundle
+- `admin.wobbly.site/staging/` должен обслуживаться отдельным staging frontend bundle
 - admin same-origin API:
   - `/production/api/...` -> production `/admin/...`
 - admin frontend assets теперь идут через:
@@ -78,22 +81,27 @@ ssh -i /Users/klem/Documents/eguene/deploy_key root@api.wobbly.site
 Ключевые пути:
 - app code: `/opt/rating-service/backend/app`
 - backups created during manual deploys: `/opt/rating-service/.deploy-backups`
+- production frontend bundle: `/opt/wobbly-front-production/current`
+- staging backend: `/opt/rating-service-staging`
+- staging frontend bundle: `/opt/wobbly-front-staging/current`
 
 ## Source Of Truth For Docs Page
 
 Человекочитаемая API docs page на `https://api.wobbly.site/api/docs` собирается клиентским JavaScript.
 
 Файлы:
-- `frontend/src/pages/ApiDocsPage.vue`
-- `frontend/src/features/docs/content.ts`
-- build output в `backend/app/static/`
+- frontend repo: [Wobbly-develop/front](https://github.com/Wobbly-develop/front)
+- `src/pages/ApiDocsPage.vue`
+- `src/features/docs/content.ts`
+- production build output должен выкладываться в отдельный frontend deploy dir и раздаваться nginx
 
 Это важно для проверки:
 - сырой `curl` по `/api/docs` покажет HTML-оболочку
-- содержимое секций и endpoint descriptions живет в `frontend/src/features/docs/content.ts`
-- если нужно проверить, обновилась ли текстовая документация после API change, смотри и production URL, и `frontend/src/features/docs/content.ts`
+- содержимое секций и endpoint descriptions живет в frontend-репозитории, в `src/features/docs/content.ts`
+- если нужно проверить, обновилась ли текстовая документация после API change, смотри и production URL, и frontend repo `src/features/docs/content.ts`
 - docs page должна грузить assets через `/assets/...`
 - если `/api/docs` белая, сначала проверить 404 на frontend bundle, а не backend routes
+- если браузер продолжает показывать старый HTML или `Welcome to nginx!`, сначала сделать hard reload или открыть страницу в incognito: после разделения front/back браузер может держать старую SPA-оболочку в disk cache
 
 ## Quick Verification Commands
 
@@ -144,6 +152,7 @@ journalctl -u rating-service -n 100 --no-pager
 Текущие домены обслуживаются через nginx:
 - `api.wobbly.site`
 - `wobbly.site`
+- `admin.wobbly.site`
 
 Для `api.wobbly.site` rate limiting config теперь хранится в репозитории:
 - `deploy/nginx/api-rate-limits.conf`
@@ -198,9 +207,10 @@ journalctl -u rating-service -n 100 --no-pager
 - перед deploy читает `backend/VERSION` и создает tag `backend/v<version>`, если его еще нет
 - затем создает или обновляет GitHub Release для этого tag
 - release notes собираются из commit history между backend release tags через `scripts/generate_backend_release_notes.sh`
-- `verify` ставит Python и Node tooling, гоняет backend checks, frontend lint/build, Docker config validation и docs sync check
+- `verify` работает только с backend-кодом и не зависит от frontend source
 - `verify` checkout'ит репозиторий с полной историей, чтобы docs sync check мог сравнивать `base sha` и `head sha`
 - `deploy` собирает release archive, копирует его на production и перезапускает `rating-service`
+- `deploy` выкатывает только backend-код; frontend выкатывается отдельным workflow из frontend-репозитория
 
 `deploy-backend-release.yml` делает следующее:
 - запускается вручную через `workflow_dispatch`
@@ -336,6 +346,7 @@ Systemd templates в репозитории:
 - `nginx` конфиги не раскатываются текущим GitHub Actions deploy автоматически
 - изменения в `deploy/nginx/` нужно применять на сервер отдельно через `nginx -t` и `systemctl reload nginx`
 - admin host routing на `admin.wobbly.site` тоже не раскатывается автоматически через pipeline и остается отдельной server-side обязанностью
+- live production сейчас уже переключен на независимую схему frontend/backend; репозиторий должен оставаться с ней синхронен
 
 ## API Docs Sync Rule
 
@@ -351,7 +362,7 @@ Systemd templates в репозитории:
 - auth and shared behavior могут жить в `backend/app/core/`
 
 Если поведение API меняется, вместе с этим должны обновляться:
-- `frontend/src/features/docs/content.ts`
+- frontend repo: `src/features/docs/content.ts`
 - при необходимости `docs/MOBILE_API.md`
 - при необходимости `README.md`
 

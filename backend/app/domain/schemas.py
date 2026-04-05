@@ -18,6 +18,7 @@ class ApiModel(BaseModel):
         populate_by_name=True,
     )
 
+
 USERNAME_PATTERN = r"^[A-Za-z0-9_.-]+$"
 Username = str
 

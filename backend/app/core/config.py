@@ -54,4 +54,5 @@ class Settings(BaseSettings):
     def cors_allowed_origins_list(self) -> list[str]:
         return self._parse_csv(self.cors_allowed_origins)
 
+
 settings = Settings()

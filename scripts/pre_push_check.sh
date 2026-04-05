@@ -21,7 +21,11 @@ fi
 echo "Running pytest"
 "$PYTHON_BIN" -m pytest
 
-echo "Running frontend build"
-npm --prefix frontend run build
+if [[ -f "frontend/package.json" ]]; then
+  echo "Running frontend build"
+  npm --prefix frontend run build
+else
+  echo "Frontend source not present in this repository, skipping frontend build"
+fi
 
 echo "Pre-push checks completed"

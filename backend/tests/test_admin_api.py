@@ -85,6 +85,84 @@ def test_admin_can_patch_managed_user(monkeypatch) -> None:
     assert response.status_code == 200
     assert response.json()["username"] == "edited_user"
     assert response.json()["participateInRating"] is True
+    assert response.json()["createdAt"] == "2026-03-19T12:00:00Z"
+
+
+def test_admin_can_read_managed_user_detail(monkeypatch) -> None:
+    client = build_client()
+    client.app.dependency_overrides[get_current_admin] = lambda: {
+        "id": 1,
+        "login": "owner",
+        "role": "owner",
+        "is_active": True,
+    }
+
+    monkeypatch.setattr(
+        admin_service,
+        "get_managed_user",
+        lambda user_id: {
+            "id": user_id,
+            "username": "detail_user",
+            "score": 321,
+            "participate_in_rating": True,
+            "created_at": "2026-03-19T10:00:00Z",
+            "updated_at": "2026-03-19T11:00:00Z",
+            "last_seen_at": "2026-03-19T11:05:00Z",
+        },
+    )
+
+    response = client.get(
+        "/admin/users/14",
+        headers={"Authorization": "Bearer owner"},
+    )
+
+    assert response.status_code == 200
+    assert response.json() == {
+        "id": 14,
+        "username": "detail_user",
+        "score": 321,
+        "participateInRating": True,
+        "createdAt": "2026-03-19T10:00:00Z",
+        "updatedAt": "2026-03-19T11:00:00Z",
+        "lastSeenAt": "2026-03-19T11:05:00Z",
+    }
+
+
+def test_admin_user_list_exposes_created_at(monkeypatch) -> None:
+    client = build_client()
+    client.app.dependency_overrides[get_current_admin] = lambda: {
+        "id": 1,
+        "login": "owner",
+        "role": "owner",
+        "is_active": True,
+    }
+
+    monkeypatch.setattr(
+        admin_service,
+        "list_managed_users",
+        lambda search, limit, offset: {
+            "items": [
+                {
+                    "id": 14,
+                    "username": "listed_user",
+                    "score": 100,
+                    "participate_in_rating": True,
+                    "created_at": "2026-03-19T10:00:00Z",
+                    "updated_at": "2026-03-19T11:00:00Z",
+                    "last_seen_at": "2026-03-19T11:05:00Z",
+                }
+            ],
+            "total": 1,
+        },
+    )
+
+    response = client.get(
+        "/admin/users",
+        headers={"Authorization": "Bearer owner"},
+    )
+
+    assert response.status_code == 200
+    assert response.json()["items"][0]["createdAt"] == "2026-03-19T10:00:00Z"
 
 
 def test_admin_can_delete_managed_user(monkeypatch) -> None:
@@ -262,7 +340,7 @@ def test_admin_host_serves_scoped_admin_asset() -> None:
 
     index_response = client.get("/staging/", headers={"host": "admin.wobbly.site"})
     assert index_response.status_code == 200
-    start = index_response.text.find('/assets/')
+    start = index_response.text.find("/assets/")
     end = index_response.text.find('"', start)
     asset_path = index_response.text[start:end]
     response = client.get(asset_path, headers={"host": "admin.wobbly.site"})
