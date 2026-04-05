@@ -118,13 +118,31 @@ def create_anonymous_user() -> AnonymousAuthResponse:
         with conn.cursor() as cur:
             cur.execute(
                 """
-                INSERT INTO users (auth_token_hash, username)
-                VALUES (%s, %s)
-                RETURNING id;
+                INSERT INTO users (auth_token_hash, username, account_status, guest_migration_key)
+                VALUES (%s, %s, 'guest', %s)
+                RETURNING id, created_at, last_seen_at;
                 """,
-                (token_hash, anonymous_username),
+                (token_hash, anonymous_username, token_hash),
             )
             user = cur.fetchone()
+            cur.execute(
+                """
+                INSERT INTO user_sessions (
+                    user_id,
+                    access_token_hash,
+                    session_type,
+                    created_at,
+                    last_seen_at
+                )
+                VALUES (%s, %s, 'guest', %s, %s);
+                """,
+                (
+                    user["id"],
+                    token_hash,
+                    user["created_at"],
+                    user["last_seen_at"],
+                ),
+            )
         conn.commit()
 
     return AnonymousAuthResponse(user_id=user["id"], access_token=access_token)

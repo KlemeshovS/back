@@ -1,6 +1,9 @@
 from __future__ import annotations
 
 import pytest
+from psycopg import connect
+
+from app.core.auth import hash_access_token
 
 pytestmark = pytest.mark.integration_db
 
@@ -66,8 +69,6 @@ def test_anonymous_auth_backfills_internal_username_in_database(
 ) -> None:
     auth_payload = create_anonymous_user(db_client)
 
-    from psycopg import connect
-
     with connect(integration_database_url) as conn:
         with conn.cursor() as cur:
             cur.execute(
@@ -78,6 +79,38 @@ def test_anonymous_auth_backfills_internal_username_in_database(
 
     assert row[0].startswith("anon_user_")
     assert row[1] is False
+
+
+def test_anonymous_auth_creates_guest_session_and_migration_key(
+    db_client,
+    integration_database_url,
+) -> None:
+    auth_payload = create_anonymous_user(db_client)
+    token_hash = hash_access_token(auth_payload["accessToken"])
+
+    with connect(integration_database_url) as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                SELECT account_status, guest_migration_key
+                FROM users
+                WHERE id = %s;
+                """,
+                (auth_payload["userId"],),
+            )
+            user_row = cur.fetchone()
+            cur.execute(
+                """
+                SELECT session_type, access_token_hash, provider
+                FROM user_sessions
+                WHERE user_id = %s;
+                """,
+                (auth_payload["userId"],),
+            )
+            session_row = cur.fetchone()
+
+    assert user_row == ("guest", token_hash)
+    assert session_row == ("guest", token_hash, None)
 
 
 def test_profile_update_persists_to_real_database(db_client) -> None:
