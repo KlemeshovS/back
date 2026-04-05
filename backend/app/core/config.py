@@ -35,6 +35,7 @@ class Settings(BaseSettings):
     )
     google_client_ids: str = Field(default="", validation_alias="GOOGLE_CLIENT_IDS")
     apple_client_ids: str = Field(default="", validation_alias="APPLE_CLIENT_IDS")
+    yandex_client_ids: str = Field(default="", validation_alias="YANDEX_CLIENT_IDS")
 
     model_config = SettingsConfigDict(
         env_file=".env",
@@ -63,6 +64,10 @@ class Settings(BaseSettings):
     @property
     def apple_client_ids_list(self) -> list[str]:
         return self._parse_csv(self.apple_client_ids)
+
+    @property
+    def yandex_client_ids_list(self) -> list[str]:
+        return self._parse_csv(self.yandex_client_ids)
 
 
 settings = Settings()

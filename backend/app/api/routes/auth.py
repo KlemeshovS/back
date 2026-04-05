@@ -7,6 +7,7 @@ from app.domain.schemas import (
     AppleAuthRequest,
     AuthSessionResponse,
     GoogleAuthRequest,
+    YandexAuthRequest,
 )
 from app.services import social_auth_service, user_service
 
@@ -59,3 +60,19 @@ def login_with_apple(payload: AppleAuthRequest, request: Request) -> AuthSession
         detail="Too many Apple login attempts. Please try again later.",
     )
     return social_auth_service.authenticate_apple(payload.id_token)
+
+
+@router.post(
+    "/auth/yandex",
+    response_model=AuthSessionResponse,
+    status_code=status.HTTP_200_OK,
+)
+def login_with_yandex(payload: YandexAuthRequest, request: Request) -> AuthSessionResponse:
+    client_ip = get_client_ip(request)
+    enforce_rate_limit(
+        key=f"yandex-auth:ip:{client_ip}",
+        limit=settings.register_rate_limit,
+        window_seconds=settings.register_window_seconds,
+        detail="Too many Yandex login attempts. Please try again later.",
+    )
+    return social_auth_service.authenticate_yandex(payload.access_token)

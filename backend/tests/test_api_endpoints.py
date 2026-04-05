@@ -249,6 +249,52 @@ def test_auth_apple_is_available_under_api_v1(monkeypatch) -> None:
     }
 
 
+def test_auth_yandex_returns_camel_case_response(monkeypatch) -> None:
+    client = build_client()
+
+    monkeypatch.setattr(
+        social_auth_service,
+        "authenticate_yandex",
+        lambda access_token: {
+            "user_id": 15,
+            "access_token": "rt_yandex",
+            "token_type": "bearer",
+        },
+    )
+
+    response = client.post("/auth/yandex", json={"accessToken": "yandex-token"})
+
+    assert response.status_code == 200
+    assert response.json() == {
+        "userId": 15,
+        "accessToken": "rt_yandex",
+        "tokenType": "bearer",
+    }
+
+
+def test_auth_yandex_is_available_under_api_v1(monkeypatch) -> None:
+    client = build_client()
+
+    monkeypatch.setattr(
+        social_auth_service,
+        "authenticate_yandex",
+        lambda access_token: {
+            "user_id": 16,
+            "access_token": "rt_yandex_v1",
+            "token_type": "bearer",
+        },
+    )
+
+    response = client.post("/api/v1/auth/yandex", json={"accessToken": "yandex-token"})
+
+    assert response.status_code == 200
+    assert response.json() == {
+        "userId": 16,
+        "accessToken": "rt_yandex_v1",
+        "tokenType": "bearer",
+    }
+
+
 def test_get_me_requires_authorization_header() -> None:
     client = build_client()
 
