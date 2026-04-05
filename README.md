@@ -156,4 +156,5 @@ Git hooks:
 - [docs/DEVELOPMENT_WORKFLOW.md](/Users/klem/Documents/eguene/docs/DEVELOPMENT_WORKFLOW.md)
 - [docs/DEPLOY.md](/Users/klem/Documents/eguene/docs/DEPLOY.md)
 - [docs/MOBILE_API.md](/Users/klem/Documents/eguene/docs/MOBILE_API.md)
+- [docs/SOCIAL_AUTH_MODEL.md](/Users/klem/Documents/eguene/wobbly/back/docs/SOCIAL_AUTH_MODEL.md)
 - [docs/TECHNICAL_BACKLOG.md](/Users/klem/Documents/eguene/wobbly/back/docs/TECHNICAL_BACKLOG.md)
