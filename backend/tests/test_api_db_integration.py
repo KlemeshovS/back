@@ -483,8 +483,8 @@ def test_google_auth_reuses_existing_internal_user(
         ),
     )
 
-    first = db_client.post("/auth/google", json={"idToken": "first"})
-    second = db_client.post("/auth/google", json={"idToken": "second"})
+    first = db_client.post("/auth/google", json={"idToken": "google-token-first"})
+    second = db_client.post("/auth/google", json={"idToken": "google-token-second"})
 
     assert first.status_code == 200
     assert second.status_code == 200
@@ -600,8 +600,8 @@ def test_apple_auth_reuses_existing_internal_user(
         ),
     )
 
-    first = db_client.post("/auth/apple", json={"idToken": "first"})
-    second = db_client.post("/auth/apple", json={"idToken": "second"})
+    first = db_client.post("/auth/apple", json={"idToken": "apple-token-first"})
+    second = db_client.post("/auth/apple", json={"idToken": "apple-token-second"})
 
     assert first.status_code == 200
     assert second.status_code == 200
@@ -704,8 +704,8 @@ def test_yandex_auth_reuses_existing_internal_user(
         ),
     )
 
-    first = db_client.post("/auth/yandex", json={"accessToken": "first"})
-    second = db_client.post("/auth/yandex", json={"accessToken": "second"})
+    first = db_client.post("/auth/yandex", json={"accessToken": "yandex-token-first"})
+    second = db_client.post("/auth/yandex", json={"accessToken": "yandex-token-second"})
 
     assert first.status_code == 200
     assert second.status_code == 200
