@@ -23,7 +23,6 @@ def issue_authenticated_session(user_id: int, provider: str) -> AuthSessionRespo
                 UPDATE user_sessions
                 SET revoked_at = NOW()
                 WHERE user_id = %s
-                  AND session_type = 'authenticated'
                   AND revoked_at IS NULL;
                 """,
                 (user_id,),

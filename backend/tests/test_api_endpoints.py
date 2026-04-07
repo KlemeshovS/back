@@ -163,7 +163,7 @@ def test_auth_google_returns_camel_case_response(monkeypatch) -> None:
     monkeypatch.setattr(
         social_auth_service,
         "authenticate_google",
-        lambda id_token: {
+        lambda id_token, guest_access_token=None: {
             "user_id": 11,
             "access_token": "rt_google",
             "refresh_token": "rf_google",
@@ -188,7 +188,7 @@ def test_auth_google_is_available_under_api_v1(monkeypatch) -> None:
     monkeypatch.setattr(
         social_auth_service,
         "authenticate_google",
-        lambda id_token: {
+        lambda id_token, guest_access_token=None: {
             "user_id": 12,
             "access_token": "rt_google_v1",
             "refresh_token": "rf_google_v1",
@@ -213,7 +213,7 @@ def test_auth_apple_returns_camel_case_response(monkeypatch) -> None:
     monkeypatch.setattr(
         social_auth_service,
         "authenticate_apple",
-        lambda id_token: {
+        lambda id_token, guest_access_token=None: {
             "user_id": 13,
             "access_token": "rt_apple",
             "refresh_token": "rf_apple",
@@ -238,7 +238,7 @@ def test_auth_apple_is_available_under_api_v1(monkeypatch) -> None:
     monkeypatch.setattr(
         social_auth_service,
         "authenticate_apple",
-        lambda id_token: {
+        lambda id_token, guest_access_token=None: {
             "user_id": 14,
             "access_token": "rt_apple_v1",
             "refresh_token": "rf_apple_v1",
@@ -263,7 +263,7 @@ def test_auth_yandex_returns_camel_case_response(monkeypatch) -> None:
     monkeypatch.setattr(
         social_auth_service,
         "authenticate_yandex",
-        lambda access_token: {
+        lambda access_token, guest_access_token=None: {
             "user_id": 15,
             "access_token": "rt_yandex",
             "refresh_token": "rf_yandex",
@@ -288,7 +288,7 @@ def test_auth_yandex_is_available_under_api_v1(monkeypatch) -> None:
     monkeypatch.setattr(
         social_auth_service,
         "authenticate_yandex",
-        lambda access_token: {
+        lambda access_token, guest_access_token=None: {
             "user_id": 16,
             "access_token": "rt_yandex_v1",
             "refresh_token": "rf_yandex_v1",

@@ -181,11 +181,12 @@ Guest — это пользователь без авторизации, кот�
 
 1. У пользователя уже есть legacy guest token.
 2. Пользователь проходит Google / Apple / Yandex login.
-3. Backend валидирует provider result.
-4. Backend находит или создает permanent internal user.
-5. Backend связывает legacy guest state с permanent user.
-6. Backend переносит данные.
-7. Backend создает authenticated session.
+3. Mobile отправляет social login request с текущим guest `Authorization: Bearer <accessToken>`, если такой token уже есть.
+4. Backend валидирует provider result.
+5. Backend использует guest session как источник миграции.
+6. Если social identity новая, backend повышает текущий guest account до `active` и привязывает provider к тому же `user_id`.
+7. Если social identity уже привязана к существующему аккаунту, backend переносит guest данные в существующий authenticated account и удаляет guest duplicate.
+8. Backend создает authenticated session.
 
 ### Что переносим
 

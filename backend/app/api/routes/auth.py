@@ -1,6 +1,13 @@
-from fastapi import APIRouter, Depends, Request, status
+from typing import Optional
 
-from app.api.dependencies import enforce_rate_limit, get_client_ip, get_current_user_session
+from fastapi import APIRouter, Depends, Header, Request, status
+
+from app.api.dependencies import (
+    enforce_rate_limit,
+    get_bearer_token,
+    get_client_ip,
+    get_current_user_session,
+)
 from app.core.config import settings
 from app.domain.schemas import (
     AnonymousAuthResponse,
@@ -39,7 +46,11 @@ def create_anonymous_user(request: Request) -> AnonymousAuthResponse:
     response_model=AuthSessionResponse,
     status_code=status.HTTP_200_OK,
 )
-def login_with_google(payload: GoogleAuthRequest, request: Request) -> AuthSessionResponse:
+def login_with_google(
+    payload: GoogleAuthRequest,
+    request: Request,
+    authorization: Optional[str] = Header(default=None),
+) -> AuthSessionResponse:
     client_ip = get_client_ip(request)
     enforce_rate_limit(
         key=f"google-auth:ip:{client_ip}",
@@ -47,7 +58,8 @@ def login_with_google(payload: GoogleAuthRequest, request: Request) -> AuthSessi
         window_seconds=settings.register_window_seconds,
         detail="Too many Google login attempts. Please try again later.",
     )
-    return social_auth_service.authenticate_google(payload.id_token)
+    guest_access_token = get_bearer_token(authorization) if authorization else None
+    return social_auth_service.authenticate_google(payload.id_token, guest_access_token)
 
 
 @router.post(
@@ -55,7 +67,11 @@ def login_with_google(payload: GoogleAuthRequest, request: Request) -> AuthSessi
     response_model=AuthSessionResponse,
     status_code=status.HTTP_200_OK,
 )
-def login_with_apple(payload: AppleAuthRequest, request: Request) -> AuthSessionResponse:
+def login_with_apple(
+    payload: AppleAuthRequest,
+    request: Request,
+    authorization: Optional[str] = Header(default=None),
+) -> AuthSessionResponse:
     client_ip = get_client_ip(request)
     enforce_rate_limit(
         key=f"apple-auth:ip:{client_ip}",
@@ -63,7 +79,8 @@ def login_with_apple(payload: AppleAuthRequest, request: Request) -> AuthSession
         window_seconds=settings.register_window_seconds,
         detail="Too many Apple login attempts. Please try again later.",
     )
-    return social_auth_service.authenticate_apple(payload.id_token)
+    guest_access_token = get_bearer_token(authorization) if authorization else None
+    return social_auth_service.authenticate_apple(payload.id_token, guest_access_token)
 
 
 @router.post(
@@ -71,7 +88,11 @@ def login_with_apple(payload: AppleAuthRequest, request: Request) -> AuthSession
     response_model=AuthSessionResponse,
     status_code=status.HTTP_200_OK,
 )
-def login_with_yandex(payload: YandexAuthRequest, request: Request) -> AuthSessionResponse:
+def login_with_yandex(
+    payload: YandexAuthRequest,
+    request: Request,
+    authorization: Optional[str] = Header(default=None),
+) -> AuthSessionResponse:
     client_ip = get_client_ip(request)
     enforce_rate_limit(
         key=f"yandex-auth:ip:{client_ip}",
@@ -79,7 +100,8 @@ def login_with_yandex(payload: YandexAuthRequest, request: Request) -> AuthSessi
         window_seconds=settings.register_window_seconds,
         detail="Too many Yandex login attempts. Please try again later.",
     )
-    return social_auth_service.authenticate_yandex(payload.access_token)
+    guest_access_token = get_bearer_token(authorization) if authorization else None
+    return social_auth_service.authenticate_yandex(payload.access_token, guest_access_token)
 
 
 @router.get(

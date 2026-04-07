@@ -501,6 +501,149 @@ def test_google_auth_reuses_existing_internal_user(
     assert identities_count == 1
 
 
+def test_guest_google_auth_promotes_guest_user_without_losing_progress(
+    db_client,
+    integration_database_url,
+    monkeypatch,
+) -> None:
+    from app.services import social_auth_service
+
+    guest = create_anonymous_user(db_client)
+    profile_response = db_client.patch(
+        "/me/profile",
+        json={"username": "guest_to_google", "participateInRating": True},
+        headers=auth_headers(guest["accessToken"]),
+    )
+    assert profile_response.status_code == 200
+
+    score_response = db_client.post(
+        "/me/score",
+        json={"score": 42},
+        headers=auth_headers(guest["accessToken"]),
+    )
+    assert score_response.status_code == 200
+
+    monkeypatch.setattr(
+        social_auth_service,
+        "verify_google_id_token",
+        lambda token: GoogleIdentity(
+            subject="google-promote-sub",
+            email="guest-promote@example.com",
+            email_verified=True,
+            payload={"iss": "https://accounts.google.com", "aud": "mobile-client"},
+        ),
+    )
+
+    response = db_client.post(
+        "/auth/google",
+        json={"idToken": "google-promote-token"},
+        headers=auth_headers(guest["accessToken"]),
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["userId"] == guest["userId"]
+
+    with connect(integration_database_url) as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                SELECT username, score, is_rating_enabled, account_status, guest_migration_key
+                FROM users
+                WHERE id = %s;
+                """,
+                (guest["userId"],),
+            )
+            user_row = cur.fetchone()
+            cur.execute(
+                """
+                SELECT provider, provider_user_id
+                FROM user_identities
+                WHERE user_id = %s;
+                """,
+                (guest["userId"],),
+            )
+            identity_row = cur.fetchone()
+
+    assert user_row == ("guest_to_google", 42, True, "active", None)
+    assert identity_row == ("google", "google-promote-sub")
+
+
+def test_guest_google_auth_merges_into_existing_authenticated_user_without_duplicates(
+    db_client,
+    integration_database_url,
+    monkeypatch,
+) -> None:
+    from app.services import social_auth_service
+
+    monkeypatch.setattr(
+        social_auth_service,
+        "verify_google_id_token",
+        lambda token: GoogleIdentity(
+            subject="google-existing-sub",
+            email="existing@example.com",
+            email_verified=True,
+            payload={"iss": "https://accounts.google.com", "aud": "mobile-client"},
+        ),
+    )
+
+    first_login = db_client.post("/auth/google", json={"idToken": "google-existing-token"})
+    assert first_login.status_code == 200
+    existing_user_id = first_login.json()["userId"]
+
+    guest = create_anonymous_user(db_client)
+    profile_response = db_client.patch(
+        "/me/profile",
+        json={"username": "merged_guest_name", "participateInRating": True},
+        headers=auth_headers(guest["accessToken"]),
+    )
+    assert profile_response.status_code == 200
+    score_response = db_client.post(
+        "/me/score",
+        json={"score": 77},
+        headers=auth_headers(guest["accessToken"]),
+    )
+    assert score_response.status_code == 200
+
+    merge_response = db_client.post(
+        "/auth/google",
+        json={"idToken": "google-existing-token-second"},
+        headers=auth_headers(guest["accessToken"]),
+    )
+    assert merge_response.status_code == 200
+    assert merge_response.json()["userId"] == existing_user_id
+
+    with connect(integration_database_url) as conn:
+        with conn.cursor() as cur:
+            cur.execute("SELECT COUNT(*) FROM users;")
+            users_count = cur.fetchone()[0]
+            cur.execute("SELECT COUNT(*) FROM user_identities WHERE provider = 'google';")
+            identities_count = cur.fetchone()[0]
+            cur.execute(
+                """
+                SELECT username, score, is_rating_enabled
+                FROM users
+                WHERE id = %s;
+                """,
+                (existing_user_id,),
+            )
+            merged_user_row = cur.fetchone()
+            cur.execute(
+                """
+                SELECT COUNT(*)
+                FROM users
+                WHERE id = %s;
+                """,
+                (guest["userId"],),
+            )
+            guest_row_count = cur.fetchone()[0]
+
+    assert users_count == 1
+    assert identities_count == 1
+    assert merged_user_row == ("merged_guest_name", 77, True)
+    assert guest_row_count == 0
+
+
 def test_apple_auth_creates_identity_and_authenticated_session(
     db_client,
     integration_database_url,
