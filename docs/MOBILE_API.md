@@ -69,6 +69,8 @@ Authorization: Bearer <accessToken>
 ## Правила backend
 
 - участие в рейтинге можно включить только если есть `username`
+- участие в рейтинге доступно только для `authenticated` session
+- guest-пользователь не может сохранять `username` для рейтинга
 - `username` должен быть уникальным
 - разрешены латинские буквы, цифры, `_`, `.`, `-`
 - если `username` уже был сохранен, его нельзя очистить в пустое значение
@@ -197,6 +199,7 @@ Authorization: Bearer <accessToken>
 ```
 
 Основные коды:
+- `AUTH_REQUIRED_FOR_RATING` — guest-пользователь пытается использовать рейтинговые функции без авторизации
 - `MISSING_AUTHORIZATION_HEADER` — в запросе отсутствует заголовок `Authorization: Bearer <accessToken>`
 - `INVALID_AUTHORIZATION_HEADER` — заголовок `Authorization` передан в неправильном формате
 - `INVALID_TOKEN` — токен передан, но не найден в системе или больше невалиден

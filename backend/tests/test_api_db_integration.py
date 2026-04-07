@@ -22,6 +22,26 @@ def create_anonymous_user(client) -> dict:
     return response.json()
 
 
+def create_authenticated_user(client, monkeypatch, subject: str = "auth-user") -> dict:
+    from app.services import social_auth_service
+
+    monkeypatch.setattr(
+        social_auth_service,
+        "verify_google_id_token",
+        lambda token: GoogleIdentity(
+            subject=subject,
+            email=f"{subject}@example.com",
+            email_verified=True,
+            payload={"iss": "https://accounts.google.com", "aud": "mobile-client"},
+        ),
+    )
+
+    response = client.post("/auth/google", json={"idToken": f"{subject}-google-token"})
+
+    assert response.status_code == 200
+    return response.json()
+
+
 def test_anonymous_users_do_not_appear_in_admin_user_list(db_client) -> None:
     from app.services import admin_service
 
@@ -116,8 +136,8 @@ def test_anonymous_auth_creates_guest_session_and_migration_key(
     assert session_row == ("guest", token_hash, None)
 
 
-def test_profile_update_persists_to_real_database(db_client) -> None:
-    auth_payload = create_anonymous_user(db_client)
+def test_profile_update_persists_to_real_database(db_client, monkeypatch) -> None:
+    auth_payload = create_authenticated_user(db_client, monkeypatch, "profile-db-user")
 
     update_response = db_client.patch(
         "/me/profile",
@@ -139,8 +159,34 @@ def test_profile_update_persists_to_real_database(db_client) -> None:
     assert me_response.json()["participateInRating"] is True
 
 
-def test_rating_toggle_updates_real_database_state(db_client) -> None:
+def test_guest_cannot_create_username_or_enable_rating(db_client) -> None:
     auth_payload = create_anonymous_user(db_client)
+
+    profile_response = db_client.patch(
+        "/me/profile",
+        json={"username": "guest_player", "participateInRating": True},
+        headers=auth_headers(auth_payload["accessToken"]),
+    )
+    rating_response = db_client.patch(
+        "/me/rating",
+        json={"participateInRating": True},
+        headers=auth_headers(auth_payload["accessToken"]),
+    )
+
+    assert profile_response.status_code == 403
+    assert profile_response.json() == {
+        "code": "AUTH_REQUIRED_FOR_RATING",
+        "message": "Authentication is required for rating features",
+    }
+    assert rating_response.status_code == 403
+    assert rating_response.json() == {
+        "code": "AUTH_REQUIRED_FOR_RATING",
+        "message": "Authentication is required for rating features",
+    }
+
+
+def test_rating_toggle_updates_real_database_state(db_client, monkeypatch) -> None:
+    auth_payload = create_authenticated_user(db_client, monkeypatch, "toggle-db-user")
 
     db_client.patch(
         "/me/profile",
@@ -167,8 +213,8 @@ def test_rating_toggle_updates_real_database_state(db_client) -> None:
     assert enable_response.json()["participateInRating"] is True
 
 
-def test_score_update_persists_to_real_database(db_client) -> None:
-    auth_payload = create_anonymous_user(db_client)
+def test_score_update_persists_to_real_database(db_client, monkeypatch) -> None:
+    auth_payload = create_authenticated_user(db_client, monkeypatch, "score-db-user")
 
     db_client.patch(
         "/me/profile",
@@ -195,15 +241,15 @@ def test_score_update_rejects_anonymous_users_without_username(db_client) -> Non
         headers=auth_headers(auth_payload["accessToken"]),
     )
 
-    assert response.status_code == 422
+    assert response.status_code == 403
     assert response.json() == {
-        "code": "USERNAME_REQUIRED_FOR_RATING",
-        "message": "Username is required to submit score",
+        "code": "AUTH_REQUIRED_FOR_RATING",
+        "message": "Authentication is required for rating features",
     }
 
 
-def test_score_update_rejects_users_with_rating_disabled(db_client) -> None:
-    auth_payload = create_anonymous_user(db_client)
+def test_score_update_rejects_users_with_rating_disabled(db_client, monkeypatch) -> None:
+    auth_payload = create_authenticated_user(db_client, monkeypatch, "disabled-db-user")
 
     db_client.patch(
         "/me/profile",
@@ -229,8 +275,11 @@ def test_score_update_rejects_users_with_rating_disabled(db_client) -> None:
     }
 
 
-def test_clearing_existing_username_is_rejected_and_score_is_preserved(db_client) -> None:
-    auth_payload = create_anonymous_user(db_client)
+def test_clearing_existing_username_is_rejected_and_score_is_preserved(
+    db_client,
+    monkeypatch,
+) -> None:
+    auth_payload = create_authenticated_user(db_client, monkeypatch, "clear-db-user")
 
     db_client.patch(
         "/me/profile",
@@ -272,10 +321,10 @@ def test_clearing_existing_username_is_rejected_and_score_is_preserved(db_client
     }
 
 
-def test_leaderboard_queries_use_real_database_data(db_client) -> None:
-    alpha = create_anonymous_user(db_client)
-    beta = create_anonymous_user(db_client)
-    gamma = create_anonymous_user(db_client)
+def test_leaderboard_queries_use_real_database_data(db_client, monkeypatch) -> None:
+    alpha = create_authenticated_user(db_client, monkeypatch, "leader-alpha")
+    beta = create_authenticated_user(db_client, monkeypatch, "leader-beta")
+    gamma = create_authenticated_user(db_client, monkeypatch, "leader-gamma")
 
     db_client.patch(
         "/me/profile",
@@ -330,9 +379,9 @@ def test_leaderboard_queries_use_real_database_data(db_client) -> None:
     }
 
 
-def test_api_v1_leaderboard_queries_use_real_database_data(db_client) -> None:
-    alpha = create_anonymous_user(db_client)
-    beta = create_anonymous_user(db_client)
+def test_api_v1_leaderboard_queries_use_real_database_data(db_client, monkeypatch) -> None:
+    alpha = create_authenticated_user(db_client, monkeypatch, "v1-alpha")
+    beta = create_authenticated_user(db_client, monkeypatch, "v1-beta")
 
     db_client.patch(
         "/api/v1/me/profile",
@@ -368,10 +417,10 @@ def test_api_v1_leaderboard_queries_use_real_database_data(db_client) -> None:
     }
 
 
-def test_real_database_flows_cover_constraint_and_validation_errors(db_client) -> None:
-    first_user = create_anonymous_user(db_client)
-    second_user = create_anonymous_user(db_client)
-    third_user = create_anonymous_user(db_client)
+def test_real_database_flows_cover_constraint_and_validation_errors(db_client, monkeypatch) -> None:
+    first_user = create_authenticated_user(db_client, monkeypatch, "duplicate-first")
+    second_user = create_authenticated_user(db_client, monkeypatch, "duplicate-second")
+    third_user = create_authenticated_user(db_client, monkeypatch, "duplicate-third")
 
     first_profile = db_client.patch(
         "/me/profile",

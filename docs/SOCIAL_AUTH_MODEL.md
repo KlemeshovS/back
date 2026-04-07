@@ -232,6 +232,15 @@ Guest — это пользователь без авторизации, кот�
 - authenticated без `username` — может пользоваться приложением, но не участвовать
 - authenticated с `username`, но с выключенным флагом — может смотреть, но не участвует
 
+На уровне API это означает:
+
+- guest может читать `GET /me`
+- guest может читать leaderboard endpoint'ы
+- guest не может использовать:
+  - `PATCH /me/profile`
+  - `PATCH /me/rating`
+  - `POST /me/score`
+
 `score`:
 
 - всегда хранится на user account

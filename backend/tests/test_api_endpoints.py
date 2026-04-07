@@ -83,6 +83,8 @@ def test_patch_me_rating_updates_participation(monkeypatch) -> None:
         "id": 7,
         "username": "player_7",
         "is_rating_enabled": True,
+        "session_type": "authenticated",
+        "provider": "google",
     }
 
     def fake_save_profile(
@@ -398,6 +400,8 @@ def test_profile_validation_error_uses_uniform_error_contract() -> None:
         "id": 7,
         "username": "player_7",
         "is_rating_enabled": True,
+        "session_type": "authenticated",
+        "provider": "google",
     }
 
     response = client.patch(
@@ -410,6 +414,54 @@ def test_profile_validation_error_uses_uniform_error_contract() -> None:
     assert response.json() == {
         "code": "VALIDATION_ERROR",
         "message": "Invalid request payload",
+    }
+
+
+def test_guest_cannot_update_profile_for_rating_features() -> None:
+    client = build_client()
+
+    client.app.dependency_overrides[get_current_user] = lambda: {
+        "id": 7,
+        "username": None,
+        "is_rating_enabled": False,
+        "session_type": "guest",
+        "provider": None,
+    }
+
+    response = client.patch(
+        "/me/profile",
+        json={"username": "guest_name", "participateInRating": True},
+        headers={"Authorization": "Bearer token"},
+    )
+
+    assert response.status_code == 403
+    assert response.json() == {
+        "code": "AUTH_REQUIRED_FOR_RATING",
+        "message": "Authentication is required for rating features",
+    }
+
+
+def test_guest_cannot_toggle_rating() -> None:
+    client = build_client()
+
+    client.app.dependency_overrides[get_current_user] = lambda: {
+        "id": 7,
+        "username": None,
+        "is_rating_enabled": False,
+        "session_type": "guest",
+        "provider": None,
+    }
+
+    response = client.patch(
+        "/me/rating",
+        json={"participateInRating": True},
+        headers={"Authorization": "Bearer token"},
+    )
+
+    assert response.status_code == 403
+    assert response.json() == {
+        "code": "AUTH_REQUIRED_FOR_RATING",
+        "message": "Authentication is required for rating features",
     }
 
 
@@ -462,6 +514,8 @@ def test_score_update_rejects_users_without_username(monkeypatch) -> None:
         "id": 7,
         "username": None,
         "is_rating_enabled": False,
+        "session_type": "authenticated",
+        "provider": "google",
     }
 
     def fake_update_my_score(user_id: int, score: int):
@@ -486,6 +540,30 @@ def test_score_update_rejects_users_without_username(monkeypatch) -> None:
     }
 
 
+def test_guest_cannot_update_score() -> None:
+    client = build_client()
+
+    client.app.dependency_overrides[get_current_user] = lambda: {
+        "id": 7,
+        "username": None,
+        "is_rating_enabled": False,
+        "session_type": "guest",
+        "provider": None,
+    }
+
+    response = client.post(
+        "/me/score",
+        json={"score": 10},
+        headers={"Authorization": "Bearer token"},
+    )
+
+    assert response.status_code == 403
+    assert response.json() == {
+        "code": "AUTH_REQUIRED_FOR_RATING",
+        "message": "Authentication is required for rating features",
+    }
+
+
 def test_score_update_rejects_users_with_rating_disabled(monkeypatch) -> None:
     client = build_client()
 
@@ -493,6 +571,8 @@ def test_score_update_rejects_users_with_rating_disabled(monkeypatch) -> None:
         "id": 7,
         "username": "player_7",
         "is_rating_enabled": False,
+        "session_type": "authenticated",
+        "provider": "google",
     }
 
     def fake_update_my_score(user_id: int, score: int):
