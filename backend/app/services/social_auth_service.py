@@ -451,6 +451,19 @@ def _merge_guest_into_existing_user(cur, *, guest_user_id: int, target_user_id: 
         guest_user["is_rating_enabled"] and has_public_username(merged_username)
     )
 
+    # Free the guest username before moving it onto the target account, otherwise
+    # the unique constraint on users.username blocks the merge inside one transaction.
+    if guest_public_username is not None and merged_username == guest_public_username:
+        cur.execute(
+            """
+            UPDATE users
+            SET username = %s,
+                updated_at = NOW()
+            WHERE id = %s;
+            """,
+            (f"anon_user_{guest_user_id}_merged", guest_user_id),
+        )
+
     cur.execute(
         """
         UPDATE users
