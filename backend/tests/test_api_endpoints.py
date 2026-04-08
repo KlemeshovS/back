@@ -628,8 +628,8 @@ def test_guest_cannot_update_profile_for_rating_features() -> None:
 
     assert response.status_code == 403
     assert response.json() == {
-        "code": "AUTH_REQUIRED_FOR_RATING",
-        "message": "Authentication is required for rating features",
+        "code": "AUTH_REQUIRED_FOR_USERNAME",
+        "message": "Authentication is required to save username",
     }
 
 
@@ -652,8 +652,8 @@ def test_guest_cannot_toggle_rating() -> None:
 
     assert response.status_code == 403
     assert response.json() == {
-        "code": "AUTH_REQUIRED_FOR_RATING",
-        "message": "Authentication is required for rating features",
+        "code": "GUEST_CANNOT_ENABLE_RATING",
+        "message": "Guest users cannot enable rating participation",
     }
 
 

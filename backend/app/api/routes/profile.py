@@ -16,12 +16,42 @@ router = APIRouter()
 current_user_dependency = Depends(get_current_user)
 
 
-def _enforce_authenticated_rating_user(current_user: dict) -> None:
-    if current_user["session_type"] != "authenticated":
+def _raise_guest_rating_error(
+    *,
+    wants_username_save: bool = False,
+    wants_rating_enable: bool = False,
+) -> None:
+    if wants_username_save:
         raise ApiError(
             status_code=status.HTTP_403_FORBIDDEN,
-            code=ApiErrorCode.AUTH_REQUIRED_FOR_RATING,
-            message="Authentication is required for rating features",
+            code=ApiErrorCode.AUTH_REQUIRED_FOR_USERNAME,
+            message="Authentication is required to save username",
+        )
+
+    if wants_rating_enable:
+        raise ApiError(
+            status_code=status.HTTP_403_FORBIDDEN,
+            code=ApiErrorCode.GUEST_CANNOT_ENABLE_RATING,
+            message="Guest users cannot enable rating participation",
+        )
+
+    raise ApiError(
+        status_code=status.HTTP_403_FORBIDDEN,
+        code=ApiErrorCode.AUTH_REQUIRED_FOR_RATING,
+        message="Authentication is required for rating features",
+    )
+
+
+def _enforce_authenticated_rating_user(
+    current_user: dict,
+    *,
+    wants_username_save: bool = False,
+    wants_rating_enable: bool = False,
+) -> None:
+    if current_user["session_type"] != "authenticated":
+        _raise_guest_rating_error(
+            wants_username_save=wants_username_save,
+            wants_rating_enable=wants_rating_enable,
         )
 
 
@@ -39,7 +69,11 @@ def update_my_profile(
     payload: ProfileUpdateRequest,
     current_user: dict = current_user_dependency,
 ) -> ProfileResponse:
-    _enforce_authenticated_rating_user(current_user)
+    _enforce_authenticated_rating_user(
+        current_user,
+        wants_username_save=payload.username is not None,
+        wants_rating_enable=payload.participate_in_rating,
+    )
     username = payload.username if payload.username is not None else current_user["username"]
     return user_service.save_profile(current_user["id"], username, payload.participate_in_rating)
 
@@ -49,7 +83,10 @@ def update_my_rating_participation(
     payload: RatingParticipationUpdateRequest,
     current_user: dict = current_user_dependency,
 ) -> ProfileResponse:
-    _enforce_authenticated_rating_user(current_user)
+    _enforce_authenticated_rating_user(
+        current_user,
+        wants_rating_enable=payload.participate_in_rating,
+    )
     return user_service.save_profile(
         current_user["id"],
         current_user["username"],

@@ -200,13 +200,13 @@ def test_guest_cannot_create_username_or_enable_rating(db_client) -> None:
 
     assert profile_response.status_code == 403
     assert profile_response.json() == {
-        "code": "AUTH_REQUIRED_FOR_RATING",
-        "message": "Authentication is required for rating features",
+        "code": "AUTH_REQUIRED_FOR_USERNAME",
+        "message": "Authentication is required to save username",
     }
     assert rating_response.status_code == 403
     assert rating_response.json() == {
-        "code": "AUTH_REQUIRED_FOR_RATING",
-        "message": "Authentication is required for rating features",
+        "code": "GUEST_CANNOT_ENABLE_RATING",
+        "message": "Guest users cannot enable rating participation",
     }
 
 
