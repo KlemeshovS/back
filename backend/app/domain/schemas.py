@@ -75,6 +75,18 @@ class AuthSessionResponse(ApiModel):
     token_type: str = "bearer"
 
 
+class LinkedIdentityResponse(ApiModel):
+    provider: str
+    provider_email: Optional[str] = None
+    provider_email_verified: bool
+    created_at: datetime
+    updated_at: datetime
+
+
+class LinkedIdentityListResponse(ApiModel):
+    items: list[LinkedIdentityResponse]
+
+
 class RefreshSessionRequest(ApiModel):
     refresh_token: str = Field(min_length=10, max_length=4096)
 

@@ -97,6 +97,7 @@ Anonymous auth создает полноценную запись в `users`, а
 - уникальность по `(provider, provider_user_id)`
 - у одного internal user может быть несколько identities
 - одна external identity может принадлежать только одному internal user
+- нельзя отвязать последний linked provider у authenticated account
 
 ### Принцип
 
@@ -303,7 +304,49 @@ Guest — это пользователь без авторизации, кот�
 - revoke session при logout
 - поддерживать несколько активных sessions на одного user
 
-## 9. Правила миграции legacy guest-пользователей
+## 9. Provider linking / unlinking
+
+Authenticated user может управлять привязанными способами входа отдельно от login flow.
+
+Поддерживаемые операции:
+
+- привязать Google к существующему internal account
+- привязать Apple к существующему internal account
+- привязать Yandex к существующему internal account
+- получить список linked providers
+- отвязать provider, если после этого остается хотя бы один способ входа
+
+### Правила link
+
+- link разрешен только для `authenticated` session
+- если `(provider, provider_user_id)` уже привязан к другому user:
+  - вернуть controlled conflict
+- если у текущего user уже есть этот `provider`, но с другим `provider_user_id`:
+  - вернуть controlled conflict
+- если identity уже привязана к этому же user:
+  - обновить email / payload и вернуть актуальный список providers
+
+### Правила unlink
+
+- unlink разрешен только для `authenticated` session
+- если provider у user не найден:
+  - вернуть `PROVIDER_NOT_LINKED`
+- если это последний linked provider:
+  - вернуть `LAST_IDENTITY_REQUIRED`
+- unlink не должен удалять:
+  - `username`
+  - `score`
+  - `is_rating_enabled`
+
+### API surface
+
+- `GET /auth/providers`
+- `POST /auth/providers/google/link`
+- `POST /auth/providers/apple/link`
+- `POST /auth/providers/yandex/link`
+- `DELETE /auth/providers/{provider}`
+
+## 10. Правила миграции legacy guest-пользователей
 
 ### Нужно сохранить
 

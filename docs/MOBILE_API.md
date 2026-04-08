@@ -28,9 +28,14 @@ Authorization: Bearer <accessToken>
 Защищенные методы:
 - `GET /api/v1/me`
 - `GET /api/v1/auth/session`
+- `GET /api/v1/auth/providers`
 - `PATCH /api/v1/me/profile`
 - `PATCH /api/v1/me/rating`
 - `POST /api/v1/me/score`
+- `POST /api/v1/auth/providers/google/link`
+- `POST /api/v1/auth/providers/apple/link`
+- `POST /api/v1/auth/providers/yandex/link`
+- `DELETE /api/v1/auth/providers/{provider}`
 - `POST /api/v1/auth/logout`
 
 ## Базовый mobile flow
@@ -60,6 +65,11 @@ Authorization: Bearer <accessToken>
 - `GET /api/v1/auth/session` — восстановить текущую сессию по `accessToken`
 - `POST /api/v1/auth/refresh` — обменять `refreshToken` на новую пару токенов
 - `POST /api/v1/auth/logout` — завершить текущую сессию
+- `GET /api/v1/auth/providers` — получить список привязанных способов входа
+- `POST /api/v1/auth/providers/google/link` — привязать Google к текущему аккаунту
+- `POST /api/v1/auth/providers/apple/link` — привязать Apple к текущему аккаунту
+- `POST /api/v1/auth/providers/yandex/link` — привязать Yandex к текущему аккаунту
+- `DELETE /api/v1/auth/providers/{provider}` — отвязать способ входа, если это не последний провайдер
 
 ### Таблицы рейтинга
 
@@ -119,6 +129,49 @@ Authorization: Bearer <accessToken>
 ### `POST /api/v1/auth/logout`
 
 Завершает текущую сессию.
+
+### `GET /api/v1/auth/providers`
+
+Возвращает список привязанных identity providers.
+
+Поля ответа для каждого provider:
+- `provider`
+- `providerEmail`
+- `providerEmailVerified`
+- `createdAt`
+- `updatedAt`
+
+### `POST /api/v1/auth/providers/google/link`
+
+Привязывает Google identity к текущему authenticated account.
+
+Тело запроса:
+- `idToken`
+
+### `POST /api/v1/auth/providers/apple/link`
+
+Привязывает Apple identity к текущему authenticated account.
+
+Тело запроса:
+- `idToken`
+
+### `POST /api/v1/auth/providers/yandex/link`
+
+Привязывает Yandex identity к текущему authenticated account.
+
+Тело запроса:
+- `accessToken`
+
+### `DELETE /api/v1/auth/providers/{provider}`
+
+Отвязывает provider от текущего authenticated account.
+
+Допустимые `provider`:
+- `google`
+- `apple`
+- `yandex`
+
+Нельзя удалить последний способ входа.
 
 ### `PATCH /api/v1/me/profile`
 
@@ -200,9 +253,14 @@ Authorization: Bearer <accessToken>
 
 Основные коды:
 - `AUTH_REQUIRED_FOR_RATING` — guest-пользователь пытается использовать рейтинговые функции без авторизации
+- `AUTH_REQUIRED_FOR_PROVIDER_MANAGEMENT` — guest-пользователь пытается управлять привязанными способами входа
 - `MISSING_AUTHORIZATION_HEADER` — в запросе отсутствует заголовок `Authorization: Bearer <accessToken>`
 - `INVALID_AUTHORIZATION_HEADER` — заголовок `Authorization` передан в неправильном формате
 - `INVALID_TOKEN` — токен передан, но не найден в системе или больше невалиден
+- `IDENTITY_ALREADY_LINKED` — этот social account уже привязан к другому internal user
+- `PROVIDER_ALREADY_LINKED` — этот provider уже привязан к текущему аккаунту с другим external id
+- `PROVIDER_NOT_LINKED` — у текущего аккаунта нет такого привязанного provider
+- `LAST_IDENTITY_REQUIRED` — нельзя отвязать последний способ входа
 - `USERNAME_ALREADY_EXISTS` — такое имя уже занято другим пользователем
 - `USERNAME_REQUIRED_FOR_RATING` — нельзя включить участие в рейтинге без `username`
 - `USER_NOT_FOUND` — пользователь не найден по переданным данным

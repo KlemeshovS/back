@@ -381,6 +381,198 @@ def test_auth_logout_returns_status(monkeypatch) -> None:
     assert response.json() == {"status": "loggedOut"}
 
 
+def test_auth_provider_list_returns_linked_identities(monkeypatch) -> None:
+    client = build_client()
+
+    client.app.dependency_overrides[get_current_user_session] = lambda: {
+        "id": 24,
+        "username": "provider_user",
+        "is_rating_enabled": False,
+        "session_type": "authenticated",
+        "provider": "google",
+        "session_id": 56,
+    }
+
+    monkeypatch.setattr(
+        social_auth_service,
+        "list_linked_identities",
+        lambda current_user: {
+            "items": [
+                {
+                    "provider": "google",
+                    "provider_email": "user@example.com",
+                    "provider_email_verified": True,
+                    "created_at": "2026-04-08T10:00:00Z",
+                    "updated_at": "2026-04-08T10:00:00Z",
+                }
+            ]
+        },
+    )
+
+    response = client.get("/auth/providers", headers={"Authorization": "Bearer token"})
+
+    assert response.status_code == 200
+    assert response.json()["items"][0]["provider"] == "google"
+
+
+def test_auth_provider_google_link_returns_identities(monkeypatch) -> None:
+    client = build_client()
+
+    client.app.dependency_overrides[get_current_user_session] = lambda: {
+        "id": 25,
+        "username": "provider_user",
+        "is_rating_enabled": False,
+        "session_type": "authenticated",
+        "provider": "google",
+        "session_id": 57,
+    }
+
+    monkeypatch.setattr(
+        social_auth_service,
+        "link_google_identity",
+        lambda current_user, id_token: {
+            "items": [
+                {
+                    "provider": "apple",
+                    "provider_email": "relay@privaterelay.appleid.com",
+                    "provider_email_verified": True,
+                    "created_at": "2026-04-08T10:00:00Z",
+                    "updated_at": "2026-04-08T10:00:00Z",
+                },
+                {
+                    "provider": "google",
+                    "provider_email": "user@example.com",
+                    "provider_email_verified": True,
+                    "created_at": "2026-04-08T10:05:00Z",
+                    "updated_at": "2026-04-08T10:05:00Z",
+                },
+            ]
+        },
+    )
+
+    response = client.post(
+        "/auth/providers/google/link",
+        json={"idToken": "google-link-token"},
+        headers={"Authorization": "Bearer token"},
+    )
+
+    assert response.status_code == 200
+    assert [item["provider"] for item in response.json()["items"]] == ["apple", "google"]
+
+
+def test_auth_provider_apple_link_returns_identities(monkeypatch) -> None:
+    client = build_client()
+
+    client.app.dependency_overrides[get_current_user_session] = lambda: {
+        "id": 26,
+        "username": "provider_user",
+        "is_rating_enabled": False,
+        "session_type": "authenticated",
+        "provider": "google",
+        "session_id": 58,
+    }
+
+    monkeypatch.setattr(
+        social_auth_service,
+        "link_apple_identity",
+        lambda current_user, id_token: {
+            "items": [
+                {
+                    "provider": "apple",
+                    "provider_email": "relay@privaterelay.appleid.com",
+                    "provider_email_verified": True,
+                    "created_at": "2026-04-08T10:00:00Z",
+                    "updated_at": "2026-04-08T10:00:00Z",
+                }
+            ]
+        },
+    )
+
+    response = client.post(
+        "/auth/providers/apple/link",
+        json={"idToken": "apple-link-token"},
+        headers={"Authorization": "Bearer token"},
+    )
+
+    assert response.status_code == 200
+    assert response.json()["items"][0]["provider"] == "apple"
+
+
+def test_auth_provider_yandex_link_returns_identities(monkeypatch) -> None:
+    client = build_client()
+
+    client.app.dependency_overrides[get_current_user_session] = lambda: {
+        "id": 27,
+        "username": "provider_user",
+        "is_rating_enabled": False,
+        "session_type": "authenticated",
+        "provider": "google",
+        "session_id": 59,
+    }
+
+    monkeypatch.setattr(
+        social_auth_service,
+        "link_yandex_identity",
+        lambda current_user, access_token: {
+            "items": [
+                {
+                    "provider": "yandex",
+                    "provider_email": "user@yandex.ru",
+                    "provider_email_verified": True,
+                    "created_at": "2026-04-08T10:00:00Z",
+                    "updated_at": "2026-04-08T10:00:00Z",
+                }
+            ]
+        },
+    )
+
+    response = client.post(
+        "/auth/providers/yandex/link",
+        json={"accessToken": "yandex-link-token"},
+        headers={"Authorization": "Bearer token"},
+    )
+
+    assert response.status_code == 200
+    assert response.json()["items"][0]["provider"] == "yandex"
+
+
+def test_auth_provider_unlink_returns_remaining_identities(monkeypatch) -> None:
+    client = build_client()
+
+    client.app.dependency_overrides[get_current_user_session] = lambda: {
+        "id": 28,
+        "username": "provider_user",
+        "is_rating_enabled": False,
+        "session_type": "authenticated",
+        "provider": "google",
+        "session_id": 60,
+    }
+
+    monkeypatch.setattr(
+        social_auth_service,
+        "unlink_identity",
+        lambda current_user, provider: {
+            "items": [
+                {
+                    "provider": "apple",
+                    "provider_email": "relay@privaterelay.appleid.com",
+                    "provider_email_verified": True,
+                    "created_at": "2026-04-08T10:00:00Z",
+                    "updated_at": "2026-04-08T10:00:00Z",
+                }
+            ]
+        },
+    )
+
+    response = client.delete(
+        "/auth/providers/google",
+        headers={"Authorization": "Bearer token"},
+    )
+
+    assert response.status_code == 200
+    assert response.json()["items"][0]["provider"] == "apple"
+
+
 def test_get_me_requires_authorization_header() -> None:
     client = build_client()
 

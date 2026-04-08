@@ -14,6 +14,7 @@ from app.domain.schemas import (
     AppleAuthRequest,
     AuthSessionResponse,
     GoogleAuthRequest,
+    LinkedIdentityListResponse,
     LogoutResponse,
     RefreshSessionRequest,
     SessionRestoreResponse,
@@ -102,6 +103,89 @@ def login_with_yandex(
     )
     guest_access_token = get_bearer_token(authorization) if authorization else None
     return social_auth_service.authenticate_yandex(payload.access_token, guest_access_token)
+
+
+@router.get(
+    "/auth/providers",
+    response_model=LinkedIdentityListResponse,
+    status_code=status.HTTP_200_OK,
+)
+def list_auth_providers(
+    current_session: dict = current_user_session_dependency,
+) -> LinkedIdentityListResponse:
+    return social_auth_service.list_linked_identities(current_session)
+
+
+@router.post(
+    "/auth/providers/google/link",
+    response_model=LinkedIdentityListResponse,
+    status_code=status.HTTP_200_OK,
+)
+def link_google_provider(
+    payload: GoogleAuthRequest,
+    request: Request,
+    current_session: dict = current_user_session_dependency,
+) -> LinkedIdentityListResponse:
+    client_ip = get_client_ip(request)
+    enforce_rate_limit(
+        key=f"google-link:ip:{client_ip}",
+        limit=settings.register_rate_limit,
+        window_seconds=settings.register_window_seconds,
+        detail="Too many Google link attempts. Please try again later.",
+    )
+    return social_auth_service.link_google_identity(current_session, payload.id_token)
+
+
+@router.post(
+    "/auth/providers/apple/link",
+    response_model=LinkedIdentityListResponse,
+    status_code=status.HTTP_200_OK,
+)
+def link_apple_provider(
+    payload: AppleAuthRequest,
+    request: Request,
+    current_session: dict = current_user_session_dependency,
+) -> LinkedIdentityListResponse:
+    client_ip = get_client_ip(request)
+    enforce_rate_limit(
+        key=f"apple-link:ip:{client_ip}",
+        limit=settings.register_rate_limit,
+        window_seconds=settings.register_window_seconds,
+        detail="Too many Apple link attempts. Please try again later.",
+    )
+    return social_auth_service.link_apple_identity(current_session, payload.id_token)
+
+
+@router.post(
+    "/auth/providers/yandex/link",
+    response_model=LinkedIdentityListResponse,
+    status_code=status.HTTP_200_OK,
+)
+def link_yandex_provider(
+    payload: YandexAuthRequest,
+    request: Request,
+    current_session: dict = current_user_session_dependency,
+) -> LinkedIdentityListResponse:
+    client_ip = get_client_ip(request)
+    enforce_rate_limit(
+        key=f"yandex-link:ip:{client_ip}",
+        limit=settings.register_rate_limit,
+        window_seconds=settings.register_window_seconds,
+        detail="Too many Yandex link attempts. Please try again later.",
+    )
+    return social_auth_service.link_yandex_identity(current_session, payload.access_token)
+
+
+@router.delete(
+    "/auth/providers/{provider}",
+    response_model=LinkedIdentityListResponse,
+    status_code=status.HTTP_200_OK,
+)
+def unlink_auth_provider(
+    provider: str,
+    current_session: dict = current_user_session_dependency,
+) -> LinkedIdentityListResponse:
+    return social_auth_service.unlink_identity(current_session, provider)
 
 
 @router.get(
