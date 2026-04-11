@@ -139,4 +139,5 @@ Hooks используют:
 - `main` обновляется только по прямой просьбе владельца
 - любой merge или push в `main` считается релизом
 - release tags: `backend/v<version>`
+- если базовый tag уже занят другим коммитом, production pipeline автоматически создает `backend/v<version>-r1`, затем `-r2` и так далее
 - rollback делается через GitHub Actions, не вручную на сервере

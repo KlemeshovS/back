@@ -49,12 +49,15 @@ Production release:
 2. перед релизом меняется `backend/VERSION`
 3. запускается `./scripts/prepare_main_release.sh <release-branch> <backend-version>`
 4. release branch вливается в `main`
-5. `main` pipeline создает tag `backend/v<version>` и GitHub Release
+5. `main` pipeline создает release tag:
+   - сначала `backend/v<version>`
+   - если он уже занят другим коммитом, автоматически `backend/v<version>-r1`, затем `-r2` и так далее
+   и после этого создает GitHub Release
 6. deploy идет через GitHub Actions
 
 Rollback:
 - GitHub Actions -> `Rollback Backend Release`
-- tag вида `backend/v0.2.0`
+- tag вида `backend/v0.2.0` или `backend/v0.2.0-r1`
 
 ## Что уже известно и не надо переоткрывать
 

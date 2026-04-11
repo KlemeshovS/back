@@ -11,9 +11,13 @@ SSH_KEY_PATH="${SSH_KEY_PATH:?SSH_KEY_PATH is required}"
 DEPLOY_VENV_PATH="${DEPLOY_VENV_PATH:-${DEPLOY_PATH}/.venv}"
 DEPLOY_HEALTHCHECK_URL="${DEPLOY_HEALTHCHECK_URL:-http://127.0.0.1:8000/ready}"
 BACKEND_VERSION_FILE="${BACKEND_VERSION_FILE:-backend/VERSION}"
+RELEASE_TAG="${RELEASE_TAG:-}"
 
 DATE_TAG="$(date +%Y%m%d-%H%M%S)"
 BACKEND_VERSION="$(BACKEND_VERSION_FILE="$BACKEND_VERSION_FILE" ./scripts/read_backend_version.sh)"
+if [[ -z "$RELEASE_TAG" ]]; then
+  RELEASE_TAG="backend/v${BACKEND_VERSION}"
+fi
 GIT_REF="$(git rev-parse --short=12 HEAD)"
 ARCHIVE_NAME="backend-v${BACKEND_VERSION}-${GIT_REF}.tar.gz"
 TMP_ARCHIVE="/tmp/${ARCHIVE_NAME}"
@@ -57,7 +61,7 @@ ssh -o BatchMode=yes -i "$SSH_KEY_PATH" "${DEPLOY_USER}@${DEPLOY_HOST}" "\
   '${DEPLOY_VENV_PATH}/bin/python' -m pip install -r '${DEPLOY_PATH}/backend/requirements.txt' && \
   printf '%s\n' '${BACKEND_VERSION}' > '${DEPLOY_PATH}/.backend-release-version' && \
   printf '%s\n' '${GIT_REF}' > '${DEPLOY_PATH}/.backend-release-ref' && \
-  printf '%s\n' 'backend/v${BACKEND_VERSION}' > '${DEPLOY_PATH}/.backend-release-tag' && \
+  printf '%s\n' '${RELEASE_TAG}' > '${DEPLOY_PATH}/.backend-release-tag' && \
   chown -R '${DEPLOY_OWNER}' '${DEPLOY_PATH}' && \
   systemctl restart '${DEPLOY_SERVICE}' && \
   for attempt in 1 2 3 4 5 6 7 8 9 10; do \

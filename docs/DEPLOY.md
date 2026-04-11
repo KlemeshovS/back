@@ -373,15 +373,21 @@ ssh -i /Users/klem/Documents/eguene/deploy_key root@api.wobbly.site 'cat /opt/ra
 Допустимые значения `release_tag`:
 - `backend/v0.1.0`
 - `backend/v0.2.0`
+- `backend/v0.2.0-r1`
 
 Допустимые значения `git_ref`:
 - `backend/v0.1.0`
 - `backend/v0.2.0`
+- `backend/v0.2.0-r1`
 - конкретный commit SHA
 
 Предпочтительный rollback path:
 - сначала использовать workflow `Rollback Backend Release` с release tag `backend/v...`
 - commit SHA использовать только если tag еще не заведен или нужен точечный hotfix rollback
+
+Если `backend/VERSION` не был увеличен, production pipeline больше не падает на конфликте tags:
+- сначала он пытается использовать `backend/v<version>`
+- если этот tag уже указывает на другой commit, pipeline автоматически создает следующий свободный tag вида `backend/v<version>-r1`, `backend/v<version>-r2` и так далее
 
 Все staging secrets и staging deploy значения intentionally documented only in `docs/STAGING.md` on `develop`.
 
