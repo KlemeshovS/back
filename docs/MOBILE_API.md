@@ -290,6 +290,10 @@ Admin UI использует отдельный admin-контур backend, н�
 - `AUTH_REQUIRED_FOR_RATING` — требуется авторизация для участия в рейтинговом контуре, например для отправки `score`
 - `AUTH_REQUIRED_FOR_USERNAME` — требуется авторизация для сохранения `username`
 - `GUEST_CANNOT_ENABLE_RATING` — guest-пользователь пытается включить участие в рейтинге
+
+Временный режим совместимости:
+- если на backend включен `ALLOW_GUEST_RATING=true`, guest-пользователи временно могут сохранять `username`, включать участие в рейтинге и отправлять `score`
+- по умолчанию этот режим выключен
 - `AUTH_REQUIRED_FOR_PROVIDER_MANAGEMENT` — guest-пользователь пытается управлять привязанными способами входа
 - `MISSING_AUTHORIZATION_HEADER` — в запросе отсутствует заголовок `Authorization: Bearer <accessToken>`
 - `INVALID_AUTHORIZATION_HEADER` — заголовок `Authorization` передан в неправильном формате

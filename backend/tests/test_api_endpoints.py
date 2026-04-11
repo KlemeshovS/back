@@ -5,7 +5,9 @@ from typing import Optional
 
 from app.api.dependencies import get_current_user, get_current_user_session
 from app.api.routes import health
+from app.core.config import settings
 from app.core.errors import ApiError, ApiErrorCode
+from app.domain.schemas import ProfileResponse, UserScoreResponse
 from app.services import session_service, social_auth_service, user_service
 from tests.helpers import build_client
 
@@ -657,6 +659,42 @@ def test_guest_cannot_toggle_rating() -> None:
     }
 
 
+def test_guest_can_update_profile_when_guest_rating_is_enabled(monkeypatch) -> None:
+    client = build_client()
+
+    client.app.dependency_overrides[get_current_user] = lambda: {
+        "id": 7,
+        "username": None,
+        "is_rating_enabled": False,
+        "session_type": "guest",
+        "provider": None,
+    }
+    monkeypatch.setattr(settings, "allow_guest_rating", True)
+
+    monkeypatch.setattr(
+        user_service,
+        "save_profile",
+        lambda user_id, username, participate_in_rating: ProfileResponse(
+            id=user_id,
+            username=username,
+            participate_in_rating=participate_in_rating,
+        ),
+    )
+
+    response = client.patch(
+        "/me/profile",
+        json={"username": "guest_name", "participateInRating": True},
+        headers={"Authorization": "Bearer token"},
+    )
+
+    assert response.status_code == 200
+    assert response.json() == {
+        "id": 7,
+        "username": "guest_name",
+        "participateInRating": True,
+    }
+
+
 def test_top_leaderboard_returns_service_payload(monkeypatch) -> None:
     client = build_client()
 
@@ -754,6 +792,33 @@ def test_guest_cannot_update_score() -> None:
         "code": "AUTH_REQUIRED_FOR_RATING",
         "message": "Authentication is required for rating features",
     }
+
+
+def test_guest_can_update_score_when_guest_rating_is_enabled(monkeypatch) -> None:
+    client = build_client()
+
+    client.app.dependency_overrides[get_current_user] = lambda: {
+        "id": 7,
+        "username": "guest_name",
+        "is_rating_enabled": True,
+        "session_type": "guest",
+        "provider": None,
+    }
+    monkeypatch.setattr(settings, "allow_guest_rating", True)
+    monkeypatch.setattr(
+        user_service,
+        "update_my_score",
+        lambda user_id, score: UserScoreResponse(username="guest_name", score=score),
+    )
+
+    response = client.post(
+        "/me/score",
+        json={"score": 10},
+        headers={"Authorization": "Bearer token"},
+    )
+
+    assert response.status_code == 200
+    assert response.json() == {"username": "guest_name", "score": 10}
 
 
 def test_score_update_rejects_users_with_rating_disabled(monkeypatch) -> None:

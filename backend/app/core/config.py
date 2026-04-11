@@ -40,6 +40,10 @@ class Settings(BaseSettings):
         default=2_592_000,
         validation_alias="AUTH_REFRESH_TOKEN_TTL_SECONDS",
     )
+    allow_guest_rating: bool = Field(
+        default=False,
+        validation_alias="ALLOW_GUEST_RATING",
+    )
 
     model_config = SettingsConfigDict(
         env_file=".env",

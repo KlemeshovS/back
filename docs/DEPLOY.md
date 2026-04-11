@@ -154,6 +154,23 @@ ls -lah /var/backups/wobbly-postgres/daily
 journalctl -u wobbly-postgres-backup.service -n 50 --no-pager
 ```
 
+## Temporary Guest Rating Compatibility
+
+Если iOS временно должен остаться на legacy guest flow, а Android уже использует новый auth flow, можно включить:
+
+```env
+ALLOW_GUEST_RATING=true
+```
+
+Эффект:
+- guest может сохранять `username`
+- guest может включать участие в рейтинге
+- guest может отправлять `score`
+
+По умолчанию:
+- `ALLOW_GUEST_RATING=false`
+- рейтинговый контур остается только для authenticated-пользователей
+
 ## Source Of Truth For Docs Page
 
 Человекочитаемая API docs page на `https://api.wobbly.site/api/docs` собирается клиентским JavaScript.
