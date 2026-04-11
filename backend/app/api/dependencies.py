@@ -5,12 +5,9 @@ from typing import Optional
 from fastapi import Depends, Header, Request, status
 
 from app.core.admin_auth import hash_admin_access_token
-from app.core.auth import hash_access_token
 from app.core.errors import ApiError, ApiErrorCode
 from app.core.rate_limit import rate_limiter
-from app.core.usernames import normalize_public_username
-from app.db.database import get_connection
-from app.services import admin_service
+from app.services import admin_service, session_service
 
 
 def get_client_ip(request: Request) -> str:
@@ -60,19 +57,7 @@ def get_bearer_token(authorization: Optional[str]) -> str:
 
 def get_current_user(authorization: Optional[str] = Header(default=None)) -> dict:
     token = get_bearer_token(authorization)
-    token_hash = hash_access_token(token)
-
-    with get_connection() as conn:
-        with conn.cursor() as cur:
-            cur.execute(
-                """
-                SELECT id, username, score, is_rating_enabled
-                FROM users
-                WHERE auth_token_hash = %s;
-                """,
-                (token_hash,),
-            )
-            user = cur.fetchone()
+    user = session_service.resolve_current_user_by_access_token(token)
 
     if user is None:
         raise ApiError(
@@ -82,8 +67,11 @@ def get_current_user(authorization: Optional[str] = Header(default=None)) -> dic
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-    user["username"] = normalize_public_username(user["username"])
     return user
+
+
+def get_current_user_session(authorization: Optional[str] = Header(default=None)) -> dict:
+    return get_current_user(authorization)
 
 
 def get_current_admin(authorization: Optional[str] = Header(default=None)) -> dict:

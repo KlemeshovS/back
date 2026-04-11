@@ -33,6 +33,13 @@ class Settings(BaseSettings):
         default="",
         validation_alias="ADMIN_BOOTSTRAP_PASSWORD",
     )
+    google_client_ids: str = Field(default="", validation_alias="GOOGLE_CLIENT_IDS")
+    apple_client_ids: str = Field(default="", validation_alias="APPLE_CLIENT_IDS")
+    yandex_client_ids: str = Field(default="", validation_alias="YANDEX_CLIENT_IDS")
+    auth_refresh_token_ttl_seconds: int = Field(
+        default=2_592_000,
+        validation_alias="AUTH_REFRESH_TOKEN_TTL_SECONDS",
+    )
 
     model_config = SettingsConfigDict(
         env_file=".env",
@@ -53,6 +60,18 @@ class Settings(BaseSettings):
     @property
     def cors_allowed_origins_list(self) -> list[str]:
         return self._parse_csv(self.cors_allowed_origins)
+
+    @property
+    def google_client_ids_list(self) -> list[str]:
+        return self._parse_csv(self.google_client_ids)
+
+    @property
+    def apple_client_ids_list(self) -> list[str]:
+        return self._parse_csv(self.apple_client_ids)
+
+    @property
+    def yandex_client_ids_list(self) -> list[str]:
+        return self._parse_csv(self.yandex_client_ids)
 
 
 settings = Settings()

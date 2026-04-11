@@ -66,6 +66,8 @@ def test_admin_can_patch_managed_user(monkeypatch) -> None:
             "username": payload.username,
             "score": payload.score,
             "participate_in_rating": payload.participate_in_rating,
+            "account_status": "active",
+            "identity_providers": ["google"],
             "created_at": "2026-03-19T12:00:00Z",
             "updated_at": "2026-03-19T12:30:00Z",
             "last_seen_at": "2026-03-19T12:30:00Z",
@@ -105,6 +107,8 @@ def test_admin_can_read_managed_user_detail(monkeypatch) -> None:
             "username": "detail_user",
             "score": 321,
             "participate_in_rating": True,
+            "account_status": "active",
+            "identity_providers": ["google", "yandex"],
             "created_at": "2026-03-19T10:00:00Z",
             "updated_at": "2026-03-19T11:00:00Z",
             "last_seen_at": "2026-03-19T11:05:00Z",
@@ -122,6 +126,8 @@ def test_admin_can_read_managed_user_detail(monkeypatch) -> None:
         "username": "detail_user",
         "score": 321,
         "participateInRating": True,
+        "accountStatus": "active",
+        "identityProviders": ["google", "yandex"],
         "createdAt": "2026-03-19T10:00:00Z",
         "updatedAt": "2026-03-19T11:00:00Z",
         "lastSeenAt": "2026-03-19T11:05:00Z",
@@ -147,6 +153,8 @@ def test_admin_user_list_exposes_created_at(monkeypatch) -> None:
                     "username": "listed_user",
                     "score": 100,
                     "participate_in_rating": True,
+                    "account_status": "guest",
+                    "identity_providers": [],
                     "created_at": "2026-03-19T10:00:00Z",
                     "updated_at": "2026-03-19T11:00:00Z",
                     "last_seen_at": "2026-03-19T11:05:00Z",
@@ -163,6 +171,8 @@ def test_admin_user_list_exposes_created_at(monkeypatch) -> None:
 
     assert response.status_code == 200
     assert response.json()["items"][0]["createdAt"] == "2026-03-19T10:00:00Z"
+    assert response.json()["items"][0]["accountStatus"] == "guest"
+    assert response.json()["items"][0]["identityProviders"] == []
 
 
 def test_admin_can_delete_managed_user(monkeypatch) -> None:

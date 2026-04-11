@@ -118,13 +118,31 @@ def create_anonymous_user() -> AnonymousAuthResponse:
         with conn.cursor() as cur:
             cur.execute(
                 """
-                INSERT INTO users (auth_token_hash, username)
-                VALUES (%s, %s)
-                RETURNING id;
+                INSERT INTO users (auth_token_hash, username, account_status, guest_migration_key)
+                VALUES (%s, %s, 'guest', %s)
+                RETURNING id, created_at, last_seen_at;
                 """,
-                (token_hash, anonymous_username),
+                (token_hash, anonymous_username, token_hash),
             )
             user = cur.fetchone()
+            cur.execute(
+                """
+                INSERT INTO user_sessions (
+                    user_id,
+                    access_token_hash,
+                    session_type,
+                    created_at,
+                    last_seen_at
+                )
+                VALUES (%s, %s, 'guest', %s, %s);
+                """,
+                (
+                    user["id"],
+                    token_hash,
+                    user["created_at"],
+                    user["last_seen_at"],
+                ),
+            )
         conn.commit()
 
     return AnonymousAuthResponse(user_id=user["id"], access_token=access_token)
@@ -188,6 +206,7 @@ def fetch_leaderboard(order: str, score_filter: str, limit: int) -> LeaderboardR
                   AND username IS NOT NULL
                   AND BTRIM(username) <> ''
                   AND username NOT LIKE 'anon_user_%%'
+                  AND last_seen_at >= NOW() - INTERVAL '30 days'
                   AND score {score_filter};
                 """
             )
@@ -200,6 +219,7 @@ def fetch_leaderboard(order: str, score_filter: str, limit: int) -> LeaderboardR
                   AND username IS NOT NULL
                   AND BTRIM(username) <> ''
                   AND username NOT LIKE 'anon_user_%%'
+                  AND last_seen_at >= NOW() - INTERVAL '30 days'
                   AND score {score_filter}
                 ORDER BY score {order}, username ASC
                 LIMIT %s;

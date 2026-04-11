@@ -150,10 +150,27 @@ Git hooks:
 - `wobbly.site`, `/api/docs` и `admin` теперь раздаются nginx напрямую из frontend deploy dirs
 - backend отвечает только за API и admin API routes
 
+## Backups
+
+В репозитории уже есть automated backup layer для PostgreSQL:
+- `scripts/backup_postgres.sh`
+- `deploy/systemd/wobbly-postgres-backup.service`
+- `deploy/systemd/wobbly-postgres-backup.timer`
+- `deploy/backup.env.example`
+
+Схема:
+- ежедневный `pg_dump`
+- хранение нескольких последних локальных копий
+- offsite copy через `rclone`
+
+Подробная настройка и проверка:
+- [docs/DEPLOY.md](/Users/klem/Documents/eguene/wobbly/back/docs/DEPLOY.md)
+
 ## Что читать дальше
 
 - [docs/HANDOFF.md](/Users/klem/Documents/eguene/docs/HANDOFF.md)
 - [docs/DEVELOPMENT_WORKFLOW.md](/Users/klem/Documents/eguene/docs/DEVELOPMENT_WORKFLOW.md)
 - [docs/DEPLOY.md](/Users/klem/Documents/eguene/docs/DEPLOY.md)
 - [docs/MOBILE_API.md](/Users/klem/Documents/eguene/docs/MOBILE_API.md)
+- [docs/SOCIAL_AUTH_MODEL.md](/Users/klem/Documents/eguene/wobbly/back/docs/SOCIAL_AUTH_MODEL.md)
 - [docs/TECHNICAL_BACKLOG.md](/Users/klem/Documents/eguene/wobbly/back/docs/TECHNICAL_BACKLOG.md)

@@ -76,6 +76,18 @@ Hooks используют:
 - `.githooks/pre-commit`
 - `.githooks/pre-push`
 
+`pre-push` запускает:
+
+```bash
+./scripts/pre_push_check.sh
+```
+
+А он, в свою очередь, гоняет полный:
+
+```bash
+./scripts/ci_check.sh
+```
+
 ## Границы репозитория
 
 Здесь живут:

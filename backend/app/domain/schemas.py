@@ -56,6 +56,53 @@ class AnonymousAuthResponse(ApiModel):
     token_type: str = "bearer"
 
 
+class GoogleAuthRequest(ApiModel):
+    id_token: str = Field(min_length=10, max_length=4096)
+
+
+class AppleAuthRequest(ApiModel):
+    id_token: str = Field(min_length=10, max_length=4096)
+
+
+class YandexAuthRequest(ApiModel):
+    access_token: str = Field(min_length=10, max_length=4096)
+
+
+class AuthSessionResponse(ApiModel):
+    user_id: int
+    access_token: str
+    refresh_token: Optional[str] = None
+    token_type: str = "bearer"
+
+
+class LinkedIdentityResponse(ApiModel):
+    provider: str
+    provider_email: Optional[str] = None
+    provider_email_verified: bool
+    created_at: datetime
+    updated_at: datetime
+
+
+class LinkedIdentityListResponse(ApiModel):
+    items: list[LinkedIdentityResponse]
+
+
+class RefreshSessionRequest(ApiModel):
+    refresh_token: str = Field(min_length=10, max_length=4096)
+
+
+class LogoutResponse(ApiModel):
+    status: str = "loggedOut"
+
+
+class SessionRestoreResponse(ApiModel):
+    user_id: int
+    username: Optional[str] = None
+    participate_in_rating: bool
+    session_type: str
+    provider: Optional[str] = None
+
+
 class ProfileUpdateRequest(ApiModel):
     username: Optional[str] = None
     participate_in_rating: bool
@@ -142,6 +189,8 @@ class ManagedUserResponse(ApiModel):
     username: Optional[str] = None
     score: int
     participate_in_rating: bool
+    account_status: str
+    identity_providers: list[str]
     created_at: datetime
     updated_at: datetime
     last_seen_at: datetime

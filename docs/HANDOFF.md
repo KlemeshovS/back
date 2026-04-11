@@ -31,6 +31,7 @@ Frontend source больше не живет здесь. Если задача �
 2. [docs/DEVELOPMENT_WORKFLOW.md](/Users/klem/Documents/eguene/docs/DEVELOPMENT_WORKFLOW.md)
 3. [docs/DEPLOY.md](/Users/klem/Documents/eguene/docs/DEPLOY.md)
 4. [docs/MOBILE_API.md](/Users/klem/Documents/eguene/docs/MOBILE_API.md)
+5. [docs/SOCIAL_AUTH_MODEL.md](/Users/klem/Documents/eguene/wobbly/back/docs/SOCIAL_AUTH_MODEL.md)
 
 ## Где искать код
 
