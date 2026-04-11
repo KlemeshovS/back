@@ -5,6 +5,7 @@ from psycopg import connect
 
 from app.core.apple_auth import AppleIdentity
 from app.core.auth import hash_access_token
+from app.core.config import settings
 from app.core.google_auth import GoogleIdentity
 from app.core.yandex_auth import YandexIdentity
 
@@ -239,6 +240,34 @@ def test_guest_cannot_create_username_or_enable_rating(db_client) -> None:
         "code": "GUEST_CANNOT_ENABLE_RATING",
         "message": "Guest users cannot enable rating participation",
     }
+
+
+def test_guest_can_use_rating_features_when_guest_rating_is_enabled(
+    db_client,
+    monkeypatch,
+) -> None:
+    monkeypatch.setattr(settings, "allow_guest_rating", True)
+    auth_payload = create_anonymous_user(db_client)
+
+    profile_response = db_client.patch(
+        "/me/profile",
+        json={"username": "guest_player", "participateInRating": True},
+        headers=auth_headers(auth_payload["accessToken"]),
+    )
+    score_response = db_client.post(
+        "/me/score",
+        json={"score": 42},
+        headers=auth_headers(auth_payload["accessToken"]),
+    )
+
+    assert profile_response.status_code == 200
+    assert profile_response.json() == {
+        "id": auth_payload["userId"],
+        "username": "guest_player",
+        "participateInRating": True,
+    }
+    assert score_response.status_code == 200
+    assert score_response.json() == {"username": "guest_player", "score": 42}
 
 
 def test_rating_toggle_updates_real_database_state(db_client, monkeypatch) -> None:

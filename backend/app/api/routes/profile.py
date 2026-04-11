@@ -48,6 +48,9 @@ def _enforce_authenticated_rating_user(
     wants_username_save: bool = False,
     wants_rating_enable: bool = False,
 ) -> None:
+    if settings.allow_guest_rating:
+        return
+
     if current_user["session_type"] != "authenticated":
         _raise_guest_rating_error(
             wants_username_save=wants_username_save,
