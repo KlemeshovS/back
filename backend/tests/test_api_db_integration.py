@@ -79,6 +79,29 @@ def test_anonymous_users_do_not_appear_in_admin_user_list(db_client) -> None:
     assert response.items == []
 
 
+def test_authenticated_user_exposes_account_status_and_identity_providers_in_admin_views(
+    db_client,
+    monkeypatch,
+) -> None:
+    from app.services import admin_service
+
+    auth_payload = create_authenticated_user(
+        db_client,
+        monkeypatch,
+        subject="admin-visible-user",
+    )
+
+    list_response = admin_service.list_managed_users(search=None, limit=50, offset=0)
+
+    matching = next(item for item in list_response.items if item.id == auth_payload["userId"])
+    assert matching.account_status == "active"
+    assert matching.identity_providers == ["google"]
+
+    detail_response = admin_service.get_managed_user(auth_payload["userId"])
+    assert detail_response.account_status == "active"
+    assert detail_response.identity_providers == ["google"]
+
+
 def test_anonymous_auth_flow_works_against_real_database(db_client) -> None:
     auth_payload = create_anonymous_user(db_client)
 

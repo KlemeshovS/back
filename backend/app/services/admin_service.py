@@ -295,14 +295,21 @@ def list_managed_users(search: Optional[str], limit: int, offset: int) -> Manage
                 cur.execute(
                     """
                     SELECT
-                        id,
-                        username,
-                        score,
-                        is_rating_enabled,
-                        created_at,
-                        updated_at,
-                        last_seen_at
+                        users.id,
+                        users.username,
+                        users.score,
+                        users.is_rating_enabled,
+                        users.account_status,
+                        COALESCE(identity.providers, ARRAY[]::text[]) AS identity_providers,
+                        users.created_at,
+                        users.updated_at,
+                        users.last_seen_at
                     FROM users
+                    LEFT JOIN LATERAL (
+                        SELECT ARRAY_AGG(provider ORDER BY provider) AS providers
+                        FROM user_identities
+                        WHERE user_id = users.id
+                    ) AS identity ON TRUE
                     WHERE username IS NOT NULL
                       AND BTRIM(username) <> ''
                       AND username NOT LIKE 'anon_user_%%'
@@ -326,14 +333,21 @@ def list_managed_users(search: Optional[str], limit: int, offset: int) -> Manage
                 cur.execute(
                     """
                     SELECT
-                        id,
-                        username,
-                        score,
-                        is_rating_enabled,
-                        created_at,
-                        updated_at,
-                        last_seen_at
+                        users.id,
+                        users.username,
+                        users.score,
+                        users.is_rating_enabled,
+                        users.account_status,
+                        COALESCE(identity.providers, ARRAY[]::text[]) AS identity_providers,
+                        users.created_at,
+                        users.updated_at,
+                        users.last_seen_at
                     FROM users
+                    LEFT JOIN LATERAL (
+                        SELECT ARRAY_AGG(provider ORDER BY provider) AS providers
+                        FROM user_identities
+                        WHERE user_id = users.id
+                    ) AS identity ON TRUE
                     WHERE username IS NOT NULL
                       AND BTRIM(username) <> ''
                       AND username NOT LIKE 'anon_user_%%'
@@ -356,15 +370,22 @@ def get_managed_user(user_id: int) -> ManagedUserResponse:
             cur.execute(
                 """
                 SELECT
-                    id,
-                    username,
-                    score,
-                    is_rating_enabled,
-                    created_at,
-                    updated_at,
-                    last_seen_at
+                    users.id,
+                    users.username,
+                    users.score,
+                    users.is_rating_enabled,
+                    users.account_status,
+                    COALESCE(identity.providers, ARRAY[]::text[]) AS identity_providers,
+                    users.created_at,
+                    users.updated_at,
+                    users.last_seen_at
                 FROM users
-                WHERE id = %s;
+                LEFT JOIN LATERAL (
+                    SELECT ARRAY_AGG(provider ORDER BY provider) AS providers
+                    FROM user_identities
+                    WHERE user_id = users.id
+                ) AS identity ON TRUE
+                WHERE users.id = %s;
                 """,
                 (user_id,),
             )
@@ -479,7 +500,7 @@ def update_managed_user(
             )
         conn.commit()
 
-    return _build_managed_user(updated_user)
+    return get_managed_user(user_id)
 
 
 def delete_managed_user(user_id: int, current_admin: dict[str, Any]) -> None:
@@ -790,6 +811,8 @@ def _build_managed_user(row: dict[str, Any]) -> ManagedUserResponse:
         username=normalize_public_username(row["username"]),
         score=row["score"],
         participate_in_rating=row["is_rating_enabled"],
+        account_status=row["account_status"],
+        identity_providers=row["identity_providers"] or [],
         created_at=row["created_at"],
         updated_at=row["updated_at"],
         last_seen_at=row["last_seen_at"],

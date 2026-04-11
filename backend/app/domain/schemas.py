@@ -189,6 +189,8 @@ class ManagedUserResponse(ApiModel):
     username: Optional[str] = None
     score: int
     participate_in_rating: bool
+    account_status: str
+    identity_providers: list[str]
     created_at: datetime
     updated_at: datetime
     last_seen_at: datetime
