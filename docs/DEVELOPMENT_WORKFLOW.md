@@ -45,10 +45,18 @@
 ## Production release
 
 1. убедиться, что `develop` зеленый
-2. обновить `backend/VERSION`
-3. подготовить release branch через `scripts/prepare_main_release.sh`
-4. влить release branch в `main`
-5. дождаться production pipeline
+2. обязательно прогнать релизную проверку без skip:
+
+```bash
+TEST_DATABASE_URL=postgresql://app:app@127.0.0.1:5432/app ./scripts/release_check.sh
+```
+
+Если релизная проверка не прошла полностью, merge или push в `main` запрещен.
+
+3. обновить `backend/VERSION`
+4. подготовить release branch через `scripts/prepare_main_release.sh`
+5. влить release branch в `main`
+6. дождаться production pipeline
 
 ## Проверки и hooks
 
@@ -58,6 +66,12 @@
 ./scripts/ci_check.sh
 ```
 
+Отдельная команда именно для релиза:
+
+```bash
+TEST_DATABASE_URL=postgresql://app:app@127.0.0.1:5432/app ./scripts/release_check.sh
+```
+
 Отдельные стадии:
 
 ```bash
@@ -65,6 +79,12 @@
 ./scripts/lint.sh
 ./scripts/test.sh
 ```
+
+`release_check.sh` отличается от обычного `ci_check.sh` тем, что:
+- требует `TEST_DATABASE_URL`
+- отдельно прогоняет real DB integration tests
+- проверяет, что в текущем Python-окружении доступны зависимости для миграций
+- считается обязательным шагом перед merge/push в `main`
 
 Подключение hooks:
 
