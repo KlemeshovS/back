@@ -174,6 +174,34 @@ Authorization: Bearer <accessToken>
 
 Нельзя удалить последний способ входа.
 
+## Admin API notes
+
+Admin UI использует отдельный admin-контур backend, но контракт managed users тоже важно держать в актуальном состоянии, потому что `/api/docs` и admin UI должны обновляться в том же изменении, что и backend API.
+
+### `GET /admin/users`
+
+Возвращает список управляемых пользователей для админки.
+
+Поля ответа для каждого пользователя:
+- `id`
+- `username`
+- `score`
+- `participateInRating`
+- `accountStatus`
+- `identityProviders`
+- `createdAt`
+- `updatedAt`
+- `lastSeenAt`
+
+Где:
+- `accountStatus = guest` — анонимный пользователь
+- `accountStatus = active` — авторизованный/активный аккаунт
+- `identityProviders` — список привязанных способов входа, например `google`, `apple`, `yandex`
+
+### `GET /admin/users/{userId}`
+
+Возвращает те же поля, что и список, но для одной записи пользователя в detail modal админки.
+
 ### `PATCH /api/v1/me/profile`
 
 Сохраняет `username` и `participateInRating`.
