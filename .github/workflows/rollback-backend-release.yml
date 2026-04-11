@@ -54,6 +54,7 @@ jobs:
           DEPLOY_OWNER: ${{ secrets.DEPLOY_OWNER }}
           DEPLOY_VENV_PATH: ${{ secrets.DEPLOY_VENV_PATH }}
           DEPLOY_HEALTHCHECK_URL: http://127.0.0.1:8000/ready
+          RELEASE_TAG: ${{ inputs.release_tag }}
           SSH_KEY_PATH: /home/runner/.ssh/deploy_key
         run: ./scripts/deploy_release.sh
 

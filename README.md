@@ -142,7 +142,8 @@ TEST_DATABASE_URL=postgresql://app:app@127.0.0.1:5432/app ./scripts/release_chec
 
 - версия backend хранится в `backend/VERSION`
 - production tag: `backend/v<version>`
-- GitHub Release: `Backend v<version>`
+- если такая базовая версия уже была выпущена раньше, pipeline автоматически создаст уникальный tag вида `backend/v<version>-r1`, `backend/v<version>-r2` и т.д.
+- GitHub Release использует effective release tag, а не ломает deploy на повторной выкладке той же базовой версии
 - rollback: GitHub Actions -> `Rollback Backend Release`
 - ручной redeploy по ref: `Deploy Backend Release`
 
