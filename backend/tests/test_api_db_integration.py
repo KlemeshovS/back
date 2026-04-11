@@ -473,6 +473,59 @@ def test_api_v1_leaderboard_queries_use_real_database_data(db_client, monkeypatc
     }
 
 
+def test_leaderboard_excludes_users_inactive_for_more_than_30_days(
+    db_client,
+    integration_database_url,
+    monkeypatch,
+) -> None:
+    recent = create_authenticated_user(db_client, monkeypatch, "leader-recent")
+    stale = create_authenticated_user(db_client, monkeypatch, "leader-stale")
+
+    db_client.patch(
+        "/me/profile",
+        json={"username": "recent_user", "participateInRating": True},
+        headers=auth_headers(recent["accessToken"]),
+    )
+    db_client.patch(
+        "/me/profile",
+        json={"username": "stale_user", "participateInRating": True},
+        headers=auth_headers(stale["accessToken"]),
+    )
+
+    db_client.post(
+        "/me/score",
+        json={"score": 25},
+        headers=auth_headers(recent["accessToken"]),
+    )
+    db_client.post(
+        "/me/score",
+        json={"score": 99},
+        headers=auth_headers(stale["accessToken"]),
+    )
+
+    with connect(integration_database_url) as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                UPDATE users
+                SET last_seen_at = NOW() - INTERVAL '31 days'
+                WHERE id = %s;
+                """,
+                (stale["userId"],),
+            )
+        conn.commit()
+
+    top_response = db_client.get("/leaderboard/top?limit=10")
+
+    assert top_response.status_code == 200
+    assert top_response.json() == {
+        "items": [
+            {"username": "recent_user", "score": 25},
+        ],
+        "total": 1,
+    }
+
+
 def test_real_database_flows_cover_constraint_and_validation_errors(db_client, monkeypatch) -> None:
     first_user = create_authenticated_user(db_client, monkeypatch, "duplicate-first")
     second_user = create_authenticated_user(db_client, monkeypatch, "duplicate-second")

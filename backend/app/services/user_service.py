@@ -206,6 +206,7 @@ def fetch_leaderboard(order: str, score_filter: str, limit: int) -> LeaderboardR
                   AND username IS NOT NULL
                   AND BTRIM(username) <> ''
                   AND username NOT LIKE 'anon_user_%%'
+                  AND last_seen_at >= NOW() - INTERVAL '30 days'
                   AND score {score_filter};
                 """
             )
@@ -218,6 +219,7 @@ def fetch_leaderboard(order: str, score_filter: str, limit: int) -> LeaderboardR
                   AND username IS NOT NULL
                   AND BTRIM(username) <> ''
                   AND username NOT LIKE 'anon_user_%%'
+                  AND last_seen_at >= NOW() - INTERVAL '30 days'
                   AND score {score_filter}
                 ORDER BY score {order}, username ASC
                 LIMIT %s;
