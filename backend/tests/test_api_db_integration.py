@@ -81,6 +81,7 @@ def test_anonymous_users_do_not_appear_in_admin_user_list(db_client) -> None:
 
 def test_authenticated_user_exposes_account_status_and_identity_providers_in_admin_views(
     db_client,
+    integration_database_url,
     monkeypatch,
 ) -> None:
     from app.services import admin_service
@@ -89,6 +90,13 @@ def test_authenticated_user_exposes_account_status_and_identity_providers_in_adm
         db_client,
         monkeypatch,
         subject="admin-visible-user",
+    )
+    seed_guest_profile_state(
+        integration_database_url,
+        user_id=auth_payload["userId"],
+        username="admin_visible_user",
+        score=12,
+        participate_in_rating=True,
     )
 
     list_response = admin_service.list_managed_users(search=None, limit=50, offset=0)
