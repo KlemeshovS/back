@@ -124,11 +124,19 @@ Git hooks:
 
 Путь релиза:
 1. закончить работу в `develop`
-2. обновить `backend/VERSION`
-3. запустить `./scripts/prepare_main_release.sh <release-branch> <backend-version>`
-4. проверить release branch
-5. влить release branch в `main`
-6. дождаться production pipeline
+2. обязательно прогнать релизную проверку без skip:
+
+```bash
+TEST_DATABASE_URL=postgresql://app:app@127.0.0.1:5432/app ./scripts/release_check.sh
+```
+
+Если `release_check.sh` не прошел полностью, релиз в `main` не делаем. Скрипт обязан пройти без skip и без ручных оговорок.
+
+3. обновить `backend/VERSION`
+4. запустить `./scripts/prepare_main_release.sh <release-branch> <backend-version>`
+5. проверить release branch
+6. влить release branch в `main`
+7. дождаться production pipeline
 
 ## Версии и rollback
 
