@@ -1,0 +1,11 @@
+[Unit]
+Description=Wobbly PostgreSQL backup
+After=network-online.target postgresql.service
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=/opt/rating-service
+EnvironmentFile=-/etc/wobbly/backup.env
+ExecStart=/opt/rating-service/scripts/backup_postgres.sh
+

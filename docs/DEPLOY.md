@@ -81,9 +81,78 @@ ssh -i /Users/klem/Documents/eguene/deploy_key root@api.wobbly.site
 Ключевые пути:
 - app code: `/opt/rating-service/backend/app`
 - backups created during manual deploys: `/opt/rating-service/.deploy-backups`
+- automated PostgreSQL backups: `/var/backups/wobbly-postgres`
 - production frontend bundle: `/opt/wobbly-front-production/current`
 - staging backend: `/opt/rating-service-staging`
 - staging frontend bundle: `/opt/wobbly-front-staging/current`
+
+## Automated Backups
+
+Production backup flow now lives in the repository:
+- script: `scripts/backup_postgres.sh`
+- systemd unit: `deploy/systemd/wobbly-postgres-backup.service`
+- systemd timer: `deploy/systemd/wobbly-postgres-backup.timer`
+- env template: `deploy/backup.env.example`
+
+What it does:
+- runs a daily `pg_dump`
+- stores local backups in `/var/backups/wobbly-postgres/daily`
+- keeps only the last `LOCAL_RETENTION_DAYS` of local copies
+- updates `latest.dump` and `latest.sha256`
+- can copy each backup off-server through `rclone`
+
+### Server Setup
+
+1. Copy the env template:
+
+```bash
+mkdir -p /etc/wobbly
+cp /opt/rating-service/deploy/backup.env.example /etc/wobbly/backup.env
+```
+
+2. Edit `/etc/wobbly/backup.env`:
+- set `DATABASE_URL` or `PG*`
+- set `LOCAL_RETENTION_DAYS`
+- set `RCLONE_REMOTE` and `RCLONE_DESTINATION`
+
+3. Install `rclone` on the server and configure the remote:
+
+```bash
+apt-get update
+apt-get install -y rclone
+rclone config
+```
+
+4. Install the systemd files:
+
+```bash
+cp /opt/rating-service/deploy/systemd/wobbly-postgres-backup.service /etc/systemd/system/
+cp /opt/rating-service/deploy/systemd/wobbly-postgres-backup.timer /etc/systemd/system/
+systemctl daemon-reload
+systemctl enable --now wobbly-postgres-backup.timer
+```
+
+### Verification
+
+Run one backup manually:
+
+```bash
+systemctl start wobbly-postgres-backup.service
+```
+
+Check timer state:
+
+```bash
+systemctl status wobbly-postgres-backup.timer
+systemctl list-timers --all | grep wobbly-postgres-backup
+```
+
+Check backup output:
+
+```bash
+ls -lah /var/backups/wobbly-postgres/daily
+journalctl -u wobbly-postgres-backup.service -n 50 --no-pager
+```
 
 ## Source Of Truth For Docs Page
 
