@@ -31,6 +31,8 @@ Authorization: Bearer <accessToken>
 - `GET /api/v1/auth/providers`
 - `PATCH /api/v1/me/profile`
 - `PATCH /api/v1/me/rating`
+- `POST /api/v1/me/avatar`
+- `DELETE /api/v1/me/avatar`
 - `POST /api/v1/me/score`
 - `POST /api/v1/auth/providers/google/link`
 - `POST /api/v1/auth/providers/apple/link`
@@ -58,6 +60,8 @@ Authorization: Bearer <accessToken>
 
 - `PATCH /api/v1/me/profile` — сохранить `username` и участие
 - `PATCH /api/v1/me/rating` — отдельно включить или выключить участие
+- `POST /api/v1/me/avatar` — загрузить аватар текущего пользователя
+- `DELETE /api/v1/me/avatar` — удалить аватар текущего пользователя
 - `POST /api/v1/me/score` — обновить score
 
 ### Внутренняя session model для social auth
@@ -102,6 +106,7 @@ Authorization: Bearer <accessToken>
 - `id`
 - `username`
 - `participateInRating`
+- `avatarUrl`
 
 ### `GET /api/v1/auth/session`
 
@@ -113,6 +118,7 @@ Authorization: Bearer <accessToken>
 - `participateInRating`
 - `sessionType`
 - `provider`
+- `avatarUrl`
 
 ### `POST /api/v1/auth/refresh`
 
@@ -210,6 +216,28 @@ Admin UI использует отдельный admin-контур backend, н�
 
 Отдельно включает или выключает участие в рейтинге.
 
+### `POST /api/v1/me/avatar`
+
+Загружает новый аватар текущего пользователя.
+
+Формат:
+- `multipart/form-data`
+- поле файла: `file`
+
+Ограничения:
+- поддерживаются `image/jpeg`, `image/png`, `image/webp`
+- максимальный размер задается backend-конфигом `AVATAR_MAX_BYTES`
+
+Ответ:
+- тот же профиль, что и `GET /api/v1/me`
+
+### `DELETE /api/v1/me/avatar`
+
+Удаляет текущий аватар пользователя.
+
+Ответ:
+- тот же профиль, что и `GET /api/v1/me`
+
 ### `POST /api/v1/me/score`
 
 Обновляет score текущего пользователя.
@@ -233,6 +261,7 @@ Admin UI использует отдельный admin-контур backend, н�
 
 Дополнительно:
 - в leaderboard попадают только пользователи, у которых `lastSeenAt` не старше 30 дней
+- для каждого элемента может приходить `avatarUrl`
 
 ### `GET /api/v1/leaderboard/bottom?limit=100`
 
@@ -240,6 +269,7 @@ Admin UI использует отдельный admin-контур backend, н�
 
 Дополнительно:
 - в leaderboard попадают только пользователи, у которых `lastSeenAt` не старше 30 дней
+- для каждого элемента может приходить `avatarUrl`
 
 Пример:
 
@@ -248,11 +278,13 @@ Admin UI использует отдельный admin-контур backend, н�
   "items": [
     {
       "username": "player_10",
-      "score": -1
+      "score": -1,
+      "avatarUrl": "https://api.wobbly.site/media/avatars/user-10.jpg"
     },
     {
       "username": "player_7",
-      "score": -3
+      "score": -3,
+      "avatarUrl": null
     }
   ],
   "total": 20

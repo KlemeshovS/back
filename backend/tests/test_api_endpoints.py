@@ -320,6 +320,7 @@ def test_auth_session_restore_returns_current_session(monkeypatch) -> None:
         "is_rating_enabled": True,
         "session_type": "authenticated",
         "provider": "google",
+        "avatar_path": None,
     }
 
     response = client.get("/auth/session", headers={"Authorization": "Bearer token"})
@@ -331,6 +332,7 @@ def test_auth_session_restore_returns_current_session(monkeypatch) -> None:
         "participateInRating": True,
         "sessionType": "authenticated",
         "provider": "google",
+        "avatarUrl": None,
     }
 
 
@@ -692,6 +694,7 @@ def test_guest_can_update_profile_when_guest_rating_is_enabled(monkeypatch) -> N
         "id": 7,
         "username": "guest_name",
         "participateInRating": True,
+        "avatarUrl": None,
     }
 
 
@@ -702,7 +705,7 @@ def test_top_leaderboard_returns_service_payload(monkeypatch) -> None:
         user_service,
         "fetch_leaderboard",
         lambda order, score_filter, limit: {
-            "items": [{"username": "good_user", "score": 12}],
+            "items": [{"username": "good_user", "score": 12, "avatar_url": None}],
             "total": 1,
         },
     )
@@ -711,7 +714,7 @@ def test_top_leaderboard_returns_service_payload(monkeypatch) -> None:
 
     assert response.status_code == 200
     assert response.json() == {
-        "items": [{"username": "good_user", "score": 12}],
+        "items": [{"username": "good_user", "score": 12, "avatarUrl": None}],
         "total": 1,
     }
 
@@ -723,7 +726,7 @@ def test_top_leaderboard_is_available_under_api_v1(monkeypatch) -> None:
         user_service,
         "fetch_leaderboard",
         lambda order, score_filter, limit: {
-            "items": [{"username": "good_v1", "score": 20}],
+            "items": [{"username": "good_v1", "score": 20, "avatar_url": None}],
             "total": 1,
         },
     )
@@ -732,7 +735,7 @@ def test_top_leaderboard_is_available_under_api_v1(monkeypatch) -> None:
 
     assert response.status_code == 200
     assert response.json() == {
-        "items": [{"username": "good_v1", "score": 20}],
+        "items": [{"username": "good_v1", "score": 20, "avatarUrl": None}],
         "total": 1,
     }
 
@@ -818,7 +821,80 @@ def test_guest_can_update_score_when_guest_rating_is_enabled(monkeypatch) -> Non
     )
 
     assert response.status_code == 200
-    assert response.json() == {"username": "guest_name", "score": 10}
+    assert response.json() == {"username": "guest_name", "score": 10, "avatarUrl": None}
+
+
+def test_upload_avatar_returns_profile(monkeypatch) -> None:
+    client = build_client()
+
+    client.app.dependency_overrides[get_current_user] = lambda: {
+        "id": 7,
+        "username": "player_7",
+        "is_rating_enabled": True,
+        "session_type": "authenticated",
+        "provider": "google",
+    }
+
+    monkeypatch.setattr(
+        user_service,
+        "save_my_avatar",
+        lambda user_id, payload, content_type: ProfileResponse(
+            id=user_id,
+            username="player_7",
+            participate_in_rating=True,
+            avatar_url="/media/avatars/user-7.jpg",
+        ),
+    )
+
+    response = client.post(
+        "/me/avatar",
+        headers={"Authorization": "Bearer token"},
+        files={"file": ("avatar.jpg", b"\xff\xd8\xffavatar", "image/jpeg")},
+    )
+
+    assert response.status_code == 200
+    assert response.json() == {
+        "id": 7,
+        "username": "player_7",
+        "participateInRating": True,
+        "avatarUrl": "/media/avatars/user-7.jpg",
+    }
+
+
+def test_delete_avatar_returns_profile(monkeypatch) -> None:
+    client = build_client()
+
+    client.app.dependency_overrides[get_current_user] = lambda: {
+        "id": 7,
+        "username": "player_7",
+        "is_rating_enabled": True,
+        "session_type": "authenticated",
+        "provider": "google",
+    }
+
+    monkeypatch.setattr(
+        user_service,
+        "delete_my_avatar",
+        lambda user_id: ProfileResponse(
+            id=user_id,
+            username="player_7",
+            participate_in_rating=True,
+            avatar_url=None,
+        ),
+    )
+
+    response = client.delete(
+        "/me/avatar",
+        headers={"Authorization": "Bearer token"},
+    )
+
+    assert response.status_code == 200
+    assert response.json() == {
+        "id": 7,
+        "username": "player_7",
+        "participateInRating": True,
+        "avatarUrl": None,
+    }
 
 
 def test_score_update_rejects_users_with_rating_disabled(monkeypatch) -> None:

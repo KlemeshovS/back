@@ -5,6 +5,7 @@ from fastapi import status
 from app.core.auth import generate_access_token, generate_refresh_token, hash_access_token
 from app.core.config import settings
 from app.core.errors import ApiError, ApiErrorCode
+from app.core.media import build_avatar_url
 from app.core.usernames import normalize_public_username
 from app.db.database import get_connection
 from app.domain.schemas import AuthSessionResponse, LogoutResponse, SessionRestoreResponse
@@ -146,6 +147,7 @@ def restore_session(current_session: dict) -> SessionRestoreResponse:
         participate_in_rating=current_session["is_rating_enabled"],
         session_type=current_session["session_type"],
         provider=current_session["provider"],
+        avatar_url=build_avatar_url(current_session.get("avatar_path")),
     )
 
 
@@ -188,6 +190,7 @@ def resolve_current_user_by_access_token(token: str) -> dict | None:
                     u.username,
                     u.score,
                     u.is_rating_enabled,
+                    u.avatar_path,
                     us.id AS session_id,
                     us.session_type,
                     us.provider
@@ -224,6 +227,7 @@ def resolve_current_user_by_access_token(token: str) -> dict | None:
                 cur.execute(
                     """
                     SELECT id, username, score, is_rating_enabled, account_status
+                    , avatar_path
                     FROM users
                     WHERE auth_token_hash = %s;
                     """,
@@ -241,6 +245,7 @@ def resolve_current_user_by_access_token(token: str) -> dict | None:
                     "session_id": None,
                     "session_type": legacy_user["account_status"],
                     "provider": None,
+                    "avatar_path": legacy_user["avatar_path"],
                 }
 
     user["username"] = normalize_public_username(user["username"])

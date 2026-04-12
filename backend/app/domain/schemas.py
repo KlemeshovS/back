@@ -101,6 +101,7 @@ class SessionRestoreResponse(ApiModel):
     participate_in_rating: bool
     session_type: str
     provider: Optional[str] = None
+    avatar_url: Optional[str] = None
 
 
 class ProfileUpdateRequest(ApiModel):
@@ -118,6 +119,7 @@ class ProfileResponse(ApiModel):
     id: int
     username: Optional[str] = None
     participate_in_rating: bool
+    avatar_url: Optional[str] = None
 
 
 class ScoreUpdateRequest(ApiModel):
@@ -133,6 +135,7 @@ class UserScoreResponse(ApiModel):
 
     username: Optional[str] = None
     score: int
+    avatar_url: Optional[str] = None
 
 
 class LeaderboardResponse(ApiModel):

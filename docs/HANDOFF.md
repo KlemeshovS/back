@@ -32,6 +32,7 @@ Frontend source больше не живет здесь. Если задача �
 3. [docs/DEPLOY.md](/Users/klem/Documents/eguene/docs/DEPLOY.md)
 4. [docs/MOBILE_API.md](/Users/klem/Documents/eguene/docs/MOBILE_API.md)
 5. [docs/SOCIAL_AUTH_MODEL.md](/Users/klem/Documents/eguene/wobbly/back/docs/SOCIAL_AUTH_MODEL.md)
+6. [docs/UPTIME_MONITORING.md](/Users/klem/Documents/eguene/wobbly/back/docs/UPTIME_MONITORING.md)
 
 ## Где искать код
 
@@ -66,6 +67,7 @@ Rollback:
 - deploy идет через GitHub Actions
 - readiness gate: `/ready`
 - backend versioning уже включен
+- uptime monitoring стартово разворачивается через `Uptime Kuma`
 
 ## Перед началом работы
 

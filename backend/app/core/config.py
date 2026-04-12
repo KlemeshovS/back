@@ -40,6 +40,9 @@ class Settings(BaseSettings):
         default=2_592_000,
         validation_alias="AUTH_REFRESH_TOKEN_TTL_SECONDS",
     )
+    media_root: str = Field(default="./uploads", validation_alias="MEDIA_ROOT")
+    media_base_url: str = Field(default="", validation_alias="MEDIA_BASE_URL")
+    avatar_max_bytes: int = Field(default=5_242_880, validation_alias="AVATAR_MAX_BYTES")
     allow_guest_rating: bool = Field(
         default=False,
         validation_alias="ALLOW_GUEST_RATING",

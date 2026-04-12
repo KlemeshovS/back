@@ -16,6 +16,7 @@ from app.api.error_handlers import (
 from app.api.routes import admin, auth, docs, health, leaderboard, profile, site
 from app.core.config import settings
 from app.core.errors import ApiError
+from app.core.media import ensure_media_directories
 from app.db.database import init_db
 
 PUBLIC_API_V1_PREFIX = "/api/v1"
@@ -33,6 +34,7 @@ async def noop_lifespan(_: FastAPI):
 
 
 def create_app(init_database: bool = True) -> FastAPI:
+    ensure_media_directories()
     app = FastAPI(
         title="Rating Service",
         lifespan=db_lifespan if init_database else noop_lifespan,
@@ -57,6 +59,7 @@ def create_app(init_database: bool = True) -> FastAPI:
     app.mount("/static", StaticFiles(directory=static_dir), name="static")
     app.mount("/assets", StaticFiles(directory=static_dir / "assets"), name="assets")
     app.mount("/og", StaticFiles(directory=static_dir / "og"), name="og")
+    app.mount("/media", StaticFiles(directory=settings.media_root, check_dir=False), name="media")
     app.add_exception_handler(ApiError, api_error_handler)
     app.add_exception_handler(HTTPException, http_exception_handler)
     app.add_exception_handler(RequestValidationError, validation_exception_handler)
