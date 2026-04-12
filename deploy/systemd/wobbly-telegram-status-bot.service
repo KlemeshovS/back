@@ -1,0 +1,15 @@
+[Unit]
+Description=Wobbly Telegram status bot
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/rating-service
+EnvironmentFile=-/etc/wobbly/telegram-status-bot.env
+ExecStart=/opt/rating-service/.venv/bin/python /opt/rating-service/scripts/telegram_status_bot.py
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

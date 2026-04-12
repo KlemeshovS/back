@@ -151,3 +151,59 @@ docker compose --env-file /opt/uptime-kuma/.env -f deploy/monitoring/uptime-kuma
 - о падении будет приходить уведомление
 - отпадет необходимость ручных `curl`-проверок как основного способа контроля
 
+## Telegram Status Bot
+
+Если команде нужен ручной запрос статуса через Telegram-команду `/status`, рядом с Uptime Kuma можно поднять маленький polling-бот.
+
+Что умеет стартовая версия:
+- принимает `/status`
+- проверяет:
+  - `https://api.wobbly.site/health`
+  - `https://api.wobbly.site/ready`
+- отвечает статусом в Telegram-группу
+
+Файлы:
+- bot script: `scripts/telegram_status_bot.py`
+- env template: `deploy/telegram-status-bot.env.example`
+- systemd unit: `deploy/systemd/wobbly-telegram-status-bot.service`
+
+### Server Setup
+
+1. Скопировать env:
+
+```bash
+mkdir -p /etc/wobbly
+cp /opt/rating-service/deploy/telegram-status-bot.env.example /etc/wobbly/telegram-status-bot.env
+```
+
+2. Отредактировать `/etc/wobbly/telegram-status-bot.env`:
+- `TELEGRAM_BOT_TOKEN`
+- `TELEGRAM_STATUS_ALLOWED_CHAT_ID`
+- `TELEGRAM_STATUS_TIMEZONE` (по умолчанию `Europe/Moscow`)
+- при необходимости `STATUS_API_HEALTH_URL` и `STATUS_API_READY_URL`
+- при необходимости `TELEGRAM_STATUS_POLL_TIMEOUT` для более быстрого ответа бота
+
+3. Установить systemd unit:
+
+```bash
+cp /opt/rating-service/deploy/systemd/wobbly-telegram-status-bot.service /etc/systemd/system/
+systemctl daemon-reload
+systemctl enable --now wobbly-telegram-status-bot.service
+```
+
+### Verification
+
+Проверить сервис:
+
+```bash
+systemctl status wobbly-telegram-status-bot.service --no-pager
+journalctl -u wobbly-telegram-status-bot.service -n 50 --no-pager
+```
+
+После этого в разрешенной Telegram-группе команда:
+
+```text
+/status
+```
+
+должна вернуть краткий статус `health` и `ready` с отметкой времени в настроенном часовом поясе.

@@ -218,6 +218,41 @@ docker ps --filter name=uptime-kuma
 docker logs --tail=100 uptime-kuma
 ```
 
+## Telegram Status Bot
+
+Если нужен ручной запрос статуса через Telegram-команду `/status`, в production можно поднять отдельный polling-бот.
+
+Файлы в репозитории:
+- env template: `deploy/telegram-status-bot.env.example`
+- systemd unit: `deploy/systemd/wobbly-telegram-status-bot.service`
+- script: `scripts/telegram_status_bot.py`
+
+### Server Setup
+
+```bash
+mkdir -p /etc/wobbly
+cp /opt/rating-service/deploy/telegram-status-bot.env.example /etc/wobbly/telegram-status-bot.env
+nano /etc/wobbly/telegram-status-bot.env
+cp /opt/rating-service/deploy/systemd/wobbly-telegram-status-bot.service /etc/systemd/system/
+systemctl daemon-reload
+systemctl enable --now wobbly-telegram-status-bot.service
+```
+
+`telegram-status-bot.env` должен содержать:
+- `TELEGRAM_BOT_TOKEN`
+- `TELEGRAM_STATUS_ALLOWED_CHAT_ID`
+
+Start version checks:
+- `https://api.wobbly.site/health`
+- `https://api.wobbly.site/ready`
+
+### Verification
+
+```bash
+systemctl status wobbly-telegram-status-bot.service --no-pager
+journalctl -u wobbly-telegram-status-bot.service -n 50 --no-pager
+```
+
 ## User Avatar Storage
 
 User avatars are stored outside the repository and outside frontend assets.

@@ -68,6 +68,7 @@ Rollback:
 - readiness gate: `/ready`
 - backend versioning уже включен
 - uptime monitoring стартово разворачивается через `Uptime Kuma`
+- ручной Telegram `/status` можно поднять отдельным systemd bot service
 
 ## Перед началом работы
 

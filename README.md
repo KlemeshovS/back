@@ -181,6 +181,7 @@ TEST_DATABASE_URL=postgresql://app:app@127.0.0.1:5432/app ./scripts/release_chec
 - `Uptime Kuma`
 - setup files: `deploy/monitoring/uptime-kuma.compose.yml`
 - install helper: `scripts/install_uptime_kuma.sh`
+- optional Telegram status bot: `scripts/telegram_status_bot.py`
 
 Подробно:
 - [docs/UPTIME_MONITORING.md](/Users/klem/Documents/eguene/wobbly/back/docs/UPTIME_MONITORING.md)
