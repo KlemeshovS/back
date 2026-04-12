@@ -155,6 +155,69 @@ ls -lah /var/backups/wobbly-postgres/daily
 journalctl -u wobbly-postgres-backup.service -n 50 --no-pager
 ```
 
+## Uptime Monitoring
+
+Стартовый automated uptime monitoring для production разворачивается через `Uptime Kuma`.
+
+Файлы в репозитории:
+- compose: `deploy/monitoring/uptime-kuma.compose.yml`
+- env template: `deploy/monitoring/uptime-kuma.env.example`
+- install helper: `scripts/install_uptime_kuma.sh`
+- setup doc: `docs/UPTIME_MONITORING.md`
+
+### Server Setup
+
+На production server:
+
+```bash
+cd /opt/rating-service
+bash scripts/install_uptime_kuma.sh
+```
+
+Что делает install helper:
+- создает `/opt/uptime-kuma`
+- создает `/opt/uptime-kuma/data`
+- копирует `.env` из шаблона, если файла еще нет
+- поднимает контейнер `uptime-kuma`
+
+### Access
+
+По умолчанию Uptime Kuma слушает только localhost:
+
+```text
+http://127.0.0.1:3001
+```
+
+Безопасный доступ:
+
+```bash
+ssh -L 3001:127.0.0.1:3001 -i /Users/klem/Documents/eguene/deploy_key root@api.wobbly.site
+```
+
+После этого локально открыть:
+
+```text
+http://127.0.0.1:3001
+```
+
+### Initial Monitors
+
+Создать в UI:
+- `API Health` -> `https://api.wobbly.site/health`
+- `Main Site` -> `https://wobbly.site`
+
+Добавить позже как отдельный readiness monitor:
+- `API Ready` -> `https://api.wobbly.site/ready`
+
+### Verification
+
+Проверить контейнер и логи:
+
+```bash
+docker ps --filter name=uptime-kuma
+docker logs --tail=100 uptime-kuma
+```
+
 ## User Avatar Storage
 
 User avatars are stored outside the repository and outside frontend assets.

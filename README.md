@@ -175,6 +175,16 @@ TEST_DATABASE_URL=postgresql://app:app@127.0.0.1:5432/app ./scripts/release_chec
 Подробная настройка и проверка:
 - [docs/DEPLOY.md](/Users/klem/Documents/eguene/wobbly/back/docs/DEPLOY.md)
 
+## Uptime Monitoring
+
+Стартовый monitoring stack для production:
+- `Uptime Kuma`
+- setup files: `deploy/monitoring/uptime-kuma.compose.yml`
+- install helper: `scripts/install_uptime_kuma.sh`
+
+Подробно:
+- [docs/UPTIME_MONITORING.md](/Users/klem/Documents/eguene/wobbly/back/docs/UPTIME_MONITORING.md)
+
 ## Что читать дальше
 
 - [docs/HANDOFF.md](/Users/klem/Documents/eguene/docs/HANDOFF.md)
@@ -182,4 +192,5 @@ TEST_DATABASE_URL=postgresql://app:app@127.0.0.1:5432/app ./scripts/release_chec
 - [docs/DEPLOY.md](/Users/klem/Documents/eguene/docs/DEPLOY.md)
 - [docs/MOBILE_API.md](/Users/klem/Documents/eguene/docs/MOBILE_API.md)
 - [docs/SOCIAL_AUTH_MODEL.md](/Users/klem/Documents/eguene/wobbly/back/docs/SOCIAL_AUTH_MODEL.md)
+- [docs/UPTIME_MONITORING.md](/Users/klem/Documents/eguene/wobbly/back/docs/UPTIME_MONITORING.md)
 - [docs/TECHNICAL_BACKLOG.md](/Users/klem/Documents/eguene/wobbly/back/docs/TECHNICAL_BACKLOG.md)
