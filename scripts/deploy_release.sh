@@ -49,35 +49,90 @@ tar \
 ssh -o BatchMode=yes -i "$SSH_KEY_PATH" "${DEPLOY_USER}@${DEPLOY_HOST}" "mkdir -p '${REMOTE_BACKUP_DIR}' '${REMOTE_RELEASE_DIR}'"
 scp -i "$SSH_KEY_PATH" "$TMP_ARCHIVE" "${DEPLOY_USER}@${DEPLOY_HOST}:${REMOTE_TMP_ARCHIVE}"
 
-ssh -o BatchMode=yes -i "$SSH_KEY_PATH" "${DEPLOY_USER}@${DEPLOY_HOST}" "\
-  if [ -f '${DEPLOY_PATH}/backend/app/main.py' ]; then \
-    cp '${DEPLOY_PATH}/backend/app/main.py' '${REMOTE_BACKUP_DIR}/main.py'; \
-  elif [ -f '${DEPLOY_PATH}/app/main.py' ]; then \
-    cp '${DEPLOY_PATH}/app/main.py' '${REMOTE_BACKUP_DIR}/main.py'; \
-  fi && \
-  cp '${REMOTE_TMP_ARCHIVE}' '${REMOTE_RELEASE_DIR}/${ARCHIVE_NAME}' && \
-  tar -xzf '${REMOTE_TMP_ARCHIVE}' -C '${DEPLOY_PATH}' && \
-  find '${DEPLOY_PATH}' -name '._*' -delete && \
-  '${DEPLOY_VENV_PATH}/bin/python' -m pip install -r '${DEPLOY_PATH}/backend/requirements.txt' && \
-  printf '%s\n' '${BACKEND_VERSION}' > '${DEPLOY_PATH}/.backend-release-version' && \
-  printf '%s\n' '${GIT_REF}' > '${DEPLOY_PATH}/.backend-release-ref' && \
-  printf '%s\n' '${RELEASE_TAG}' > '${DEPLOY_PATH}/.backend-release-tag' && \
-  chown -R '${DEPLOY_OWNER}' '${DEPLOY_PATH}' && \
-  systemctl restart '${DEPLOY_SERVICE}' && \
-  for attempt in 1 2 3 4 5 6 7 8 9 10; do \
-    if systemctl is-active --quiet '${DEPLOY_SERVICE}'; then \
-      break; \
-    fi; \
-    sleep 2; \
-  done && \
-  systemctl is-active '${DEPLOY_SERVICE}' && \
-  for attempt in 1 2 3 4 5 6 7 8 9 10; do \
-    if curl -fsS '${DEPLOY_HEALTHCHECK_URL}'; then \
-      exit 0; \
-    fi; \
-    sleep 2; \
-  done; \
-  journalctl -u '${DEPLOY_SERVICE}' -n 50 --no-pager; \
-  exit 1"
+ssh -o BatchMode=yes -i "$SSH_KEY_PATH" "${DEPLOY_USER}@${DEPLOY_HOST}" \
+  bash -s -- \
+  "$DEPLOY_PATH" \
+  "$REMOTE_BACKUP_DIR" \
+  "$REMOTE_TMP_ARCHIVE" \
+  "$REMOTE_RELEASE_DIR" \
+  "$ARCHIVE_NAME" \
+  "$DEPLOY_VENV_PATH" \
+  "$BACKEND_VERSION" \
+  "$GIT_REF" \
+  "$RELEASE_TAG" \
+  "$DEPLOY_OWNER" \
+  "$DEPLOY_SERVICE" \
+  "$DEPLOY_HEALTHCHECK_URL" <<'REMOTE'
+set -euo pipefail
+
+deploy_path="$1"
+remote_backup_dir="$2"
+remote_tmp_archive="$3"
+remote_release_dir="$4"
+archive_name="$5"
+configured_venv_path="$6"
+backend_version="$7"
+git_ref="$8"
+release_tag="$9"
+deploy_owner="${10}"
+deploy_service="${11}"
+deploy_healthcheck_url="${12}"
+
+if [ -f "${deploy_path}/backend/app/main.py" ]; then
+  cp "${deploy_path}/backend/app/main.py" "${remote_backup_dir}/main.py"
+elif [ -f "${deploy_path}/app/main.py" ]; then
+  cp "${deploy_path}/app/main.py" "${remote_backup_dir}/main.py"
+fi
+
+cp "${remote_tmp_archive}" "${remote_release_dir}/${archive_name}"
+tar -xzf "${remote_tmp_archive}" -C "${deploy_path}"
+find "${deploy_path}" -name '._*' -delete
+
+service_execstart="$(systemctl cat "${deploy_service}" 2>/dev/null | sed -n 's/^ExecStart=//p' | head -n 1)"
+service_venv_path="$(printf '%s\n' "${service_execstart}" | sed -n 's#^\([^ ]*/\.venv\)/bin/uvicorn.*#\1#p')"
+
+if [[ -n "${service_venv_path}" ]]; then
+  effective_venv_path="${service_venv_path}"
+elif [[ -n "${configured_venv_path}" ]]; then
+  effective_venv_path="${configured_venv_path}"
+else
+  effective_venv_path="${deploy_path}/.venv"
+fi
+
+echo "Using deploy venv: ${effective_venv_path}"
+
+if [[ ! -x "${effective_venv_path}/bin/python" ]]; then
+  echo "Creating missing venv at ${effective_venv_path}"
+  python3 -m venv "${effective_venv_path}"
+fi
+
+"${effective_venv_path}/bin/python" -m pip install --upgrade pip
+"${effective_venv_path}/bin/python" -m pip install -r "${deploy_path}/backend/requirements.txt"
+
+printf '%s\n' "${backend_version}" > "${deploy_path}/.backend-release-version"
+printf '%s\n' "${git_ref}" > "${deploy_path}/.backend-release-ref"
+printf '%s\n' "${release_tag}" > "${deploy_path}/.backend-release-tag"
+chown -R "${deploy_owner}" "${deploy_path}"
+
+systemctl restart "${deploy_service}"
+for attempt in 1 2 3 4 5 6 7 8 9 10; do
+  if systemctl is-active --quiet "${deploy_service}"; then
+    break
+  fi
+  sleep 2
+done
+
+systemctl is-active "${deploy_service}"
+
+for attempt in 1 2 3 4 5 6 7 8 9 10; do
+  if curl -fsS "${deploy_healthcheck_url}"; then
+    exit 0
+  fi
+  sleep 2
+done
+
+journalctl -u "${deploy_service}" -n 50 --no-pager
+exit 1
+REMOTE
 
 rm -f "$TMP_ARCHIVE"
