@@ -179,7 +179,9 @@ cp /opt/rating-service/deploy/telegram-status-bot.env.example /etc/wobbly/telegr
 2. Отредактировать `/etc/wobbly/telegram-status-bot.env`:
 - `TELEGRAM_BOT_TOKEN`
 - `TELEGRAM_STATUS_ALLOWED_CHAT_ID`
+- `TELEGRAM_STATUS_TIMEZONE` (по умолчанию `Europe/Moscow`)
 - при необходимости `STATUS_API_HEALTH_URL` и `STATUS_API_READY_URL`
+- при необходимости `TELEGRAM_STATUS_POLL_TIMEOUT` для более быстрого ответа бота
 
 3. Установить systemd unit:
 
@@ -204,4 +206,4 @@ journalctl -u wobbly-telegram-status-bot.service -n 50 --no-pager
 /status
 ```
 
-должна вернуть краткий статус `health` и `ready`.
+должна вернуть краткий статус `health` и `ready` с отметкой времени в настроенном часовом поясе.

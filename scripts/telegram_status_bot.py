@@ -9,6 +9,11 @@ from datetime import datetime, timezone
 from typing import Any
 from urllib import error, parse, request
 
+try:
+    from zoneinfo import ZoneInfo
+except ImportError:  # pragma: no cover
+    ZoneInfo = None  # type: ignore[assignment]
+
 
 def getenv_required(name: str) -> str:
     value = os.getenv(name, "").strip()
@@ -25,8 +30,9 @@ API_HEALTH_URL = os.getenv(
 API_READY_URL = os.getenv(
     "STATUS_API_READY_URL", "https://api.wobbly.site/ready"
 ).strip()
-POLL_TIMEOUT = int(os.getenv("TELEGRAM_STATUS_POLL_TIMEOUT", "30"))
+POLL_TIMEOUT = int(os.getenv("TELEGRAM_STATUS_POLL_TIMEOUT", "5"))
 REQUEST_TIMEOUT = int(os.getenv("TELEGRAM_STATUS_REQUEST_TIMEOUT", "10"))
+DISPLAY_TIMEZONE = os.getenv("TELEGRAM_STATUS_TIMEZONE", "Europe/Moscow").strip()
 
 TELEGRAM_API_BASE = f"https://api.telegram.org/bot{BOT_TOKEN}"
 
@@ -53,7 +59,8 @@ def telegram_api(method: str, payload: dict[str, Any] | None = None) -> dict[str
         headers=headers,
         method="POST" if payload is not None else "GET",
     )
-    with request.urlopen(req, timeout=REQUEST_TIMEOUT + 5) as response:
+    api_timeout = max(REQUEST_TIMEOUT + 5, POLL_TIMEOUT + 5)
+    with request.urlopen(req, timeout=api_timeout) as response:
         body = response.read().decode("utf-8")
     parsed = json.loads(body)
     if not parsed.get("ok"):
@@ -114,14 +121,43 @@ def format_status_message() -> str:
         perform_http_check("API health", API_HEALTH_URL),
         perform_http_check("API ready", API_READY_URL),
     ]
-    checked_at = (
-        datetime.now(timezone.utc).astimezone().strftime("%Y-%m-%d %H:%M:%S %Z")
-    )
-    lines = ["Wobbly status", f"Checked at: {checked_at}", ""]
+    if ZoneInfo is not None:
+        tz = ZoneInfo(DISPLAY_TIMEZONE)
+        checked_at = (
+            datetime.now(timezone.utc).astimezone(tz).strftime("%Y-%m-%d %H:%M:%S")
+        )
+        timezone_label = "MSK"
+    else:
+        checked_at = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
+        timezone_label = "UTC"
+
+    all_ok = all(result.ok for result in checks)
+    summary_icon = "🟢" if all_ok else "🔴"
+    lines = [
+        f"{summary_icon} Wobbly status",
+        f"🕒 Проверено: {checked_at} {timezone_label}",
+        "",
+    ]
     for result in checks:
-        icon = "OK" if result.ok else "FAIL"
+        icon = "✅" if result.ok else "❌"
         latency = f"{result.latency_ms}ms" if result.latency_ms is not None else "n/a"
-        lines.append(f"{icon} {result.name}: {result.details}, {latency}")
+        lines.append(f"{icon} {result.name}: {result.details} • {latency}")
+
+    if all_ok:
+        lines.extend(
+            [
+                "",
+                "✨ Все ключевые backend-check'и сейчас в норме.",
+            ]
+        )
+    else:
+        failed_checks = ", ".join(result.name for result in checks if not result.ok)
+        lines.extend(
+            [
+                "",
+                f"⚠️ Нужна проверка: {failed_checks}",
+            ]
+        )
     return "\n".join(lines)
 
 
