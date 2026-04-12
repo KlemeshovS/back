@@ -509,7 +509,8 @@ Systemd templates в репозитории:
 
 Во время deploy script теперь:
 - распаковывает release
-- обновляет Python dependencies в production venv через `pip install -r backend/requirements.txt`
+- определяет effective Python venv по `systemd ExecStart` текущего сервиса и только потом обновляет dependencies через `pip install -r backend/requirements.txt`
+- если нужный venv отсутствует, создает его через `python3 -m venv`
 - сохраняет immutable backend archive в `/opt/rating-service/.releases/`
 - пишет metadata текущего backend deploy в:
   - `/opt/rating-service/.backend-release-version`
@@ -520,6 +521,10 @@ Systemd templates в репозитории:
 - если `/ready` не поднимается вовремя, печатает свежие `journalctl` логи сервиса и завершает deploy с ошибкой
 - не включает в release archive локальные dev-артефакты вроде `.venv`, caches и `frontend/node_modules`
 - использует `/ready` как реальную пост-рестарт проверку доступности БД, а `/health` оставляет lightweight liveness endpoint
+
+Это важно:
+- ошибочный `DEPLOY_VENV_PATH` или `STAGING_DEPLOY_VENV_PATH` secret больше не должен ломать deploy сам по себе
+- если secret устарел, deploy script все равно берет venv из реального systemd unit, который запускает сервис
 
 Важно:
 - `nginx` конфиги не раскатываются текущим GitHub Actions deploy автоматически
