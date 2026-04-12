@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from pathlib import Path
+
 import pytest
 from psycopg import connect
 
@@ -121,6 +123,7 @@ def test_anonymous_auth_flow_works_against_real_database(db_client) -> None:
         "id": auth_payload["userId"],
         "username": None,
         "participateInRating": False,
+        "avatarUrl": None,
     }
 
 
@@ -140,6 +143,7 @@ def test_api_v1_anonymous_auth_flow_works_against_real_database(db_client) -> No
         "id": auth_payload["userId"],
         "username": None,
         "participateInRating": False,
+        "avatarUrl": None,
     }
 
 
@@ -207,6 +211,7 @@ def test_profile_update_persists_to_real_database(db_client, monkeypatch) -> Non
         "id": auth_payload["userId"],
         "username": "db_player",
         "participateInRating": True,
+        "avatarUrl": None,
     }
 
     me_response = db_client.get("/me", headers=auth_headers(auth_payload["accessToken"]))
@@ -265,9 +270,10 @@ def test_guest_can_use_rating_features_when_guest_rating_is_enabled(
         "id": auth_payload["userId"],
         "username": "guest_player",
         "participateInRating": True,
+        "avatarUrl": None,
     }
     assert score_response.status_code == 200
-    assert score_response.json() == {"username": "guest_player", "score": 42}
+    assert score_response.json() == {"username": "guest_player", "score": 42, "avatarUrl": None}
 
 
 def test_rating_toggle_updates_real_database_state(db_client, monkeypatch) -> None:
@@ -314,7 +320,7 @@ def test_score_update_persists_to_real_database(db_client, monkeypatch) -> None:
     )
 
     assert response.status_code == 200
-    assert response.json() == {"username": "score_user", "score": 42}
+    assert response.json() == {"username": "score_user", "score": 42, "avatarUrl": None}
 
 
 def test_score_update_rejects_anonymous_users_without_username(db_client) -> None:
@@ -395,7 +401,7 @@ def test_clearing_existing_username_is_rejected_and_score_is_preserved(
         headers=auth_headers(auth_payload["accessToken"]),
     )
     assert score_response.status_code == 200
-    assert score_response.json() == {"username": "clear_user", "score": 84}
+    assert score_response.json() == {"username": "clear_user", "score": 84, "avatarUrl": None}
 
     me_response = db_client.get("/me", headers=auth_headers(auth_payload["accessToken"]))
     assert me_response.status_code == 200
@@ -403,6 +409,7 @@ def test_clearing_existing_username_is_rejected_and_score_is_preserved(
         "id": auth_payload["userId"],
         "username": "clear_user",
         "participateInRating": True,
+        "avatarUrl": None,
     }
 
 
@@ -449,8 +456,8 @@ def test_leaderboard_queries_use_real_database_data(db_client, monkeypatch) -> N
     assert top_response.status_code == 200
     assert top_response.json() == {
         "items": [
-            {"username": "alpha", "score": 15},
-            {"username": "beta", "score": 8},
+            {"username": "alpha", "score": 15, "avatarUrl": None},
+            {"username": "beta", "score": 8, "avatarUrl": None},
         ],
         "total": 2,
     }
@@ -458,7 +465,7 @@ def test_leaderboard_queries_use_real_database_data(db_client, monkeypatch) -> N
     assert bottom_response.status_code == 200
     assert bottom_response.json() == {
         "items": [
-            {"username": "gamma", "score": -4},
+            {"username": "gamma", "score": -4, "avatarUrl": None},
         ],
         "total": 1,
     }
@@ -495,8 +502,8 @@ def test_api_v1_leaderboard_queries_use_real_database_data(db_client, monkeypatc
     assert top_response.status_code == 200
     assert top_response.json() == {
         "items": [
-            {"username": "v1_alpha", "score": 30},
-            {"username": "v1_beta", "score": 10},
+            {"username": "v1_alpha", "score": 30, "avatarUrl": None},
+            {"username": "v1_beta", "score": 10, "avatarUrl": None},
         ],
         "total": 2,
     }
@@ -549,10 +556,77 @@ def test_leaderboard_excludes_users_inactive_for_more_than_30_days(
     assert top_response.status_code == 200
     assert top_response.json() == {
         "items": [
-            {"username": "recent_user", "score": 25},
+            {"username": "recent_user", "score": 25, "avatarUrl": None},
         ],
         "total": 1,
     }
+
+
+def test_avatar_upload_and_leaderboard_return_avatar_url(
+    db_client,
+    monkeypatch,
+    tmp_path,
+) -> None:
+    monkeypatch.setattr(settings, "media_root", str(tmp_path))
+    monkeypatch.setattr(settings, "media_base_url", "")
+
+    auth_payload = create_authenticated_user(db_client, monkeypatch, "avatar-user")
+
+    profile_response = db_client.patch(
+        "/me/profile",
+        json={"username": "avatar_user", "participateInRating": True},
+        headers=auth_headers(auth_payload["accessToken"]),
+    )
+    assert profile_response.status_code == 200
+
+    upload_response = db_client.post(
+        "/me/avatar",
+        headers=auth_headers(auth_payload["accessToken"]),
+        files={"file": ("avatar.jpg", b"\xff\xd8\xffavatar-binary", "image/jpeg")},
+    )
+    assert upload_response.status_code == 200
+    avatar_url = upload_response.json()["avatarUrl"]
+    assert avatar_url is not None
+    assert avatar_url.startswith("/media/avatars/user-")
+
+    me_response = db_client.get("/me", headers=auth_headers(auth_payload["accessToken"]))
+    assert me_response.status_code == 200
+    assert me_response.json()["avatarUrl"] == avatar_url
+
+    score_response = db_client.post(
+        "/me/score",
+        json={"score": 18},
+        headers=auth_headers(auth_payload["accessToken"]),
+    )
+    assert score_response.status_code == 200
+    assert score_response.json()["avatarUrl"] == avatar_url
+
+    top_response = db_client.get("/leaderboard/top?limit=5")
+    assert top_response.status_code == 200
+    assert top_response.json()["items"][0]["avatarUrl"] == avatar_url
+
+    relative_path = avatar_url.removeprefix("/media/")
+    assert (Path(tmp_path) / relative_path).exists()
+
+
+def test_avatar_delete_clears_profile_avatar(db_client, monkeypatch, tmp_path) -> None:
+    monkeypatch.setattr(settings, "media_root", str(tmp_path))
+    monkeypatch.setattr(settings, "media_base_url", "")
+
+    auth_payload = create_authenticated_user(db_client, monkeypatch, "avatar-delete-user")
+    upload_response = db_client.post(
+        "/me/avatar",
+        headers=auth_headers(auth_payload["accessToken"]),
+        files={"file": ("avatar.png", b"\x89PNG\r\n\x1a\navatar", "image/png")},
+    )
+    assert upload_response.status_code == 200
+
+    delete_response = db_client.delete(
+        "/me/avatar",
+        headers=auth_headers(auth_payload["accessToken"]),
+    )
+    assert delete_response.status_code == 200
+    assert delete_response.json()["avatarUrl"] is None
 
 
 def test_real_database_flows_cover_constraint_and_validation_errors(db_client, monkeypatch) -> None:

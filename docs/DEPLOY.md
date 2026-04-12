@@ -82,6 +82,7 @@ ssh -i /Users/klem/Documents/eguene/deploy_key root@api.wobbly.site
 - app code: `/opt/rating-service/backend/app`
 - backups created during manual deploys: `/opt/rating-service/.deploy-backups`
 - automated PostgreSQL backups: `/var/backups/wobbly-postgres`
+- uploaded user avatars by default: `/opt/rating-service/uploads/avatars`
 - production frontend bundle: `/opt/wobbly-front-production/current`
 - staging backend: `/opt/rating-service-staging`
 - staging frontend bundle: `/opt/wobbly-front-staging/current`
@@ -153,6 +154,29 @@ Check backup output:
 ls -lah /var/backups/wobbly-postgres/daily
 journalctl -u wobbly-postgres-backup.service -n 50 --no-pager
 ```
+
+## User Avatar Storage
+
+User avatars are stored outside the repository and outside frontend assets.
+
+Relevant env settings:
+
+```env
+MEDIA_ROOT=/opt/rating-service/uploads
+MEDIA_BASE_URL=https://api.wobbly.site
+AVATAR_MAX_BYTES=5242880
+```
+
+Public URL shape:
+
+```text
+https://api.wobbly.site/media/avatars/<generated-file>
+```
+
+Notes:
+- backend stores only relative `avatar_path` in the database
+- `/media/...` is served by FastAPI from `MEDIA_ROOT`
+- avatar uploads support `jpeg`, `png`, and `webp`
 
 ## Temporary Guest Rating Compatibility
 

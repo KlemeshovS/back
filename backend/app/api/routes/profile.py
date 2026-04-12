@@ -1,4 +1,6 @@
-from fastapi import APIRouter, Depends, Request, status
+from typing import Annotated
+
+from fastapi import APIRouter, Depends, File, Request, UploadFile, status
 
 from app.api.dependencies import enforce_rate_limit, get_client_ip, get_current_user
 from app.core.config import settings
@@ -64,6 +66,7 @@ def get_my_profile(current_user: dict = current_user_dependency) -> ProfileRespo
         id=current_user["id"],
         username=current_user["username"],
         participate_in_rating=current_user["is_rating_enabled"],
+        avatar_url=user_service.build_avatar_url(current_user.get("avatar_path")),
     )
 
 
@@ -118,3 +121,21 @@ def update_my_score(
         detail="Too many score updates for this user. Please try again later.",
     )
     return user_service.update_my_score(current_user["id"], payload.score)
+
+
+@router.post("/me/avatar", response_model=ProfileResponse)
+async def upload_my_avatar(
+    file: Annotated[UploadFile, File(...)],
+    current_user: dict = current_user_dependency,
+) -> ProfileResponse:
+    payload = await file.read()
+    return user_service.save_my_avatar(
+        current_user["id"],
+        payload=payload,
+        content_type=file.content_type,
+    )
+
+
+@router.delete("/me/avatar", response_model=ProfileResponse)
+def delete_my_avatar(current_user: dict = current_user_dependency) -> ProfileResponse:
+    return user_service.delete_my_avatar(current_user["id"])

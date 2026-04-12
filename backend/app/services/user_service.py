@@ -6,7 +6,15 @@ from fastapi import status
 from psycopg.errors import UniqueViolation
 
 from app.core.auth import generate_access_token, hash_access_token
+from app.core.config import settings
 from app.core.errors import ApiError, ApiErrorCode
+from app.core.media import (
+    build_avatar_storage_path,
+    build_avatar_url,
+    delete_avatar_file,
+    ensure_media_directories,
+    validate_avatar_image,
+)
 from app.core.usernames import (
     build_anonymous_username,
     has_public_username,
@@ -31,7 +39,7 @@ def save_profile(
             with conn.cursor() as cur:
                 cur.execute(
                     """
-                    SELECT username
+                    SELECT username, avatar_path
                     FROM users
                     WHERE id = %s;
                     """,
@@ -89,7 +97,7 @@ def save_profile(
                         updated_at = NOW(),
                         last_seen_at = NOW()
                     WHERE id = %s
-                    RETURNING id, username, is_rating_enabled;
+                    RETURNING id, username, is_rating_enabled, avatar_path;
                     """,
                     (stored_username, participate_in_rating, user_id),
                 )
@@ -106,6 +114,7 @@ def save_profile(
         id=user["id"],
         username=normalize_public_username(user["username"]),
         participate_in_rating=user["is_rating_enabled"],
+        avatar_url=build_avatar_url(user.get("avatar_path")),
     )
 
 
@@ -154,6 +163,7 @@ def update_my_score(user_id: int, score: int) -> UserScoreResponse:
             cur.execute(
                 """
                 SELECT username, is_rating_enabled
+                    , avatar_path
                 FROM users
                 WHERE id = %s;
                 """,
@@ -182,7 +192,7 @@ def update_my_score(user_id: int, score: int) -> UserScoreResponse:
                     updated_at = NOW(),
                     last_seen_at = NOW()
                 WHERE id = %s
-                RETURNING username, score;
+                RETURNING username, score, avatar_path;
                 """,
                 (score, user_id),
             )
@@ -192,6 +202,118 @@ def update_my_score(user_id: int, score: int) -> UserScoreResponse:
     return UserScoreResponse(
         username=normalize_public_username(user["username"]),
         score=user["score"],
+        avatar_url=build_avatar_url(user.get("avatar_path")),
+    )
+
+
+def save_my_avatar(
+    user_id: int,
+    *,
+    payload: bytes,
+    content_type: str | None,
+) -> ProfileResponse:
+    if len(payload) > settings.avatar_max_bytes:
+        raise ApiError(
+            status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+            code=ApiErrorCode.AVATAR_TOO_LARGE,
+            message="Avatar file is too large",
+        )
+
+    ensure_media_directories()
+    extension = validate_avatar_image(content_type, payload)
+    relative_path, absolute_path = build_avatar_storage_path(user_id=user_id, extension=extension)
+
+    old_avatar_path: str | None = None
+    try:
+        absolute_path.write_bytes(payload)
+        with get_connection() as conn:
+            with conn.cursor() as cur:
+                cur.execute(
+                    """
+                    SELECT avatar_path
+                    FROM users
+                    WHERE id = %s;
+                    """,
+                    (user_id,),
+                )
+                existing_user = cur.fetchone()
+                if existing_user is None:
+                    raise ApiError(
+                        status_code=status.HTTP_404_NOT_FOUND,
+                        code=ApiErrorCode.USER_NOT_FOUND,
+                        message="User not found",
+                    )
+                old_avatar_path = existing_user["avatar_path"]
+
+                cur.execute(
+                    """
+                    UPDATE users
+                    SET avatar_path = %s,
+                        updated_at = NOW(),
+                        last_seen_at = NOW()
+                    WHERE id = %s
+                    RETURNING id, username, is_rating_enabled, avatar_path;
+                    """,
+                    (relative_path, user_id),
+                )
+                user = cur.fetchone()
+            conn.commit()
+    except Exception:
+        absolute_path.unlink(missing_ok=True)
+        raise
+
+    if old_avatar_path and old_avatar_path != relative_path:
+        delete_avatar_file(old_avatar_path)
+
+    return ProfileResponse(
+        id=user["id"],
+        username=normalize_public_username(user["username"]),
+        participate_in_rating=user["is_rating_enabled"],
+        avatar_url=build_avatar_url(user["avatar_path"]),
+    )
+
+
+def delete_my_avatar(user_id: int) -> ProfileResponse:
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                SELECT avatar_path
+                FROM users
+                WHERE id = %s;
+                """,
+                (user_id,),
+            )
+            existing = cur.fetchone()
+            if existing is None:
+                raise ApiError(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    code=ApiErrorCode.USER_NOT_FOUND,
+                    message="User not found",
+                )
+
+            old_avatar_path = existing["avatar_path"]
+            cur.execute(
+                """
+                UPDATE users
+                SET avatar_path = NULL,
+                    updated_at = NOW(),
+                    last_seen_at = NOW()
+                WHERE id = %s
+                RETURNING id, username, is_rating_enabled, avatar_path;
+                """,
+                (user_id,),
+            )
+            user = cur.fetchone()
+        conn.commit()
+
+    delete_avatar_file(old_avatar_path)
+
+    return ProfileResponse(
+        id=user["id"],
+        username=normalize_public_username(user["username"]),
+        participate_in_rating=user["is_rating_enabled"],
+        avatar_url=None,
     )
 
 
@@ -213,7 +335,7 @@ def fetch_leaderboard(order: str, score_filter: str, limit: int) -> LeaderboardR
             total_row = cur.fetchone()
             cur.execute(
                 f"""
-                SELECT username, score
+                SELECT username, score, avatar_path
                 FROM users
                 WHERE is_rating_enabled = TRUE
                   AND username IS NOT NULL
@@ -233,6 +355,7 @@ def fetch_leaderboard(order: str, score_filter: str, limit: int) -> LeaderboardR
             UserScoreResponse(
                 username=normalize_public_username(row["username"]),
                 score=row["score"],
+                avatar_url=build_avatar_url(row.get("avatar_path")),
             )
             for row in rows
         ],
