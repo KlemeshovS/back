@@ -17,13 +17,31 @@ Legacy unversioned routes пока остаются для обратной со
 - Swagger: `https://api.wobbly.site/api/swagger`
 - text docs: `https://api.wobbly.site/api/docs`
 
-## Authorization
+## Request Headers
+
+### Authorization
 
 Для защищенных методов:
 
 ```http
 Authorization: Bearer <accessToken>
 ```
+
+### X-Client-Platform
+
+Опциональный заголовок для идентификации платформы клиента. Сервер сохраняет значение в сессии для аналитики.
+
+```http
+X-Client-Platform: ios
+```
+
+Допустимые значения: `ios`, `android`. Любое другое значение игнорируется.
+
+Рекомендуется передавать во всех запросах, создающих сессию:
+- `POST /api/v1/auth/anonymous`
+- `POST /api/v1/auth/google`
+- `POST /api/v1/auth/apple`
+- `POST /api/v1/auth/yandex`
 
 Защищенные методы:
 - `GET /api/v1/me`
@@ -116,8 +134,8 @@ Authorization: Bearer <accessToken>
 - `userId`
 - `username`
 - `participateInRating`
-- `sessionType`
-- `provider`
+- `sessionType` — `guest` | `authenticated`
+- `provider` — `google` | `apple` | `yandex` | `null` для guest
 - `avatarUrl`
 
 ### `POST /api/v1/auth/refresh`
