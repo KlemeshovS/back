@@ -1,3 +1,5 @@
+import asyncio
+import contextlib
 from contextlib import asynccontextmanager
 from pathlib import Path
 
@@ -18,6 +20,7 @@ from app.core.config import settings
 from app.core.errors import ApiError
 from app.core.media import ensure_media_directories
 from app.db.database import init_db
+from app.services.cleanup_service import run_cleanup_loop
 
 PUBLIC_API_V1_PREFIX = "/api/v1"
 
@@ -25,7 +28,13 @@ PUBLIC_API_V1_PREFIX = "/api/v1"
 @asynccontextmanager
 async def db_lifespan(_: FastAPI):
     init_db()
-    yield
+    task = asyncio.create_task(run_cleanup_loop())
+    try:
+        yield
+    finally:
+        task.cancel()
+        with contextlib.suppress(asyncio.CancelledError):
+            await task
 
 
 @asynccontextmanager
