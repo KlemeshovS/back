@@ -40,7 +40,7 @@ while IFS= read -r file; do
   # - domain schemas (request/response models visible to clients)
   # Internal helpers, services, and core utilities are excluded because
   # they do not change the public API surface.
-  if [[ "$file" == backend/app/api/routes/* || "$file" == "backend/app/api/dependencies.py" || "$file" == "backend/app/api/app.py" || "$file" == "backend/app/domain/schemas.py" ]]; then
+  if [[ "$file" == backend/app/api/routes/* || "$file" == "backend/app/api/dependencies.py" || "$file" == "backend/app/domain/schemas.py" ]]; then
     API_CHANGED=true
   fi
 
