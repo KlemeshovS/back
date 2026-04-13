@@ -436,16 +436,8 @@ def update_managed_user(
                 target_type="user",
                 target_id=user_id,
                 details={
-                    "before": {
-                        "username": existing_user["username"],
-                        "score": existing_user["score"],
-                        "participateInRating": existing_user["is_rating_enabled"],
-                    },
-                    "after": {
-                        "username": updated_user["username"],
-                        "score": updated_user["score"],
-                        "participateInRating": updated_user["is_rating_enabled"],
-                    },
+                    "before": _user_snapshot(existing_user),
+                    "after": _user_snapshot(updated_user),
                 },
             )
         conn.commit()
@@ -486,13 +478,7 @@ def delete_managed_user(user_id: int, current_admin: dict[str, Any]) -> None:
                 action="user.delete",
                 target_type="user",
                 target_id=user_id,
-                details={
-                    "before": {
-                        "username": existing_user["username"],
-                        "score": existing_user["score"],
-                        "participateInRating": existing_user["is_rating_enabled"],
-                    }
-                },
+                details={"before": _user_snapshot(existing_user)},
             )
         conn.commit()
 
@@ -598,22 +584,7 @@ def update_admin_user(
                 )
 
             if existing_admin["role"] == AdminRole.OWNER.value and role != AdminRole.OWNER.value:
-                cur.execute(
-                    """
-                    SELECT COUNT(*) AS total
-                    FROM admin_users
-                    WHERE role = %s
-                      AND is_active = TRUE;
-                    """,
-                    (AdminRole.OWNER.value,),
-                )
-                owner_count = cur.fetchone()["total"]
-                if owner_count <= 1:
-                    raise ApiError(
-                        status_code=status.HTTP_403_FORBIDDEN,
-                        code=ApiErrorCode.FORBIDDEN,
-                        message="At least one active owner must remain",
-                    )
+                _ensure_owner_count_maintained(cur)
 
             updates = ["role = %s", "is_active = %s", "updated_at = NOW()"]
             values: list[Any] = [role, is_active]
@@ -640,13 +611,9 @@ def update_admin_user(
                 target_type="admin_user",
                 target_id=admin_id,
                 details={
-                    "before": {
-                        "role": existing_admin["role"],
-                        "isActive": existing_admin["is_active"],
-                    },
+                    "before": _admin_snapshot(existing_admin),
                     "after": {
-                        "role": updated_admin["role"],
-                        "isActive": updated_admin["is_active"],
+                        **_admin_snapshot(updated_admin),
                         "passwordChanged": bool(payload.password),
                     },
                 },
@@ -683,22 +650,7 @@ def delete_admin_user(admin_id: int, current_admin: dict[str, Any]) -> None:
                 )
 
             if existing_admin["role"] == AdminRole.OWNER.value:
-                cur.execute(
-                    """
-                    SELECT COUNT(*) AS total
-                    FROM admin_users
-                    WHERE role = %s
-                      AND is_active = TRUE;
-                    """,
-                    (AdminRole.OWNER.value,),
-                )
-                owner_count = cur.fetchone()["total"]
-                if owner_count <= 1:
-                    raise ApiError(
-                        status_code=status.HTTP_403_FORBIDDEN,
-                        code=ApiErrorCode.FORBIDDEN,
-                        message="At least one active owner must remain",
-                    )
+                _ensure_owner_count_maintained(cur)
 
             cur.execute(
                 """
@@ -717,8 +669,7 @@ def delete_admin_user(admin_id: int, current_admin: dict[str, Any]) -> None:
                 details={
                     "before": {
                         "login": existing_admin["login"],
-                        "role": existing_admin["role"],
-                        "isActive": existing_admin["is_active"],
+                        **_admin_snapshot(existing_admin),
                     }
                 },
             )
@@ -753,6 +704,39 @@ def list_audit_logs(limit: int, offset: int) -> AdminAuditLogListResponse:
         items=[_build_audit_log_entry(row) for row in rows],
         total=total,
     )
+
+
+def _ensure_owner_count_maintained(cur) -> None:
+    cur.execute(
+        """
+        SELECT COUNT(*) AS total
+        FROM admin_users
+        WHERE role = %s
+          AND is_active = TRUE;
+        """,
+        (AdminRole.OWNER.value,),
+    )
+    if cur.fetchone()["total"] <= 1:
+        raise ApiError(
+            status_code=status.HTTP_403_FORBIDDEN,
+            code=ApiErrorCode.FORBIDDEN,
+            message="At least one active owner must remain",
+        )
+
+
+def _user_snapshot(user: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "username": user["username"],
+        "score": user["score"],
+        "participateInRating": user["is_rating_enabled"],
+    }
+
+
+def _admin_snapshot(admin: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "role": admin["role"],
+        "isActive": admin["is_active"],
+    }
 
 
 def _build_managed_user(row: dict[str, Any]) -> ManagedUserResponse:
