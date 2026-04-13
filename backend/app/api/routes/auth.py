@@ -6,6 +6,7 @@ from app.api.dependencies import (
     enforce_rate_limit,
     get_bearer_token,
     get_client_ip,
+    get_client_platform,
     get_current_user_session,
 )
 from app.core.config import settings
@@ -39,7 +40,7 @@ def create_anonymous_user(request: Request) -> AnonymousAuthResponse:
         window_seconds=settings.register_window_seconds,
         detail="Too many account creation attempts. Please try again later.",
     )
-    return user_service.create_anonymous_user()
+    return user_service.create_anonymous_user(get_client_platform(request))
 
 
 @router.post(
@@ -60,7 +61,9 @@ def login_with_google(
         detail="Too many Google login attempts. Please try again later.",
     )
     guest_access_token = get_bearer_token(authorization) if authorization else None
-    return social_auth_service.authenticate_google(payload.id_token, guest_access_token)
+    return social_auth_service.authenticate_google(
+        payload.id_token, guest_access_token, get_client_platform(request)
+    )
 
 
 @router.post(
@@ -81,7 +84,9 @@ def login_with_apple(
         detail="Too many Apple login attempts. Please try again later.",
     )
     guest_access_token = get_bearer_token(authorization) if authorization else None
-    return social_auth_service.authenticate_apple(payload.id_token, guest_access_token)
+    return social_auth_service.authenticate_apple(
+        payload.id_token, guest_access_token, get_client_platform(request)
+    )
 
 
 @router.post(
@@ -102,7 +107,9 @@ def login_with_yandex(
         detail="Too many Yandex login attempts. Please try again later.",
     )
     guest_access_token = get_bearer_token(authorization) if authorization else None
-    return social_auth_service.authenticate_yandex(payload.access_token, guest_access_token)
+    return social_auth_service.authenticate_yandex(
+        payload.access_token, guest_access_token, get_client_platform(request)
+    )
 
 
 @router.get(

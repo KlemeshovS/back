@@ -10,6 +10,13 @@ from app.core.rate_limit import rate_limiter
 from app.services import admin_service, session_service
 
 
+def get_client_platform(request: Request) -> Optional[str]:
+    value = request.headers.get("x-client-platform", "").strip().lower()
+    if value in ("ios", "android"):
+        return value
+    return None
+
+
 def get_client_ip(request: Request) -> str:
     forwarded_for = request.headers.get("x-forwarded-for")
     if forwarded_for:

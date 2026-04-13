@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Optional
+
 from fastapi import status
 
 from app.core.auth import generate_access_token, generate_refresh_token, hash_access_token
@@ -11,7 +13,9 @@ from app.db.database import get_connection
 from app.domain.schemas import AuthSessionResponse, LogoutResponse, SessionRestoreResponse
 
 
-def issue_authenticated_session(user_id: int, provider: str) -> AuthSessionResponse:
+def issue_authenticated_session(
+    user_id: int, provider: str, client_platform: Optional[str] = None
+) -> AuthSessionResponse:
     access_token = generate_access_token()
     refresh_token = generate_refresh_token()
     access_token_hash = hash_access_token(access_token)
@@ -36,6 +40,7 @@ def issue_authenticated_session(user_id: int, provider: str) -> AuthSessionRespo
                     refresh_token_hash,
                     session_type,
                     provider,
+                    client_platform,
                     expires_at
                 )
                 VALUES (
@@ -43,6 +48,7 @@ def issue_authenticated_session(user_id: int, provider: str) -> AuthSessionRespo
                     %s,
                     %s,
                     'authenticated',
+                    %s,
                     %s,
                     NOW() + make_interval(secs => %s)
                 );
@@ -52,6 +58,7 @@ def issue_authenticated_session(user_id: int, provider: str) -> AuthSessionRespo
                     access_token_hash,
                     refresh_token_hash,
                     provider,
+                    client_platform,
                     settings.auth_refresh_token_ttl_seconds,
                 ),
             )

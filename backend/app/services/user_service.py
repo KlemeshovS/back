@@ -118,7 +118,7 @@ def save_profile(
     )
 
 
-def create_anonymous_user() -> AnonymousAuthResponse:
+def create_anonymous_user(client_platform: Optional[str] = None) -> AnonymousAuthResponse:
     access_token = generate_access_token()
     token_hash = hash_access_token(access_token)
     anonymous_username = build_anonymous_username(token_hash)
@@ -140,14 +140,16 @@ def create_anonymous_user() -> AnonymousAuthResponse:
                     user_id,
                     access_token_hash,
                     session_type,
+                    client_platform,
                     created_at,
                     last_seen_at
                 )
-                VALUES (%s, %s, 'guest', %s, %s);
+                VALUES (%s, %s, 'guest', %s, %s, %s);
                 """,
                 (
                     user["id"],
                     token_hash,
+                    client_platform,
                     user["created_at"],
                     user["last_seen_at"],
                 ),

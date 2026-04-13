@@ -21,6 +21,7 @@ from app.services.session_service import (
 def authenticate_google(
     id_token: str,
     guest_access_token: Optional[str] = None,
+    client_platform: Optional[str] = None,
 ) -> AuthSessionResponse:
     identity = verify_google_id_token(id_token)
     user_id = _authenticate_social_identity(
@@ -32,12 +33,13 @@ def authenticate_google(
         placeholder_username=build_google_placeholder_username(identity.subject),
         guest_access_token=guest_access_token,
     )
-    return issue_authenticated_session(user_id, "google")
+    return issue_authenticated_session(user_id, "google", client_platform)
 
 
 def authenticate_apple(
     id_token: str,
     guest_access_token: Optional[str] = None,
+    client_platform: Optional[str] = None,
 ) -> AuthSessionResponse:
     identity = verify_apple_id_token(id_token)
     user_id = _authenticate_social_identity(
@@ -49,12 +51,13 @@ def authenticate_apple(
         placeholder_username=build_apple_placeholder_username(identity.subject),
         guest_access_token=guest_access_token,
     )
-    return issue_authenticated_session(user_id, "apple")
+    return issue_authenticated_session(user_id, "apple", client_platform)
 
 
 def authenticate_yandex(
     access_token: str,
     guest_access_token: Optional[str] = None,
+    client_platform: Optional[str] = None,
 ) -> AuthSessionResponse:
     identity = verify_yandex_access_token(access_token)
     user_id = _authenticate_social_identity(
@@ -66,7 +69,7 @@ def authenticate_yandex(
         placeholder_username=build_yandex_placeholder_username(identity.subject),
         guest_access_token=guest_access_token,
     )
-    return issue_authenticated_session(user_id, "yandex")
+    return issue_authenticated_session(user_id, "yandex", client_platform)
 
 
 def list_linked_identities(current_user: dict) -> LinkedIdentityListResponse:
