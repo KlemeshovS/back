@@ -7,7 +7,15 @@ from fastapi import Depends, Header, Request, status
 from app.core.admin_auth import hash_admin_access_token
 from app.core.errors import ApiError, ApiErrorCode
 from app.core.rate_limit import rate_limiter
+from app.domain.schemas import AdminRole
 from app.services import admin_service, session_service
+
+
+def get_client_platform(request: Request) -> Optional[str]:
+    value = request.headers.get("x-client-platform", "").strip().lower()
+    if value in ("ios", "android"):
+        return value
+    return None
 
 
 def get_client_ip(request: Request) -> str:
@@ -84,7 +92,7 @@ current_admin_dependency = Depends(get_current_admin)
 
 
 def require_owner(current_admin: dict = current_admin_dependency) -> dict:
-    if current_admin["role"] != "owner":
+    if current_admin["role"] != AdminRole.OWNER:
         raise ApiError(
             status_code=status.HTTP_403_FORBIDDEN,
             code=ApiErrorCode.FORBIDDEN,

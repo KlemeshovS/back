@@ -28,6 +28,14 @@ from app.domain.schemas import (
     UserScoreResponse,
 )
 
+_ACTIVE_RATING_USER_FILTER = (
+    "is_rating_enabled = TRUE\n"
+    "  AND username IS NOT NULL\n"
+    "  AND BTRIM(username) <> ''\n"
+    "  AND username NOT LIKE 'anon_user_%%'\n"
+    "  AND last_seen_at >= NOW() - INTERVAL '30 days'"
+)
+
 
 def save_profile(
     user_id: int,
@@ -118,7 +126,7 @@ def save_profile(
     )
 
 
-def create_anonymous_user() -> AnonymousAuthResponse:
+def create_anonymous_user(client_platform: Optional[str] = None) -> AnonymousAuthResponse:
     access_token = generate_access_token()
     token_hash = hash_access_token(access_token)
     anonymous_username = build_anonymous_username(token_hash)
@@ -140,14 +148,16 @@ def create_anonymous_user() -> AnonymousAuthResponse:
                     user_id,
                     access_token_hash,
                     session_type,
+                    client_platform,
                     created_at,
                     last_seen_at
                 )
-                VALUES (%s, %s, 'guest', %s, %s);
+                VALUES (%s, %s, 'guest', %s, %s, %s);
                 """,
                 (
                     user["id"],
                     token_hash,
+                    client_platform,
                     user["created_at"],
                     user["last_seen_at"],
                 ),
@@ -324,11 +334,7 @@ def fetch_leaderboard(order: str, score_filter: str, limit: int) -> LeaderboardR
                 f"""
                 SELECT COUNT(*) AS total
                 FROM users
-                WHERE is_rating_enabled = TRUE
-                  AND username IS NOT NULL
-                  AND BTRIM(username) <> ''
-                  AND username NOT LIKE 'anon_user_%%'
-                  AND last_seen_at >= NOW() - INTERVAL '30 days'
+                WHERE {_ACTIVE_RATING_USER_FILTER}
                   AND score {score_filter};
                 """
             )
@@ -337,11 +343,7 @@ def fetch_leaderboard(order: str, score_filter: str, limit: int) -> LeaderboardR
                 f"""
                 SELECT username, score, avatar_path
                 FROM users
-                WHERE is_rating_enabled = TRUE
-                  AND username IS NOT NULL
-                  AND BTRIM(username) <> ''
-                  AND username NOT LIKE 'anon_user_%%'
-                  AND last_seen_at >= NOW() - INTERVAL '30 days'
+                WHERE {_ACTIVE_RATING_USER_FILTER}
                   AND score {score_filter}
                 ORDER BY score {order}, username ASC
                 LIMIT %s;

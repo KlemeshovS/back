@@ -34,7 +34,13 @@ if [[ -f "frontend/package.json" ]]; then
 fi
 
 while IFS= read -r file; do
-  if [[ "$file" == backend/app/api/routes/* || "$file" == "backend/app/api/dependencies.py" || "$file" == "backend/app/api/app.py" || "$file" == backend/app/services/* || "$file" == backend/app/domain/* || "$file" == backend/app/core/* ]]; then
+  # Only flag changes that affect the public API contract:
+  # - route handlers (endpoints, request/response shape)
+  # - API-level dependencies (auth guards, request parsing)
+  # - domain schemas (request/response models visible to clients)
+  # Internal helpers, services, and core utilities are excluded because
+  # they do not change the public API surface.
+  if [[ "$file" == backend/app/api/routes/* || "$file" == "backend/app/api/dependencies.py" || "$file" == "backend/app/api/app.py" || "$file" == "backend/app/domain/schemas.py" ]]; then
     API_CHANGED=true
   fi
 

@@ -11,7 +11,7 @@ from app.core.google_auth import build_google_placeholder_username, verify_googl
 from app.core.usernames import has_public_username, normalize_public_username
 from app.core.yandex_auth import build_yandex_placeholder_username, verify_yandex_access_token
 from app.db.database import get_connection
-from app.domain.schemas import AuthSessionResponse, LinkedIdentityListResponse
+from app.domain.schemas import AuthSessionResponse, LinkedIdentityListResponse, SessionType
 from app.services.session_service import (
     issue_authenticated_session,
     resolve_current_user_by_access_token,
@@ -21,6 +21,7 @@ from app.services.session_service import (
 def authenticate_google(
     id_token: str,
     guest_access_token: Optional[str] = None,
+    client_platform: Optional[str] = None,
 ) -> AuthSessionResponse:
     identity = verify_google_id_token(id_token)
     user_id = _authenticate_social_identity(
@@ -32,12 +33,13 @@ def authenticate_google(
         placeholder_username=build_google_placeholder_username(identity.subject),
         guest_access_token=guest_access_token,
     )
-    return issue_authenticated_session(user_id, "google")
+    return issue_authenticated_session(user_id, "google", client_platform)
 
 
 def authenticate_apple(
     id_token: str,
     guest_access_token: Optional[str] = None,
+    client_platform: Optional[str] = None,
 ) -> AuthSessionResponse:
     identity = verify_apple_id_token(id_token)
     user_id = _authenticate_social_identity(
@@ -49,12 +51,13 @@ def authenticate_apple(
         placeholder_username=build_apple_placeholder_username(identity.subject),
         guest_access_token=guest_access_token,
     )
-    return issue_authenticated_session(user_id, "apple")
+    return issue_authenticated_session(user_id, "apple", client_platform)
 
 
 def authenticate_yandex(
     access_token: str,
     guest_access_token: Optional[str] = None,
+    client_platform: Optional[str] = None,
 ) -> AuthSessionResponse:
     identity = verify_yandex_access_token(access_token)
     user_id = _authenticate_social_identity(
@@ -66,7 +69,7 @@ def authenticate_yandex(
         placeholder_username=build_yandex_placeholder_username(identity.subject),
         guest_access_token=guest_access_token,
     )
-    return issue_authenticated_session(user_id, "yandex")
+    return issue_authenticated_session(user_id, "yandex", client_platform)
 
 
 def list_linked_identities(current_user: dict) -> LinkedIdentityListResponse:
@@ -401,14 +404,14 @@ def _resolve_guest_user_for_migration(guest_access_token: Optional[str]) -> Opti
         return None
 
     current_user = resolve_current_user_by_access_token(guest_access_token)
-    if current_user is None or current_user["session_type"] != "guest":
+    if current_user is None or current_user["session_type"] != SessionType.GUEST:
         return None
 
     return current_user
 
 
 def _require_authenticated_user(current_user: dict) -> None:
-    if current_user["session_type"] != "authenticated":
+    if current_user["session_type"] != SessionType.AUTHENTICATED:
         raise ApiError(
             status_code=status.HTTP_403_FORBIDDEN,
             code=ApiErrorCode.AUTH_REQUIRED_FOR_PROVIDER_MANAGEMENT,
