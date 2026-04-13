@@ -26,6 +26,15 @@ router = APIRouter()
 current_user_session_dependency = Depends(get_current_user_session)
 
 
+def _enforce_auth_rate_limit(action: str, client_ip: str, detail: str, multiplier: int = 1) -> None:
+    enforce_rate_limit(
+        key=f"{action}:ip:{client_ip}",
+        limit=settings.register_rate_limit * multiplier,
+        window_seconds=settings.register_window_seconds,
+        detail=detail,
+    )
+
+
 @router.post(
     "/auth/anonymous",
     response_model=AnonymousAuthResponse,
@@ -33,11 +42,8 @@ current_user_session_dependency = Depends(get_current_user_session)
 )
 def create_anonymous_user(request: Request) -> AnonymousAuthResponse:
     client_ip = get_client_ip(request)
-    enforce_rate_limit(
-        key=f"anonymous-auth:ip:{client_ip}",
-        limit=settings.register_rate_limit,
-        window_seconds=settings.register_window_seconds,
-        detail="Too many account creation attempts. Please try again later.",
+    _enforce_auth_rate_limit(
+        "anonymous-auth", client_ip, "Too many account creation attempts. Please try again later."
     )
     return user_service.create_anonymous_user()
 
@@ -53,11 +59,8 @@ def login_with_google(
     authorization: Optional[str] = Header(default=None),
 ) -> AuthSessionResponse:
     client_ip = get_client_ip(request)
-    enforce_rate_limit(
-        key=f"google-auth:ip:{client_ip}",
-        limit=settings.register_rate_limit,
-        window_seconds=settings.register_window_seconds,
-        detail="Too many Google login attempts. Please try again later.",
+    _enforce_auth_rate_limit(
+        "google-auth", client_ip, "Too many Google login attempts. Please try again later."
     )
     guest_access_token = get_bearer_token(authorization) if authorization else None
     return social_auth_service.authenticate_google(payload.id_token, guest_access_token)
@@ -74,11 +77,8 @@ def login_with_apple(
     authorization: Optional[str] = Header(default=None),
 ) -> AuthSessionResponse:
     client_ip = get_client_ip(request)
-    enforce_rate_limit(
-        key=f"apple-auth:ip:{client_ip}",
-        limit=settings.register_rate_limit,
-        window_seconds=settings.register_window_seconds,
-        detail="Too many Apple login attempts. Please try again later.",
+    _enforce_auth_rate_limit(
+        "apple-auth", client_ip, "Too many Apple login attempts. Please try again later."
     )
     guest_access_token = get_bearer_token(authorization) if authorization else None
     return social_auth_service.authenticate_apple(payload.id_token, guest_access_token)
@@ -95,11 +95,8 @@ def login_with_yandex(
     authorization: Optional[str] = Header(default=None),
 ) -> AuthSessionResponse:
     client_ip = get_client_ip(request)
-    enforce_rate_limit(
-        key=f"yandex-auth:ip:{client_ip}",
-        limit=settings.register_rate_limit,
-        window_seconds=settings.register_window_seconds,
-        detail="Too many Yandex login attempts. Please try again later.",
+    _enforce_auth_rate_limit(
+        "yandex-auth", client_ip, "Too many Yandex login attempts. Please try again later."
     )
     guest_access_token = get_bearer_token(authorization) if authorization else None
     return social_auth_service.authenticate_yandex(payload.access_token, guest_access_token)
@@ -127,11 +124,8 @@ def link_google_provider(
     current_session: dict = current_user_session_dependency,
 ) -> LinkedIdentityListResponse:
     client_ip = get_client_ip(request)
-    enforce_rate_limit(
-        key=f"google-link:ip:{client_ip}",
-        limit=settings.register_rate_limit,
-        window_seconds=settings.register_window_seconds,
-        detail="Too many Google link attempts. Please try again later.",
+    _enforce_auth_rate_limit(
+        "google-link", client_ip, "Too many Google link attempts. Please try again later."
     )
     return social_auth_service.link_google_identity(current_session, payload.id_token)
 
@@ -147,11 +141,8 @@ def link_apple_provider(
     current_session: dict = current_user_session_dependency,
 ) -> LinkedIdentityListResponse:
     client_ip = get_client_ip(request)
-    enforce_rate_limit(
-        key=f"apple-link:ip:{client_ip}",
-        limit=settings.register_rate_limit,
-        window_seconds=settings.register_window_seconds,
-        detail="Too many Apple link attempts. Please try again later.",
+    _enforce_auth_rate_limit(
+        "apple-link", client_ip, "Too many Apple link attempts. Please try again later."
     )
     return social_auth_service.link_apple_identity(current_session, payload.id_token)
 
@@ -167,11 +158,8 @@ def link_yandex_provider(
     current_session: dict = current_user_session_dependency,
 ) -> LinkedIdentityListResponse:
     client_ip = get_client_ip(request)
-    enforce_rate_limit(
-        key=f"yandex-link:ip:{client_ip}",
-        limit=settings.register_rate_limit,
-        window_seconds=settings.register_window_seconds,
-        detail="Too many Yandex link attempts. Please try again later.",
+    _enforce_auth_rate_limit(
+        "yandex-link", client_ip, "Too many Yandex link attempts. Please try again later."
     )
     return social_auth_service.link_yandex_identity(current_session, payload.access_token)
 
@@ -206,11 +194,11 @@ def restore_current_session(
 )
 def refresh_auth_session(payload: RefreshSessionRequest, request: Request) -> AuthSessionResponse:
     client_ip = get_client_ip(request)
-    enforce_rate_limit(
-        key=f"refresh-auth:ip:{client_ip}",
-        limit=settings.register_rate_limit * 2,
-        window_seconds=settings.register_window_seconds,
-        detail="Too many refresh attempts. Please try again later.",
+    _enforce_auth_rate_limit(
+        "refresh-auth",
+        client_ip,
+        "Too many refresh attempts. Please try again later.",
+        multiplier=2,
     )
     return session_service.refresh_authenticated_session(payload.refresh_token)
 

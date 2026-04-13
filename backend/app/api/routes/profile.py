@@ -10,6 +10,7 @@ from app.domain.schemas import (
     ProfileUpdateRequest,
     RatingParticipationUpdateRequest,
     ScoreUpdateRequest,
+    SessionType,
     UserScoreResponse,
 )
 from app.services import user_service
@@ -53,7 +54,7 @@ def _enforce_authenticated_rating_user(
     if settings.allow_guest_rating:
         return
 
-    if current_user["session_type"] != "authenticated":
+    if current_user["session_type"] != SessionType.AUTHENTICATED:
         _raise_guest_rating_error(
             wants_username_save=wants_username_save,
             wants_rating_enable=wants_rating_enable,
