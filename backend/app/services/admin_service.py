@@ -35,6 +35,29 @@ from app.domain.schemas import (
     ManagedUserUpdateRequest,
 )
 
+_REGISTERED_USER_FILTER = (
+    "username IS NOT NULL\n  AND BTRIM(username) <> ''\n  AND username NOT LIKE 'anon_user_%%'"
+)
+
+_MANAGED_USER_SELECT = """
+    SELECT
+        users.id,
+        users.username,
+        users.score,
+        users.is_rating_enabled,
+        users.account_status,
+        COALESCE(identity.providers, ARRAY[]::text[]) AS identity_providers,
+        users.created_at,
+        users.updated_at,
+        users.last_seen_at
+    FROM users
+    LEFT JOIN LATERAL (
+        SELECT ARRAY_AGG(provider ORDER BY provider) AS providers
+        FROM user_identities
+        WHERE user_id = users.id
+    ) AS identity ON TRUE
+"""
+
 
 def bootstrap_owner(login: str, password: str) -> None:
     with get_connection() as conn:
@@ -241,22 +264,18 @@ def get_admin_overview() -> AdminOverviewResponse:
     with get_connection() as conn:
         with conn.cursor() as cur:
             cur.execute(
-                """
+                f"""
                 SELECT
                     (
                         SELECT COUNT(*)
                         FROM users
-                        WHERE username IS NOT NULL
-                          AND BTRIM(username) <> ''
-                          AND username NOT LIKE 'anon_user_%%'
+                        WHERE {_REGISTERED_USER_FILTER}
                     ) AS total_users,
                     (
                         SELECT COUNT(*)
                         FROM users
                         WHERE is_rating_enabled = TRUE
-                          AND username IS NOT NULL
-                          AND BTRIM(username) <> ''
-                          AND username NOT LIKE 'anon_user_%%'
+                          AND {_REGISTERED_USER_FILTER}
                     ) AS rating_enabled_users,
                     (SELECT COUNT(*) FROM admin_users) AS total_admins,
                     (SELECT COUNT(*) FROM admin_users WHERE is_active = TRUE) AS active_admins,
@@ -276,86 +295,32 @@ def get_admin_overview() -> AdminOverviewResponse:
 
 def list_managed_users(search: Optional[str], limit: int, offset: int) -> ManagedUserListResponse:
     search_term = f"%{search.strip()}%" if search else None
+    search_clause = "AND username ILIKE %s" if search_term else ""
 
     with get_connection() as conn:
         with conn.cursor() as cur:
-            if search_term:
-                cur.execute(
-                    """
-                    SELECT COUNT(*) AS total
-                    FROM users
-                    WHERE username IS NOT NULL
-                      AND BTRIM(username) <> ''
-                      AND username NOT LIKE 'anon_user_%%'
-                      AND username ILIKE %s;
-                    """,
-                    (search_term,),
-                )
-                total = cur.fetchone()["total"]
-                cur.execute(
-                    """
-                    SELECT
-                        users.id,
-                        users.username,
-                        users.score,
-                        users.is_rating_enabled,
-                        users.account_status,
-                        COALESCE(identity.providers, ARRAY[]::text[]) AS identity_providers,
-                        users.created_at,
-                        users.updated_at,
-                        users.last_seen_at
-                    FROM users
-                    LEFT JOIN LATERAL (
-                        SELECT ARRAY_AGG(provider ORDER BY provider) AS providers
-                        FROM user_identities
-                        WHERE user_id = users.id
-                    ) AS identity ON TRUE
-                    WHERE username IS NOT NULL
-                      AND BTRIM(username) <> ''
-                      AND username NOT LIKE 'anon_user_%%'
-                      AND username ILIKE %s
-                    ORDER BY id DESC
-                    LIMIT %s OFFSET %s;
-                    """,
-                    (search_term, limit, offset),
-                )
-            else:
-                cur.execute(
-                    """
-                    SELECT COUNT(*) AS total
-                    FROM users
-                    WHERE username IS NOT NULL
-                      AND BTRIM(username) <> ''
-                      AND username NOT LIKE 'anon_user_%%';
-                    """
-                )
-                total = cur.fetchone()["total"]
-                cur.execute(
-                    """
-                    SELECT
-                        users.id,
-                        users.username,
-                        users.score,
-                        users.is_rating_enabled,
-                        users.account_status,
-                        COALESCE(identity.providers, ARRAY[]::text[]) AS identity_providers,
-                        users.created_at,
-                        users.updated_at,
-                        users.last_seen_at
-                    FROM users
-                    LEFT JOIN LATERAL (
-                        SELECT ARRAY_AGG(provider ORDER BY provider) AS providers
-                        FROM user_identities
-                        WHERE user_id = users.id
-                    ) AS identity ON TRUE
-                    WHERE username IS NOT NULL
-                      AND BTRIM(username) <> ''
-                      AND username NOT LIKE 'anon_user_%%'
-                    ORDER BY id DESC
-                    LIMIT %s OFFSET %s;
-                    """,
-                    (limit, offset),
-                )
+            count_params = (search_term,) if search_term else ()
+            cur.execute(
+                f"""
+                SELECT COUNT(*) AS total
+                FROM users
+                WHERE {_REGISTERED_USER_FILTER}
+                {search_clause};
+                """,
+                count_params,
+            )
+            total = cur.fetchone()["total"]
+            select_params = (search_term, limit, offset) if search_term else (limit, offset)
+            cur.execute(
+                f"""
+                {_MANAGED_USER_SELECT}
+                WHERE {_REGISTERED_USER_FILTER}
+                {search_clause}
+                ORDER BY id DESC
+                LIMIT %s OFFSET %s;
+                """,
+                select_params,
+            )
             rows = cur.fetchall()
 
     return ManagedUserListResponse(
@@ -368,23 +333,8 @@ def get_managed_user(user_id: int) -> ManagedUserResponse:
     with get_connection() as conn:
         with conn.cursor() as cur:
             cur.execute(
-                """
-                SELECT
-                    users.id,
-                    users.username,
-                    users.score,
-                    users.is_rating_enabled,
-                    users.account_status,
-                    COALESCE(identity.providers, ARRAY[]::text[]) AS identity_providers,
-                    users.created_at,
-                    users.updated_at,
-                    users.last_seen_at
-                FROM users
-                LEFT JOIN LATERAL (
-                    SELECT ARRAY_AGG(provider ORDER BY provider) AS providers
-                    FROM user_identities
-                    WHERE user_id = users.id
-                ) AS identity ON TRUE
+                f"""
+                {_MANAGED_USER_SELECT}
                 WHERE users.id = %s;
                 """,
                 (user_id,),
