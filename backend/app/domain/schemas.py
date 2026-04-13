@@ -50,6 +50,16 @@ class AdminRole(str, Enum):
     ADMIN = "admin"
 
 
+class SessionType(str, Enum):
+    GUEST = "guest"
+    AUTHENTICATED = "authenticated"
+
+
+class AccountStatus(str, Enum):
+    GUEST = "guest"
+    ACTIVE = "active"
+
+
 class AnonymousAuthResponse(ApiModel):
     user_id: int
     access_token: str
