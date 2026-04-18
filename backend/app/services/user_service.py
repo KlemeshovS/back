@@ -359,14 +359,16 @@ def delete_my_account(user_id: int) -> None:
                 """,
                 (
                     user_id,
-                    json.dumps({
-                        "before": {
-                            "id": user_id,
-                            "username": existing["username"],
-                            "score": existing["score"],
-                            "is_rating_enabled": existing["is_rating_enabled"],
+                    json.dumps(
+                        {
+                            "before": {
+                                "id": user_id,
+                                "username": existing["username"],
+                                "score": existing["score"],
+                                "is_rating_enabled": existing["is_rating_enabled"],
+                            }
                         }
-                    }),
+                    ),
                 ),
             )
         conn.commit()
