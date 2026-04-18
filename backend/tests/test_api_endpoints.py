@@ -928,3 +928,37 @@ def test_score_update_rejects_users_with_rating_disabled(monkeypatch) -> None:
         "code": "RATING_DISABLED_FOR_SCORE",
         "message": "Rating must be enabled to submit score",
     }
+
+
+def test_delete_my_account_returns_204_for_authenticated_user(monkeypatch) -> None:
+    client = build_client()
+
+    client.app.dependency_overrides[get_current_user] = lambda: {
+        "id": 10,
+        "username": "player_10",
+        "is_rating_enabled": True,
+        "session_type": "authenticated",
+        "provider": "google",
+    }
+
+    monkeypatch.setattr(user_service, "delete_my_account", lambda user_id: None)
+
+    response = client.delete("/me", headers={"Authorization": "Bearer token"})
+
+    assert response.status_code == 204
+
+
+def test_delete_my_account_rejects_guest(monkeypatch) -> None:
+    client = build_client()
+
+    client.app.dependency_overrides[get_current_user] = lambda: {
+        "id": 5,
+        "username": None,
+        "is_rating_enabled": False,
+        "session_type": "guest",
+        "provider": None,
+    }
+
+    response = client.delete("/me", headers={"Authorization": "Bearer token"})
+
+    assert response.status_code == 403

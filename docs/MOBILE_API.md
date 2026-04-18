@@ -51,6 +51,7 @@ X-Client-Platform: ios
 - `PATCH /api/v1/me/rating`
 - `POST /api/v1/me/avatar`
 - `DELETE /api/v1/me/avatar`
+- `DELETE /api/v1/me`
 - `POST /api/v1/me/score`
 - `POST /api/v1/auth/providers/google/link`
 - `POST /api/v1/auth/providers/apple/link`
@@ -255,6 +256,14 @@ Admin UI использует отдельный admin-контур backend, н�
 
 Ответ:
 - тот же профиль, что и `GET /api/v1/me`
+
+### `DELETE /api/v1/me`
+
+Удаляет аккаунт текущего пользователя и все связанные данные (сессии, провайдеры, аватар).
+
+Доступно только для `authenticated` пользователей.
+
+Ответ: `204 No Content`
 
 ### `POST /api/v1/me/score`
 

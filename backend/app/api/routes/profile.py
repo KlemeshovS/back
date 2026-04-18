@@ -140,3 +140,14 @@ async def upload_my_avatar(
 @router.delete("/me/avatar", response_model=ProfileResponse)
 def delete_my_avatar(current_user: dict = current_user_dependency) -> ProfileResponse:
     return user_service.delete_my_avatar(current_user["id"])
+
+
+@router.delete("/me", status_code=status.HTTP_204_NO_CONTENT)
+def delete_my_account(current_user: dict = current_user_dependency) -> None:
+    if current_user["session_type"] != SessionType.AUTHENTICATED:
+        raise ApiError(
+            status_code=status.HTTP_403_FORBIDDEN,
+            code=ApiErrorCode.AUTH_REQUIRED_FOR_RATING,
+            message="Only authenticated users can delete their account",
+        )
+    user_service.delete_my_account(current_user["id"])

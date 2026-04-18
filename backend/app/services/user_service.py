@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from typing import Optional
 
 from fastapi import status
@@ -325,6 +326,53 @@ def delete_my_avatar(user_id: int) -> ProfileResponse:
         participate_in_rating=user["is_rating_enabled"],
         avatar_url=None,
     )
+
+
+def delete_my_account(user_id: int) -> None:
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                SELECT username, score, is_rating_enabled, avatar_path
+                FROM users
+                WHERE id = %s;
+                """,
+                (user_id,),
+            )
+            existing = cur.fetchone()
+            if existing is None:
+                raise ApiError(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    code=ApiErrorCode.USER_NOT_FOUND,
+                    message="User not found",
+                )
+            avatar_path = existing["avatar_path"]
+
+            cur.execute("DELETE FROM users WHERE id = %s;", (user_id,))
+
+            cur.execute(
+                """
+                INSERT INTO admin_audit_log (
+                    admin_id, admin_login, action, target_type, target_id, details
+                )
+                VALUES (NULL, 'user_self', 'user.self_delete', 'user', %s, %s::jsonb);
+                """,
+                (
+                    user_id,
+                    json.dumps({
+                        "before": {
+                            "id": user_id,
+                            "username": existing["username"],
+                            "score": existing["score"],
+                            "is_rating_enabled": existing["is_rating_enabled"],
+                        }
+                    }),
+                ),
+            )
+        conn.commit()
+
+    if avatar_path:
+        delete_avatar_file(avatar_path)
 
 
 def fetch_leaderboard(order: str, score_filter: str, limit: int) -> LeaderboardResponse:
