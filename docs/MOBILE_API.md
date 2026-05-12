@@ -318,6 +318,92 @@ Admin UI использует отдельный admin-контур backend, н�
 }
 ```
 
+## Friends API
+
+Система друзей доступна только для `authenticated`-пользователей. Гость получает `403 AUTH_REQUIRED_FOR_RATING` на любом эндпоинте.
+
+### Защищённые методы
+
+- `POST /api/v1/friends`
+- `GET /api/v1/friends`
+- `GET /api/v1/friends/requests`
+- `PATCH /api/v1/friends/{friendshipId}`
+- `DELETE /api/v1/friends/{friendshipId}`
+
+### Статусы дружбы
+
+- `pending` — заявка отправлена, ждёт ответа
+- `accepted` — дружба подтверждена
+- `declined` — заявка отклонена
+
+### Поля объекта дружбы (FriendResponse)
+
+- `userId` — ID другого пользователя (не текущего)
+- `username` — username другого пользователя
+- `avatarUrl` — абсолютный URL аватара или `null`
+- `friendshipId` — ID дружбы, используется в PATCH и DELETE
+- `status` — `pending` / `accepted` / `declined`
+- `isRequester` — `true`, если текущий пользователь отправил заявку
+- `createdAt` — ISO 8601
+
+### `POST /api/v1/friends`
+
+Отправить заявку в друзья.
+
+Тело запроса:
+- `username` — username адресата
+
+Ответ `201`: объект `FriendResponse` со статусом `pending`, `isRequester: true`.
+
+### `GET /api/v1/friends`
+
+Возвращает список принятых дружб (`status=accepted`).
+
+Ответ `200`:
+- `items` — массив `FriendResponse`
+- `total` — общее количество
+
+### `GET /api/v1/friends/requests`
+
+Возвращает все pending-заявки текущего пользователя (входящие и исходящие).
+
+Разделение:
+- `isRequester: false` — входящая заявка, можно принять или отклонить
+- `isRequester: true` — исходящая заявка, можно только отменить через DELETE
+
+### `PATCH /api/v1/friends/{friendshipId}`
+
+Принять или отклонить входящую заявку. Только адресат (`isRequester: false`).
+
+Тело запроса:
+- `action` — `accept` или `decline`
+
+Ответ `200`: обновлённый `FriendResponse`.
+
+### `DELETE /api/v1/friends/{friendshipId}`
+
+Удалить друга или отменить заявку. Доступно обеим сторонам.
+
+Ответ: `204 No Content`.
+
+### Правила
+
+- Лимит — 200 принятых дружб на пользователя
+- Нельзя отправить заявку самому себе
+- Нельзя отправить повторную заявку, пока существует pending/accepted/declined запись
+- Только `authenticated`-пользователи
+
+### Коды ошибок Friends
+
+- `AUTH_REQUIRED_FOR_RATING` — гость пытается работать с друзьями
+- `USER_NOT_FOUND` — username не существует или аккаунт неактивен
+- `CANNOT_ADD_SELF` — попытка добавить себя в друзья
+- `ALREADY_FRIENDS` — пользователи уже являются друзьями
+- `FRIEND_REQUEST_ALREADY_SENT` — заявка в любую сторону уже существует
+- `FRIENDS_LIMIT_REACHED` — достигнут лимит 200 принятых дружб
+- `FRIEND_REQUEST_NOT_FOUND` — заявка не найдена или не принадлежит текущему пользователю
+- `NOT_FRIENDS` — дружба не найдена (DELETE)
+
 ## Versioning Strategy
 
 - `v1` — текущий стабильный public contract для mobile/web clients
