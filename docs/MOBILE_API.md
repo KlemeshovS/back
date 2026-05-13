@@ -318,91 +318,74 @@ Admin UI использует отдельный admin-контур backend, н�
 }
 ```
 
-## Friends API
+## Follows API (подписки и друзья)
 
-Система друзей доступна только для `authenticated`-пользователей. Гость получает `403 AUTH_REQUIRED_FOR_RATING` на любом эндпоинте.
+Система подписок доступна только для `authenticated`-пользователей. Гость получает `403 AUTH_REQUIRED_FOR_RATING`.
+
+Модель: **подписка односторонняя**. Взаимная подписка автоматически означает дружбу — никаких заявок, статусов и подтверждений нет.
 
 ### Защищённые методы
 
-- `POST /api/v1/friends`
-- `GET /api/v1/friends`
-- `GET /api/v1/friends/requests`
-- `PATCH /api/v1/friends/{friendshipId}`
-- `DELETE /api/v1/friends/{friendshipId}`
+- `POST /api/v1/follows`
+- `DELETE /api/v1/follows/{userId}`
+- `GET /api/v1/follows`
+- `GET /api/v1/follows/followers`
+- `GET /api/v1/follows/friends`
 
-### Статусы дружбы
+### Поля объекта подписки (FollowResponse)
 
-- `pending` — заявка отправлена, ждёт ответа
-- `accepted` — дружба подтверждена
-- `declined` — заявка отклонена
-
-### Поля объекта дружбы (FriendResponse)
-
-- `userId` — ID другого пользователя (не текущего)
+- `userId` — ID другого пользователя
 - `username` — username другого пользователя
 - `avatarUrl` — абсолютный URL аватара или `null`
-- `friendshipId` — ID дружбы, используется в PATCH и DELETE
-- `status` — `pending` / `accepted` / `declined`
-- `isRequester` — `true`, если текущий пользователь отправил заявку
+- `isMutual` — `true`, если подписка взаимная (= друзья)
 - `createdAt` — ISO 8601
 
-### `POST /api/v1/friends`
+### `POST /api/v1/follows`
 
-Отправить заявку в друзья.
-
-Тело запроса:
-- `username` — username адресата
-
-Ответ `201`: объект `FriendResponse` со статусом `pending`, `isRequester: true`.
-
-### `GET /api/v1/friends`
-
-Возвращает список принятых дружб (`status=accepted`).
-
-Ответ `200`:
-- `items` — массив `FriendResponse`
-- `total` — общее количество
-
-### `GET /api/v1/friends/requests`
-
-Возвращает все pending-заявки текущего пользователя (входящие и исходящие).
-
-Разделение:
-- `isRequester: false` — входящая заявка, можно принять или отклонить
-- `isRequester: true` — исходящая заявка, можно только отменить через DELETE
-
-### `PATCH /api/v1/friends/{friendshipId}`
-
-Принять или отклонить входящую заявку. Только адресат (`isRequester: false`).
+Подписаться на пользователя по username.
 
 Тело запроса:
-- `action` — `accept` или `decline`
+- `username` — username цели
 
-Ответ `200`: обновлённый `FriendResponse`.
+Ответ `201`: `FollowResponse`. Если другой уже подписан на вас — `isMutual: true`.
 
-### `DELETE /api/v1/friends/{friendshipId}`
+### `DELETE /api/v1/follows/{userId}`
 
-Удалить друга или отменить заявку. Доступно обеим сторонам.
+Отписаться от пользователя. `userId` — ID пользователя, от которого отписываемся.
 
 Ответ: `204 No Content`.
 
+### `GET /api/v1/follows`
+
+Список пользователей, на которых подписан текущий пользователь (мои подписки).
+
+Ответ `200`:
+- `items` — массив `FollowResponse`
+- `total` — общее количество
+
+### `GET /api/v1/follows/followers`
+
+Список пользователей, которые подписаны на текущего пользователя (мои подписчики).
+
+### `GET /api/v1/follows/friends`
+
+Список пользователей с взаимной подпиской (друзья). Все элементы имеют `isMutual: true`.
+
 ### Правила
 
-- Лимит — 200 принятых дружб на пользователя
-- Нельзя отправить заявку самому себе
-- Нельзя отправить повторную заявку, пока существует pending/accepted/declined запись
+- Лимит подписок — 500 на пользователя
+- Нельзя подписаться на себя
 - Только `authenticated`-пользователи
+- Дружба = взаимная подписка, отдельного подтверждения не требует
 
-### Коды ошибок Friends
+### Коды ошибок Follows
 
-- `AUTH_REQUIRED_FOR_RATING` — гость пытается работать с друзьями
+- `AUTH_REQUIRED_FOR_RATING` — гость пытается работать с подписками
 - `USER_NOT_FOUND` — username не существует или аккаунт неактивен
-- `CANNOT_ADD_SELF` — попытка добавить себя в друзья
-- `ALREADY_FRIENDS` — пользователи уже являются друзьями
-- `FRIEND_REQUEST_ALREADY_SENT` — заявка в любую сторону уже существует
-- `FRIENDS_LIMIT_REACHED` — достигнут лимит 200 принятых дружб
-- `FRIEND_REQUEST_NOT_FOUND` — заявка не найдена или не принадлежит текущему пользователю
-- `NOT_FRIENDS` — дружба не найдена (DELETE)
+- `CANNOT_FOLLOW_SELF` — попытка подписаться на себя
+- `ALREADY_FOLLOWING` — уже подписан на этого пользователя
+- `FOLLOWS_LIMIT_REACHED` — достигнут лимит 500 подписок
+- `NOT_FOLLOWING` — попытка отписаться от пользователя, на которого не подписан
 
 ## Versioning Strategy
 
