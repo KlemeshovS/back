@@ -15,7 +15,7 @@ from app.api.error_handlers import (
     unhandled_exception_handler,
     validation_exception_handler,
 )
-from app.api.routes import admin, auth, docs, friends, health, leaderboard, profile, site
+from app.api.routes import admin, auth, docs, follows, health, leaderboard, profile, site
 from app.core.config import settings
 from app.core.errors import ApiError
 from app.core.media import ensure_media_directories
@@ -84,6 +84,6 @@ def create_app(init_database: bool = True) -> FastAPI:
     app.include_router(auth.router, prefix=PUBLIC_API_V1_PREFIX)
     app.include_router(profile.router, prefix=PUBLIC_API_V1_PREFIX)
     app.include_router(leaderboard.router, prefix=PUBLIC_API_V1_PREFIX)
-    app.include_router(friends.router, prefix=PUBLIC_API_V1_PREFIX)
+    app.include_router(follows.router, prefix=PUBLIC_API_V1_PREFIX)
 
     return app

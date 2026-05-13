@@ -1,11 +1,10 @@
-"""add friendships table
+"""Add follows table
 
 Revision ID: 20260512_000008
 Revises: 20260418_000007
 Create Date: 2026-05-12 00:00:00.000000
 """
 
-import sqlalchemy as sa
 from alembic import op
 
 revision = "20260512_000008"
@@ -16,22 +15,18 @@ depends_on = None
 
 def upgrade() -> None:
     op.execute("""
-        CREATE TABLE friendships (
+        CREATE TABLE follows (
             id          BIGSERIAL PRIMARY KEY,
-            requester_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-            addressee_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-            status      VARCHAR(16) NOT NULL DEFAULT 'pending'
-                            CHECK (status IN ('pending', 'accepted', 'declined')),
+            follower_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+            followed_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
             created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-            updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-            CONSTRAINT friendships_unique UNIQUE (requester_id, addressee_id),
-            CONSTRAINT friendships_no_self CHECK (requester_id <> addressee_id)
+            CONSTRAINT follows_unique  UNIQUE (follower_id, followed_id),
+            CONSTRAINT follows_no_self CHECK  (follower_id <> followed_id)
         );
     """)
-    op.execute("CREATE INDEX idx_friendships_requester ON friendships (requester_id);")
-    op.execute("CREATE INDEX idx_friendships_addressee ON friendships (addressee_id);")
-    op.execute("CREATE INDEX idx_friendships_status ON friendships (status);")
+    op.execute("CREATE INDEX ON follows (follower_id);")
+    op.execute("CREATE INDEX ON follows (followed_id);")
 
 
 def downgrade() -> None:
-    op.drop_table("friendships")
+    op.execute("DROP TABLE IF EXISTS follows CASCADE;")

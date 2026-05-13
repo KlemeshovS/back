@@ -263,33 +263,21 @@ class AdminAuditLogListResponse(ApiModel):
     total: int
 
 
-# Friends
+# Follows
 
 
-class FriendshipStatus(str, Enum):
-    PENDING = "pending"
-    ACCEPTED = "accepted"
-    DECLINED = "declined"
-
-
-class FriendRequestCreate(ApiModel):
+class FollowCreate(ApiModel):
     username: str = Field(min_length=3, max_length=64)
 
 
-class FriendResponse(ApiModel):
+class FollowResponse(ApiModel):
     user_id: int
     username: str
     avatar_url: Optional[str] = None
-    friendship_id: int
-    status: FriendshipStatus
-    is_requester: bool
+    is_mutual: bool
     created_at: datetime
 
 
-class FriendListResponse(ApiModel):
-    items: list[FriendResponse]
+class FollowListResponse(ApiModel):
+    items: list[FollowResponse]
     total: int
-
-
-class FriendActionRequest(ApiModel):
-    action: str = Field(pattern="^(accept|decline)$")
