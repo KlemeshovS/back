@@ -714,7 +714,7 @@ def test_top_leaderboard_returns_service_payload(monkeypatch) -> None:
 
     assert response.status_code == 200
     assert response.json() == {
-        "items": [{"username": "good_user", "score": 12, "avatarUrl": None}],
+        "items": [{"userId": None, "username": "good_user", "score": 12, "avatarUrl": None}],
         "total": 1,
     }
 
@@ -735,7 +735,7 @@ def test_top_leaderboard_is_available_under_api_v1(monkeypatch) -> None:
 
     assert response.status_code == 200
     assert response.json() == {
-        "items": [{"username": "good_v1", "score": 20, "avatarUrl": None}],
+        "items": [{"userId": None, "username": "good_v1", "score": 20, "avatarUrl": None}],
         "total": 1,
     }
 
@@ -821,7 +821,12 @@ def test_guest_can_update_score_when_guest_rating_is_enabled(monkeypatch) -> Non
     )
 
     assert response.status_code == 200
-    assert response.json() == {"username": "guest_name", "score": 10, "avatarUrl": None}
+    assert response.json() == {
+        "userId": None,
+        "username": "guest_name",
+        "score": 10,
+        "avatarUrl": None,
+    }
 
 
 def test_upload_avatar_returns_profile(monkeypatch) -> None:
