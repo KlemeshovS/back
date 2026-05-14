@@ -143,6 +143,7 @@ class UserScoreResponse(ApiModel):
         from_attributes=True,
     )
 
+    user_id: Optional[int] = None
     username: Optional[str] = None
     score: int
     avatar_url: Optional[str] = None
