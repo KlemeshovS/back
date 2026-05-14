@@ -211,6 +211,7 @@ def update_my_score(user_id: int, score: int) -> UserScoreResponse:
         conn.commit()
 
     return UserScoreResponse(
+        user_id=user_id,
         username=normalize_public_username(user["username"]),
         score=user["score"],
         avatar_url=build_avatar_url(user.get("avatar_path")),
@@ -391,7 +392,7 @@ def fetch_leaderboard(order: str, score_filter: str, limit: int) -> LeaderboardR
             total_row = cur.fetchone()
             cur.execute(
                 f"""
-                SELECT username, score, avatar_path
+                SELECT id, username, score, avatar_path
                 FROM users
                 WHERE {_ACTIVE_RATING_USER_FILTER}
                   AND score {score_filter}
@@ -405,6 +406,7 @@ def fetch_leaderboard(order: str, score_filter: str, limit: int) -> LeaderboardR
     return LeaderboardResponse(
         items=[
             UserScoreResponse(
+                user_id=row["id"],
                 username=normalize_public_username(row["username"]),
                 score=row["score"],
                 avatar_url=build_avatar_url(row.get("avatar_path")),

@@ -273,7 +273,12 @@ def test_guest_can_use_rating_features_when_guest_rating_is_enabled(
         "avatarUrl": None,
     }
     assert score_response.status_code == 200
-    assert score_response.json() == {"username": "guest_player", "score": 42, "avatarUrl": None}
+    assert score_response.json() == {
+        "userId": auth_payload["userId"],
+        "username": "guest_player",
+        "score": 42,
+        "avatarUrl": None,
+    }
 
 
 def test_rating_toggle_updates_real_database_state(db_client, monkeypatch) -> None:
@@ -320,7 +325,12 @@ def test_score_update_persists_to_real_database(db_client, monkeypatch) -> None:
     )
 
     assert response.status_code == 200
-    assert response.json() == {"username": "score_user", "score": 42, "avatarUrl": None}
+    assert response.json() == {
+        "userId": auth_payload["userId"],
+        "username": "score_user",
+        "score": 42,
+        "avatarUrl": None,
+    }
 
 
 def test_score_update_rejects_anonymous_users_without_username(db_client) -> None:
@@ -401,7 +411,12 @@ def test_clearing_existing_username_is_rejected_and_score_is_preserved(
         headers=auth_headers(auth_payload["accessToken"]),
     )
     assert score_response.status_code == 200
-    assert score_response.json() == {"username": "clear_user", "score": 84, "avatarUrl": None}
+    assert score_response.json() == {
+        "userId": auth_payload["userId"],
+        "username": "clear_user",
+        "score": 84,
+        "avatarUrl": None,
+    }
 
     me_response = db_client.get("/me", headers=auth_headers(auth_payload["accessToken"]))
     assert me_response.status_code == 200
@@ -456,8 +471,8 @@ def test_leaderboard_queries_use_real_database_data(db_client, monkeypatch) -> N
     assert top_response.status_code == 200
     assert top_response.json() == {
         "items": [
-            {"username": "alpha", "score": 15, "avatarUrl": None},
-            {"username": "beta", "score": 8, "avatarUrl": None},
+            {"userId": alpha["userId"], "username": "alpha", "score": 15, "avatarUrl": None},
+            {"userId": beta["userId"], "username": "beta", "score": 8, "avatarUrl": None},
         ],
         "total": 2,
     }
@@ -465,7 +480,7 @@ def test_leaderboard_queries_use_real_database_data(db_client, monkeypatch) -> N
     assert bottom_response.status_code == 200
     assert bottom_response.json() == {
         "items": [
-            {"username": "gamma", "score": -4, "avatarUrl": None},
+            {"userId": gamma["userId"], "username": "gamma", "score": -4, "avatarUrl": None},
         ],
         "total": 1,
     }
@@ -502,8 +517,8 @@ def test_api_v1_leaderboard_queries_use_real_database_data(db_client, monkeypatc
     assert top_response.status_code == 200
     assert top_response.json() == {
         "items": [
-            {"username": "v1_alpha", "score": 30, "avatarUrl": None},
-            {"username": "v1_beta", "score": 10, "avatarUrl": None},
+            {"userId": alpha["userId"], "username": "v1_alpha", "score": 30, "avatarUrl": None},
+            {"userId": beta["userId"], "username": "v1_beta", "score": 10, "avatarUrl": None},
         ],
         "total": 2,
     }
@@ -556,7 +571,7 @@ def test_leaderboard_excludes_users_inactive_for_more_than_30_days(
     assert top_response.status_code == 200
     assert top_response.json() == {
         "items": [
-            {"username": "recent_user", "score": 25, "avatarUrl": None},
+            {"userId": recent["userId"], "username": "recent_user", "score": 25, "avatarUrl": None},
         ],
         "total": 1,
     }
