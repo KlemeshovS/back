@@ -29,21 +29,21 @@ def save_calendar(user_id: int, days: dict[str, int]) -> CalendarResponse:
                     updated_at = NOW(),
                     last_seen_at = NOW()
                 WHERE id = %s
-                RETURNING calendar_data;
+                RETURNING calendar_data, updated_at;
                 """,
                 (encoded, user_id),
             )
             row = cur.fetchone()
         conn.commit()
 
-    return CalendarResponse(days=row["calendar_data"] or {})
+    return CalendarResponse(days=row["calendar_data"] or {}, updated_at=row["updated_at"])
 
 
 def get_calendar(user_id: int) -> CalendarResponse:
     with get_connection() as conn:
         with conn.cursor() as cur:
             cur.execute(
-                "SELECT calendar_data FROM users WHERE id = %s;",
+                "SELECT calendar_data, updated_at FROM users WHERE id = %s;",
                 (user_id,),
             )
             row = cur.fetchone()
@@ -55,4 +55,4 @@ def get_calendar(user_id: int) -> CalendarResponse:
             message="User not found",
         )
 
-    return CalendarResponse(days=row["calendar_data"] or {})
+    return CalendarResponse(days=row["calendar_data"] or {}, updated_at=row["updated_at"])

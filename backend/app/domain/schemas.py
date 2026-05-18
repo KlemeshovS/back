@@ -273,6 +273,7 @@ class CalendarSaveRequest(ApiModel):
 
 class CalendarResponse(ApiModel):
     days: dict[str, int]
+    updated_at: datetime
 
 
 # Follows
