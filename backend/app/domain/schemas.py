@@ -264,6 +264,18 @@ class AdminAuditLogListResponse(ApiModel):
     total: int
 
 
+# Calendar
+
+
+class CalendarSaveRequest(ApiModel):
+    days: dict[str, int]
+
+
+class CalendarResponse(ApiModel):
+    days: dict[str, int]
+    updated_at: datetime
+
+
 # Follows
 
 

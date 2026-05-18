@@ -114,6 +114,14 @@ printf '%s\n' "${git_ref}" > "${deploy_path}/.backend-release-ref"
 printf '%s\n' "${release_tag}" > "${deploy_path}/.backend-release-tag"
 chown -R "${deploy_owner}" "${deploy_path}"
 
+cd "${deploy_path}/backend"
+if [ -f "${deploy_path}/backend/.env" ]; then
+  set -a; source "${deploy_path}/backend/.env"; set +a
+elif [ -f "${deploy_path}/.env" ]; then
+  set -a; source "${deploy_path}/.env"; set +a
+fi
+"${effective_venv_path}/bin/python" -m alembic upgrade head
+
 systemctl restart "${deploy_service}"
 for attempt in 1 2 3 4 5 6 7 8 9 10; do
   if systemctl is-active --quiet "${deploy_service}"; then
