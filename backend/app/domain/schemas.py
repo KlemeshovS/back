@@ -143,6 +143,7 @@ class UserScoreResponse(ApiModel):
         from_attributes=True,
     )
 
+    user_id: Optional[int] = None
     username: Optional[str] = None
     score: int
     avatar_url: Optional[str] = None
@@ -260,4 +261,24 @@ class AdminAuditLogEntryResponse(ApiModel):
 
 class AdminAuditLogListResponse(ApiModel):
     items: list[AdminAuditLogEntryResponse]
+    total: int
+
+
+# Follows
+
+
+class FollowCreate(ApiModel):
+    username: str = Field(min_length=3, max_length=64)
+
+
+class FollowResponse(ApiModel):
+    user_id: int
+    username: str
+    avatar_url: Optional[str] = None
+    is_mutual: bool
+    created_at: datetime
+
+
+class FollowListResponse(ApiModel):
+    items: list[FollowResponse]
     total: int

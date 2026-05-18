@@ -318,6 +318,75 @@ Admin UI использует отдельный admin-контур backend, н�
 }
 ```
 
+## Follows API (подписки и друзья)
+
+Система подписок доступна только для `authenticated`-пользователей. Гость получает `403 AUTH_REQUIRED_FOR_RATING`.
+
+Модель: **подписка односторонняя**. Взаимная подписка автоматически означает дружбу — никаких заявок, статусов и подтверждений нет.
+
+### Защищённые методы
+
+- `POST /api/v1/follows`
+- `DELETE /api/v1/follows/{userId}`
+- `GET /api/v1/follows`
+- `GET /api/v1/follows/followers`
+- `GET /api/v1/follows/friends`
+
+### Поля объекта подписки (FollowResponse)
+
+- `userId` — ID другого пользователя
+- `username` — username другого пользователя
+- `avatarUrl` — абсолютный URL аватара или `null`
+- `isMutual` — `true`, если подписка взаимная (= друзья)
+- `createdAt` — ISO 8601
+
+### `POST /api/v1/follows`
+
+Подписаться на пользователя по username.
+
+Тело запроса:
+- `username` — username цели
+
+Ответ `201`: `FollowResponse`. Если другой уже подписан на вас — `isMutual: true`.
+
+### `DELETE /api/v1/follows/{userId}`
+
+Отписаться от пользователя. `userId` — ID пользователя, от которого отписываемся.
+
+Ответ: `204 No Content`.
+
+### `GET /api/v1/follows`
+
+Список пользователей, на которых подписан текущий пользователь (мои подписки).
+
+Ответ `200`:
+- `items` — массив `FollowResponse`
+- `total` — общее количество
+
+### `GET /api/v1/follows/followers`
+
+Список пользователей, которые подписаны на текущего пользователя (мои подписчики).
+
+### `GET /api/v1/follows/friends`
+
+Список пользователей с взаимной подпиской (друзья). Все элементы имеют `isMutual: true`.
+
+### Правила
+
+- Лимит подписок — 500 на пользователя
+- Нельзя подписаться на себя
+- Только `authenticated`-пользователи
+- Дружба = взаимная подписка, отдельного подтверждения не требует
+
+### Коды ошибок Follows
+
+- `AUTH_REQUIRED_FOR_RATING` — гость пытается работать с подписками
+- `USER_NOT_FOUND` — username не существует или аккаунт неактивен
+- `CANNOT_FOLLOW_SELF` — попытка подписаться на себя
+- `ALREADY_FOLLOWING` — уже подписан на этого пользователя
+- `FOLLOWS_LIMIT_REACHED` — достигнут лимит 500 подписок
+- `NOT_FOLLOWING` — попытка отписаться от пользователя, на которого не подписан
+
 ## Versioning Strategy
 
 - `v1` — текущий стабильный public contract для mobile/web clients
