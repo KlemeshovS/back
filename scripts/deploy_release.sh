@@ -120,7 +120,11 @@ if [ -f "${deploy_path}/backend/.env" ]; then
 elif [ -f "${deploy_path}/.env" ]; then
   set -a; source "${deploy_path}/.env"; set +a
 fi
-"${effective_venv_path}/bin/python" -m alembic upgrade head
+echo "=== Alembic current revision ==="
+"${effective_venv_path}/bin/python" -m alembic current
+echo "=== Running alembic upgrade head ==="
+"${effective_venv_path}/bin/python" -m alembic upgrade head --verbose
+echo "=== Alembic upgrade done ==="
 
 systemctl restart "${deploy_service}"
 for attempt in 1 2 3 4 5 6 7 8 9 10; do
