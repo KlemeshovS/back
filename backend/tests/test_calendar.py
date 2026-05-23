@@ -15,7 +15,6 @@ _NOW = datetime(2024, 1, 15, 12, 0, 0, tzinfo=timezone.utc)
 def _make_user(user_id: int = 1) -> dict:
     return {
         "id": user_id,
-        "user_id": user_id,
         "username": "test_user",
         "is_rating_enabled": True,
         "session_type": SessionType.AUTHENTICATED,

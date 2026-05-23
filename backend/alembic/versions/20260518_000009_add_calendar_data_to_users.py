@@ -15,10 +15,7 @@ depends_on = None
 
 
 def upgrade() -> None:
-    op.execute("""
-        ALTER TABLE users
-        ADD COLUMN calendar_data JSONB;
-    """)
+    op.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS calendar_data JSONB;")
 
 
 def downgrade() -> None:

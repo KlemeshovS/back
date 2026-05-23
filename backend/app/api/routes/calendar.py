@@ -29,7 +29,7 @@ def save_calendar(
     body: CalendarSaveRequest,
     current_user: dict = current_user_dependency,
 ) -> CalendarResponse:
-    return calendar_service.save_calendar(current_user["user_id"], body.days)
+    return calendar_service.save_calendar(current_user["id"], body.days)
 
 
 @router.get(
@@ -40,4 +40,4 @@ def save_calendar(
 def get_calendar(
     current_user: dict = current_user_dependency,
 ) -> CalendarResponse:
-    return calendar_service.get_calendar(current_user["user_id"])
+    return calendar_service.get_calendar(current_user["id"])

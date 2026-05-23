@@ -120,7 +120,18 @@ if [ -f "${deploy_path}/backend/.env" ]; then
 elif [ -f "${deploy_path}/.env" ]; then
   set -a; source "${deploy_path}/.env"; set +a
 fi
+echo "=== Alembic current revision ==="
+alembic_current="$("${effective_venv_path}/bin/python" -m alembic current 2>&1)"
+echo "${alembic_current}"
+if echo "${alembic_current}" | grep -qvE "^INFO|^WARNING|^$"; then
+  echo "Alembic revision found, upgrading normally"
+else
+  echo "No alembic revision found, stamping baseline 20260512_000008"
+  "${effective_venv_path}/bin/python" -m alembic stamp 20260512_000008
+fi
+echo "=== Running alembic upgrade head ==="
 "${effective_venv_path}/bin/python" -m alembic upgrade head
+echo "=== Alembic upgrade done ==="
 
 systemctl restart "${deploy_service}"
 for attempt in 1 2 3 4 5 6 7 8 9 10; do
