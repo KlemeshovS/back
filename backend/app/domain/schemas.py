@@ -269,6 +269,7 @@ class AdminAuditLogListResponse(ApiModel):
 
 class CalendarSaveRequest(ApiModel):
     days: dict[str, int]
+    client_updated_at: Optional[datetime] = None
 
 
 class CalendarResponse(ApiModel):
