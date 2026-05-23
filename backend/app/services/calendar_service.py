@@ -1,12 +1,15 @@
 from __future__ import annotations
 
 import json
+from datetime import datetime, timezone
 
 from fastapi import status
 
 from app.core.errors import ApiError, ApiErrorCode
 from app.db.database import get_connection
 from app.domain.schemas import CalendarResponse
+
+_EPOCH = datetime(1970, 1, 1, tzinfo=timezone.utc)
 
 _CALENDAR_MAX_BYTES = 512 * 1024  # 512 KB
 
@@ -55,4 +58,6 @@ def get_calendar(user_id: int) -> CalendarResponse:
             message="User not found",
         )
 
-    return CalendarResponse(days=row["calendar_data"] or {}, updated_at=row["updated_at"])
+    calendar_data = row["calendar_data"]
+    updated_at = row["updated_at"] if calendar_data is not None else _EPOCH
+    return CalendarResponse(days=calendar_data or {}, updated_at=updated_at)

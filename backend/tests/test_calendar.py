@@ -7,6 +7,7 @@ from app.api.dependencies import get_current_user
 from app.core.errors import ApiError, ApiErrorCode
 from app.domain.schemas import CalendarResponse, SessionType
 from app.services import calendar_service
+from app.services.calendar_service import _EPOCH
 from tests.helpers import build_client
 
 _NOW = datetime(2024, 1, 15, 12, 0, 0, tzinfo=timezone.utc)
@@ -138,3 +139,30 @@ def test_save_empty_calendar():
         m.assert_called_once_with(1, {})
     finally:
         _clear_overrides(client)
+
+
+def _mock_db_cursor(mock_conn, cursor):
+    cur_ctx = mock_conn.return_value.__enter__.return_value.cursor.return_value.__enter__
+    cur_ctx.return_value = cursor
+
+
+def test_get_calendar_returns_epoch_when_no_data_saved():
+    row = {"calendar_data": None, "updated_at": _NOW}
+    with mock.patch("app.services.calendar_service.get_connection") as mock_conn:
+        mock_cursor = mock.MagicMock()
+        mock_cursor.fetchone.return_value = row
+        _mock_db_cursor(mock_conn, mock_cursor)
+        result = calendar_service.get_calendar(1)
+    assert result.days == {}
+    assert result.updated_at == _EPOCH
+
+
+def test_get_calendar_returns_real_updated_at_when_data_exists():
+    row = {"calendar_data": {"2024-1-15": 0}, "updated_at": _NOW}
+    with mock.patch("app.services.calendar_service.get_connection") as mock_conn:
+        mock_cursor = mock.MagicMock()
+        mock_cursor.fetchone.return_value = row
+        _mock_db_cursor(mock_conn, mock_cursor)
+        result = calendar_service.get_calendar(1)
+    assert result.days == {"2024-1-15": 0}
+    assert result.updated_at == _NOW
