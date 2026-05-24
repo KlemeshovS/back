@@ -11,6 +11,8 @@ from app.services.calendar_service import _EPOCH
 from tests.helpers import build_client
 
 _NOW = datetime(2024, 1, 15, 12, 0, 0, tzinfo=timezone.utc)
+_OLDER = datetime(2024, 1, 10, 12, 0, 0, tzinfo=timezone.utc)
+_NEWER = datetime(2024, 1, 20, 12, 0, 0, tzinfo=timezone.utc)
 
 
 def _make_user(user_id: int = 1) -> dict:
@@ -48,7 +50,49 @@ def test_save_calendar_success():
         body = response.json()
         assert body["days"] == _SAMPLE_DAYS
         assert "updatedAt" in body
-        m.assert_called_once_with(1, _SAMPLE_DAYS)
+        m.assert_called_once_with(1, _SAMPLE_DAYS, None)
+    finally:
+        _clear_overrides(client)
+
+
+def test_save_calendar_with_client_updated_at():
+    client = build_client()
+    _override_user(client, _make_user())
+    try:
+        with mock.patch.object(
+            calendar_service,
+            "save_calendar",
+            return_value=CalendarResponse(days=_SAMPLE_DAYS, updated_at=_NOW),
+        ) as m:
+            response = client.put(
+                "/me/calendar",
+                json={"days": _SAMPLE_DAYS, "clientUpdatedAt": _NOW.isoformat()},
+            )
+        assert response.status_code == 200
+        m.assert_called_once_with(1, _SAMPLE_DAYS, _NOW)
+    finally:
+        _clear_overrides(client)
+
+
+def test_save_calendar_conflict():
+    client = build_client()
+    _override_user(client, _make_user())
+    try:
+        with mock.patch.object(
+            calendar_service,
+            "save_calendar",
+            side_effect=ApiError(
+                status_code=409,
+                code=ApiErrorCode.CALENDAR_CONFLICT,
+                message="Данные календаря были обновлены другим устройством",
+            ),
+        ):
+            response = client.put(
+                "/me/calendar",
+                json={"days": _SAMPLE_DAYS, "clientUpdatedAt": _OLDER.isoformat()},
+            )
+        assert response.status_code == 409
+        assert response.json()["code"] == "CALENDAR_CONFLICT"
     finally:
         _clear_overrides(client)
 
@@ -136,7 +180,7 @@ def test_save_empty_calendar():
         body = response.json()
         assert body["days"] == {}
         assert "updatedAt" in body
-        m.assert_called_once_with(1, {})
+        m.assert_called_once_with(1, {}, None)
     finally:
         _clear_overrides(client)
 
@@ -147,7 +191,7 @@ def _mock_db_cursor(mock_conn, cursor):
 
 
 def test_get_calendar_returns_epoch_when_no_data_saved():
-    row = {"calendar_data": None, "updated_at": _NOW}
+    row = {"calendar_data": None, "calendar_updated_at": None, "updated_at": _NOW}
     with mock.patch("app.services.calendar_service.get_connection") as mock_conn:
         mock_cursor = mock.MagicMock()
         mock_cursor.fetchone.return_value = row
@@ -157,12 +201,48 @@ def test_get_calendar_returns_epoch_when_no_data_saved():
     assert result.updated_at == _EPOCH
 
 
-def test_get_calendar_returns_real_updated_at_when_data_exists():
-    row = {"calendar_data": {"2024-1-15": 0}, "updated_at": _NOW}
+def test_get_calendar_uses_calendar_updated_at():
+    row = {"calendar_data": {"2024-1-15": 0}, "calendar_updated_at": _NOW, "updated_at": _NEWER}
     with mock.patch("app.services.calendar_service.get_connection") as mock_conn:
         mock_cursor = mock.MagicMock()
         mock_cursor.fetchone.return_value = row
         _mock_db_cursor(mock_conn, mock_cursor)
         result = calendar_service.get_calendar(1)
-    assert result.days == {"2024-1-15": 0}
+    assert result.updated_at == _NOW
+
+
+def test_get_calendar_falls_back_to_updated_at_for_legacy_data():
+    row = {"calendar_data": {"2024-1-15": 0}, "calendar_updated_at": None, "updated_at": _NOW}
+    with mock.patch("app.services.calendar_service.get_connection") as mock_conn:
+        mock_cursor = mock.MagicMock()
+        mock_cursor.fetchone.return_value = row
+        _mock_db_cursor(mock_conn, mock_cursor)
+        result = calendar_service.get_calendar(1)
+    assert result.updated_at == _NOW
+
+
+def test_save_calendar_conflict_rejected_when_server_is_newer():
+    _NOW_SERVER = _NEWER
+    _CLIENT_UPDATED_AT = _OLDER
+    with mock.patch("app.services.calendar_service.get_connection") as mock_conn:
+        mock_cursor = mock.MagicMock()
+        mock_cursor.fetchone.return_value = {"calendar_updated_at": _NOW_SERVER}
+        _mock_db_cursor(mock_conn, mock_cursor)
+        try:
+            calendar_service.save_calendar(1, {}, _CLIENT_UPDATED_AT)
+            raise AssertionError("Expected CALENDAR_CONFLICT")
+        except ApiError as e:
+            assert e.code == ApiErrorCode.CALENDAR_CONFLICT
+            assert e.status_code == 409
+
+
+def test_save_calendar_no_conflict_when_client_is_newer():
+    with mock.patch("app.services.calendar_service.get_connection") as mock_conn:
+        mock_cursor = mock.MagicMock()
+        mock_cursor.fetchone.side_effect = [
+            {"calendar_updated_at": _OLDER},
+            {"calendar_data": {}, "calendar_updated_at": _NOW},
+        ]
+        _mock_db_cursor(mock_conn, mock_cursor)
+        result = calendar_service.save_calendar(1, {}, _NOW)
     assert result.updated_at == _NOW
