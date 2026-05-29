@@ -60,6 +60,54 @@ def save_calendar(
     return CalendarResponse(days=row["calendar_data"] or {}, updated_at=row["calendar_updated_at"])
 
 
+def get_friend_calendar(requester_id: int, target_user_id: int) -> CalendarResponse:
+    if requester_id == target_user_id:
+        return get_calendar(requester_id)
+
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                SELECT
+                    calendar_data,
+                    calendar_updated_at,
+                    updated_at,
+                    (
+                        SELECT COUNT(*) = 2 FROM follows
+                        WHERE (follower_id = %s AND followed_id = %s)
+                           OR (follower_id = %s AND followed_id = %s)
+                    ) AS is_mutual
+                FROM users WHERE id = %s;
+                """,
+                (requester_id, target_user_id, target_user_id, requester_id, target_user_id),
+            )
+            row = cur.fetchone()
+
+    if row is None:
+        raise ApiError(
+            status_code=status.HTTP_404_NOT_FOUND,
+            code=ApiErrorCode.USER_NOT_FOUND,
+            message="Пользователь не найден",
+        )
+
+    if not row["is_mutual"]:
+        raise ApiError(
+            status_code=status.HTTP_403_FORBIDDEN,
+            code=ApiErrorCode.NOT_FRIENDS,
+            message="Календарь доступен только друзьям",
+        )
+
+    calendar_data = row["calendar_data"]
+    if calendar_data is None:
+        updated_at = _EPOCH
+    elif row["calendar_updated_at"] is not None:
+        updated_at = row["calendar_updated_at"]
+    else:
+        updated_at = row["updated_at"]
+
+    return CalendarResponse(days=calendar_data or {}, updated_at=updated_at)
+
+
 def get_calendar(user_id: int) -> CalendarResponse:
     with get_connection() as conn:
         with conn.cursor() as cur:
