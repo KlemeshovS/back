@@ -246,3 +246,92 @@ def test_save_calendar_no_conflict_when_client_is_newer():
         _mock_db_cursor(mock_conn, mock_cursor)
         result = calendar_service.save_calendar(1, {}, _NOW)
     assert result.updated_at == _NOW
+
+
+def test_get_friend_calendar_via_route():
+    client = build_client()
+    _override_user(client, _make_user(user_id=1))
+    try:
+        with mock.patch.object(
+            calendar_service,
+            "get_friend_calendar",
+            return_value=CalendarResponse(days=_SAMPLE_DAYS, updated_at=_NOW),
+        ) as m:
+            response = client.get("/api/v1/users/2/calendar")
+        assert response.status_code == 200
+        assert response.json()["days"] == _SAMPLE_DAYS
+        m.assert_called_once_with(1, 2)
+    finally:
+        _clear_overrides(client)
+
+
+def test_get_friend_calendar_requires_auth():
+    client = build_client()
+    response = client.get("/api/v1/users/2/calendar")
+    assert response.status_code == 401
+
+
+def test_get_friend_calendar_not_friends():
+    client = build_client()
+    _override_user(client, _make_user(user_id=1))
+    try:
+        with mock.patch.object(
+            calendar_service,
+            "get_friend_calendar",
+            side_effect=ApiError(
+                status_code=403,
+                code=ApiErrorCode.NOT_FRIENDS,
+                message="Календарь доступен только друзьям",
+            ),
+        ):
+            response = client.get("/api/v1/users/2/calendar")
+        assert response.status_code == 403
+        assert response.json()["code"] == "NOT_FRIENDS"
+    finally:
+        _clear_overrides(client)
+
+
+def test_get_friend_calendar_service_mutual():
+    row = {
+        "calendar_data": {"2024-1-15": 1},
+        "calendar_updated_at": _NOW,
+        "updated_at": _NEWER,
+        "is_mutual": True,
+    }
+    with mock.patch("app.services.calendar_service.get_connection") as mock_conn:
+        mock_cursor = mock.MagicMock()
+        mock_cursor.fetchone.return_value = row
+        _mock_db_cursor(mock_conn, mock_cursor)
+        result = calendar_service.get_friend_calendar(1, 2)
+    assert result.days == {"2024-1-15": 1}
+    assert result.updated_at == _NOW
+
+
+def test_get_friend_calendar_service_not_mutual():
+    row = {
+        "calendar_data": {"2024-1-15": 1},
+        "calendar_updated_at": _NOW,
+        "updated_at": _NEWER,
+        "is_mutual": False,
+    }
+    with mock.patch("app.services.calendar_service.get_connection") as mock_conn:
+        mock_cursor = mock.MagicMock()
+        mock_cursor.fetchone.return_value = row
+        _mock_db_cursor(mock_conn, mock_cursor)
+        try:
+            calendar_service.get_friend_calendar(1, 2)
+            raise AssertionError("Expected NOT_FRIENDS")
+        except ApiError as e:
+            assert e.code == ApiErrorCode.NOT_FRIENDS
+            assert e.status_code == 403
+
+
+def test_get_friend_calendar_self_delegates_to_get_calendar():
+    with mock.patch.object(
+        calendar_service,
+        "get_calendar",
+        return_value=CalendarResponse(days=_SAMPLE_DAYS, updated_at=_NOW),
+    ) as m:
+        result = calendar_service.get_friend_calendar(1, 1)
+    m.assert_called_once_with(1)
+    assert result.days == _SAMPLE_DAYS
