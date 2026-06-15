@@ -554,12 +554,15 @@ def test_leaderboard_excludes_users_inactive_for_more_than_30_days(
         headers=auth_headers(stale["accessToken"]),
     )
 
+    # Рейтинговая активность считается по updated_at: last_seen_at остаётся
+    # свежим (его обновил score-POST), но раз данные не менялись больше 30 дней,
+    # пользователь выпадает из лидерборда.
     with connect(integration_database_url) as conn:
         with conn.cursor() as cur:
             cur.execute(
                 """
                 UPDATE users
-                SET last_seen_at = NOW() - INTERVAL '31 days'
+                SET updated_at = NOW() - INTERVAL '31 days'
                 WHERE id = %s;
                 """,
                 (stale["userId"],),

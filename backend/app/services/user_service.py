@@ -34,7 +34,7 @@ _ACTIVE_RATING_USER_FILTER = (
     "  AND username IS NOT NULL\n"
     "  AND BTRIM(username) <> ''\n"
     "  AND username NOT LIKE 'anon_user_%%'\n"
-    "  AND last_seen_at >= NOW() - INTERVAL '30 days'"
+    "  AND updated_at >= NOW() - INTERVAL '30 days'"
 )
 
 
