@@ -1,8 +1,13 @@
 from fastapi import APIRouter, Depends
 
 from app.api.dependencies import get_current_user
-from app.domain.schemas import CalendarResponse, CalendarSaveRequest
-from app.services import calendar_service
+from app.domain.schemas import (
+    CalendarResponse,
+    CalendarSaveRequest,
+    TriggersResponse,
+    TriggersSaveRequest,
+)
+from app.services import calendar_service, trigger_service
 
 router = APIRouter(prefix="/me/calendar", tags=["calendar"])
 current_user_dependency = Depends(get_current_user)
@@ -41,3 +46,32 @@ def get_calendar(
     current_user: dict = current_user_dependency,
 ) -> CalendarResponse:
     return calendar_service.get_calendar(current_user["id"])
+
+
+@router.put(
+    "/triggers",
+    response_model=TriggersResponse,
+    summary="Сохранить дневник триггеров пользователя",
+    description=(
+        "Сохраняет причины употребления алкоголя по дням (дневник триггеров). "
+        "Ключ — дата в формате `YYYY-M-D`, значение — список тегов из фиксированного "
+        "набора: `stress`, `boredom`, `party`, `company`, `loneliness`, `conflict`, "
+        "`habit`, `other`. Приватные данные — не возвращаются в friend-calendar."
+    ),
+)
+def save_triggers(
+    body: TriggersSaveRequest,
+    current_user: dict = current_user_dependency,
+) -> TriggersResponse:
+    return trigger_service.save_triggers(current_user["id"], body.triggers, body.client_updated_at)
+
+
+@router.get(
+    "/triggers",
+    response_model=TriggersResponse,
+    summary="Получить дневник триггеров пользователя",
+)
+def get_triggers(
+    current_user: dict = current_user_dependency,
+) -> TriggersResponse:
+    return trigger_service.get_triggers(current_user["id"])
