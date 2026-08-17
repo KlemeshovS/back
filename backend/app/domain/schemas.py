@@ -277,6 +277,40 @@ class CalendarResponse(ApiModel):
     updated_at: datetime
 
 
+# Triggers (дневник причин выпить — почему конкретный день отмечен алкоголем)
+
+VALID_TRIGGERS = {
+    "stress",
+    "boredom",
+    "party",
+    "company",
+    "loneliness",
+    "conflict",
+    "habit",
+    "other",
+}
+
+
+def validate_triggers_input(value: dict[str, list[str]]) -> dict[str, list[str]]:
+    for _day_key, tags in value.items():
+        for tag in tags:
+            if tag not in VALID_TRIGGERS:
+                raise ValueError(f"Unknown trigger value: {tag!r}")
+    return value
+
+
+class TriggersSaveRequest(ApiModel):
+    triggers: dict[str, list[str]]
+    client_updated_at: Optional[datetime] = None
+
+    _validate_triggers = field_validator("triggers")(validate_triggers_input)
+
+
+class TriggersResponse(ApiModel):
+    triggers: dict[str, list[str]]
+    updated_at: datetime
+
+
 # Follows
 
 
