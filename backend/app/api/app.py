@@ -18,6 +18,7 @@ from app.api.error_handlers import (
 from app.api.routes import (
     admin,
     auth,
+    bets,
     calendar,
     docs,
     follows,
@@ -99,5 +100,6 @@ def create_app(init_database: bool = True) -> FastAPI:
     app.include_router(calendar.router)
     app.include_router(calendar.router, prefix=PUBLIC_API_V1_PREFIX)
     app.include_router(users.router, prefix=PUBLIC_API_V1_PREFIX)
+    app.include_router(bets.router, prefix=PUBLIC_API_V1_PREFIX)
 
     return app

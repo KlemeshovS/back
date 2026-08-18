@@ -1,10 +1,10 @@
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import date, datetime
 from enum import Enum
 from typing import Optional
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 
 def to_camel(value: str) -> str:
@@ -309,6 +309,86 @@ class TriggersSaveRequest(ApiModel):
 class TriggersResponse(ApiModel):
     triggers: dict[str, list[str]]
     updated_at: datetime
+
+
+# Bets (пари между взаимными друзьями)
+
+VALID_BET_TYPES = {"sobriety", "sport", "score_up", "score_down"}
+VALID_DURATION_MODES = {"period", "fixed_date"}
+_BET_DURATION_DAYS_MIN = 1
+_BET_DURATION_DAYS_MAX = 366
+
+
+class BetParticipant(ApiModel):
+    user_id: int
+    username: Optional[str] = None
+    avatar_url: Optional[str] = None
+
+
+class BetCreateRequest(ApiModel):
+    opponent_user_id: int
+    bet_type: str
+    duration_mode: str
+    duration_days: Optional[int] = None
+    target_end_date: Optional[date] = None
+
+    @field_validator("bet_type")
+    @classmethod
+    def _validate_bet_type(cls, value: str) -> str:
+        if value not in VALID_BET_TYPES:
+            raise ValueError(f"Unknown bet_type: {value!r}")
+        return value
+
+    @field_validator("duration_mode")
+    @classmethod
+    def _validate_duration_mode(cls, value: str) -> str:
+        if value not in VALID_DURATION_MODES:
+            raise ValueError(f"Unknown duration_mode: {value!r}")
+        return value
+
+    @field_validator("duration_days")
+    @classmethod
+    def _validate_duration_days(cls, value: Optional[int]) -> Optional[int]:
+        if value is not None and not (_BET_DURATION_DAYS_MIN <= value <= _BET_DURATION_DAYS_MAX):
+            raise ValueError(
+                "duration_days must be between "
+                f"{_BET_DURATION_DAYS_MIN} and {_BET_DURATION_DAYS_MAX}"
+            )
+        return value
+
+    @model_validator(mode="after")
+    def _validate_duration_fields(self) -> "BetCreateRequest":
+        if self.duration_mode == "period" and self.duration_days is None:
+            raise ValueError("duration_days is required when duration_mode is 'period'")
+        if self.duration_mode == "fixed_date" and self.target_end_date is None:
+            raise ValueError("target_end_date is required when duration_mode is 'fixed_date'")
+        return self
+
+
+class BetResponse(ApiModel):
+    id: int
+    challenger: BetParticipant
+    opponent: BetParticipant
+    bet_type: str
+    duration_mode: str
+    duration_days: Optional[int] = None
+    target_end_date: Optional[date] = None
+    status: str
+    resolution_type: Optional[str] = None
+    winner_id: Optional[int] = None
+    forfeited_by: Optional[int] = None
+    respond_by: datetime
+    start_at: Optional[datetime] = None
+    end_at: Optional[datetime] = None
+    result_snapshot: Optional[dict] = None
+    created_at: datetime
+    accepted_at: Optional[datetime] = None
+    resolved_at: Optional[datetime] = None
+
+
+class BetListResponse(ApiModel):
+    items: list[BetResponse]
+    total: int
 
 
 # Follows

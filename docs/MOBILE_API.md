@@ -561,6 +561,134 @@ Admin UI использует отдельный admin-контур backend, н�
 - `USER_NOT_FOUND` (`404`) — пользователь не найден (не должно возникать при нормальной авторизации)
 - `INTERNAL_SERVER_ERROR` (`500`) — непредвиденная ошибка сервера
 
+## Bets API (пари между взаимными друзьями)
+
+Пари — вызов, который пользователь бросает взаимному другу на одно из четырёх событий. Ставки не денежные. Победитель определяется **сервером**, на основе уже синкающихся календарных данных обоих участников (`calendar_data`), а не на основании того, что пришлёт клиент — это исключает читерство.
+
+### Защищённые методы
+
+- `POST /api/v1/me/bets` — бросить вызов
+- `GET /api/v1/me/bets` — все пари пользователя (входящие/активные/история)
+- `GET /api/v1/me/bets/{betId}` — детали одного пари
+- `POST /api/v1/me/bets/{betId}/accept` — принять
+- `POST /api/v1/me/bets/{betId}/decline` — отклонить
+- `POST /api/v1/me/bets/{betId}/cancel` — отозвать (только автор, только pending)
+- `POST /api/v1/me/bets/{betId}/forfeit` — слиться (только active)
+
+### Типы пари (`betType`)
+
+| Тип          | Механика                                                                 |
+|--------------|---------------------------------------------------------------------------|
+| `sobriety`   | На вылет: первый алкогольный день в окне пари — проигрыш. Ничья, если оба сорвались в один день или оба продержались весь срок. |
+| `sport`      | У кого больше дней со спортом за весь срок.                              |
+| `score_up`   | У кого больше очков за срок (считаются с нуля от старта пари).           |
+| `score_down` | Та же метрика, что и `score_up`, но побеждает тот, у кого очков меньше.  |
+
+Равенство значений в `sport`/`score_up`/`score_down` — ничья (`winnerId = null`).
+
+### Срок (`durationMode`)
+
+- `period` — количество дней (`durationDays`, 1–366). Пари стартует **не сразу, а с момента принятия** оппонентом. Дедлайн на принятие равен тому же сроку: если вызов не приняли в течение `durationDays` дней с момента создания — он считается просроченным (`expired`).
+- `fixed_date` — конкретная дата (`targetEndDate`, `YYYY-MM-DD`, должна быть в будущем на момент создания). Дедлайн на принятие = конец этой даты; после неё непринятый вызов тоже считается `expired`.
+
+### `POST /api/v1/me/bets`
+
+```json
+{
+  "opponentUserId": 42,
+  "betType": "sobriety",
+  "durationMode": "period",
+  "durationDays": 14
+}
+```
+
+или
+
+```json
+{
+  "opponentUserId": 42,
+  "betType": "score_up",
+  "durationMode": "fixed_date",
+  "targetEndDate": "2026-12-31"
+}
+```
+
+Оппонент должен быть взаимным другом (`403 BET_NOT_MUTUAL_FRIEND`), нельзя бросить вызов себе (`422 BET_CANNOT_CHALLENGE_SELF`).
+
+Ответ `201` — объект пари в статусе `pending`:
+
+```json
+{
+  "id": 17,
+  "challenger": {"userId": 1, "username": "vasya", "avatarUrl": null},
+  "opponent": {"userId": 42, "username": "petya", "avatarUrl": null},
+  "betType": "sobriety",
+  "durationMode": "period",
+  "durationDays": 14,
+  "targetEndDate": null,
+  "status": "pending",
+  "resolutionType": null,
+  "winnerId": null,
+  "forfeitedBy": null,
+  "respondBy": "2026-09-01T12:00:00Z",
+  "startAt": null,
+  "endAt": null,
+  "resultSnapshot": null,
+  "createdAt": "2026-08-18T12:00:00Z",
+  "acceptedAt": null,
+  "resolvedAt": null
+}
+```
+
+### Жизненный цикл (`status` / `resolutionType`)
+
+```
+pending ──accept──▶ active ──(время истекло / срыв)──▶ resolved (resolutionType=natural)
+   │                    │
+   │ decline            │ forfeit
+   ▼                    ▼
+resolved             resolved (resolutionType=forfeit, forfeitedBy=тот кто слился)
+(resolutionType=declined)
+
+   │ cancel (только автор, пока pending)
+   ▼
+resolved (resolutionType=cancelled)
+
+   │ дедлайн принятия истёк
+   ▼
+resolved (resolutionType=expired)
+```
+
+`status` — всего три значения: `pending`, `active`, `resolved`. Детали исхода — в `resolutionType` (`declined` / `cancelled` / `expired` / `forfeit` / `natural`) и `winnerId` (`null` = ничья, либо исход без победителя — declined/cancelled/expired).
+
+**Важно:** резолюция `pending`→`expired` и `active`→`resolved` (по истечении срока или по срыву в `sobriety`-пари) происходит **лениво** — при любом чтении (`GET /me/bets` или `GET /me/bets/{id}`) сервер сначала проверяет, не истёк ли дедлайн/срок, и если да — пересчитывает и сохраняет исход перед тем как вернуть ответ. Отдельного cron/scheduler нет.
+
+`resultSnapshot` — финальные цифры на момент завершения (например `{"challengerValue": 3, "opponentValue": 1}` для `sport`), нужен для отображения в Истории без повторного запроса календаря.
+
+### `GET /api/v1/me/bets`
+
+Возвращает **все** пари пользователя (где он challenger или opponent), новые сверху. Разбивку на входящие вызовы / активные / историю делает клиент по полям `status` + `opponent.userId == me` (входящий вызов — это `status=pending` и я `opponent`).
+
+### `POST /api/v1/me/bets/{betId}/accept`
+
+Только `opponent`, только пока `status=pending`. Запускает отсчёт срока с этого момента (`startAt = now`, `endAt` вычисляется по `durationDays`/`targetEndDate`). Иначе `409 BET_INVALID_STATE`.
+
+### `POST /api/v1/me/bets/{betId}/decline` и `.../cancel`
+
+`decline` — только `opponent`, `cancel` — только `challenger`, оба только пока `status=pending`.
+
+### `POST /api/v1/me/bets/{betId}/forfeit`
+
+Любой участник, только пока `status=active`. Автоматическая победа второго участника (`resolutionType=forfeit`, `forfeitedBy` = тот, кто слился).
+
+### Коды ошибок Bets
+
+- `BET_NOT_FOUND` (`404`)
+- `BET_CANNOT_CHALLENGE_SELF` (`422`)
+- `BET_NOT_MUTUAL_FRIEND` (`403`) — оппонент не взаимный друг
+- `BET_FORBIDDEN` (`403`) — действие доступно другой роли (например, отклонить может только оппонент)
+- `BET_INVALID_STATE` (`409`) — действие не подходит текущему статусу пари (например, принять уже принятое)
+
 ## Calendar друга
 
 ### `GET /api/v1/users/{userId}/calendar`
