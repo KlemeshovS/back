@@ -634,6 +634,7 @@ Admin UI использует отдельный admin-контур backend, н�
   "startAt": null,
   "endAt": null,
   "resultSnapshot": null,
+  "liveSnapshot": null,
   "createdAt": "2026-08-18T12:00:00Z",
   "acceptedAt": null,
   "resolvedAt": null
@@ -664,6 +665,8 @@ resolved (resolutionType=expired)
 **Важно:** резолюция `pending`→`expired` и `active`→`resolved` (по истечении срока или по срыву в `sobriety`-пари) происходит **лениво** — при любом чтении (`GET /me/bets` или `GET /me/bets/{id}`) сервер сначала проверяет, не истёк ли дедлайн/срок, и если да — пересчитывает и сохраняет исход перед тем как вернуть ответ. Отдельного cron/scheduler нет.
 
 `resultSnapshot` — финальные цифры на момент завершения (например `{"challengerValue": 3, "opponentValue": 1}` для `sport`), нужен для отображения в Истории без повторного запроса календаря.
+
+`liveSnapshot` — те же цифры, но текущие (не персистятся, считаются на каждый `GET` заново) для ещё **активного** пари типа `sport`/`score_up`/`score_down`, чтобы показать текущий счёт до того, как пари завершится. Для `sobriety` всегда `null` (пока пари активно, оба участника по определению ещё не сорвались — показывать нечего), для `pending`/`resolved` тоже всегда `null` (в `resolved` цифры уже в `resultSnapshot`).
 
 ### `GET /api/v1/me/bets`
 
