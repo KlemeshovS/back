@@ -278,7 +278,7 @@ class TestLazyResolutionSport:
         assert resolved.status == "resolved"
         assert resolved.resolution_type == "natural"
         assert resolved.winner_id == challenger_id
-        assert resolved.result_snapshot == {"challenger_value": 3, "opponent_value": 1}
+        assert resolved.result_snapshot == {"challengerValue": 3, "opponentValue": 1}
 
 
 class TestLazyResolutionSobriety:
