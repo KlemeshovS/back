@@ -280,6 +280,32 @@ class TestLazyResolutionSport:
         assert resolved.winner_id == challenger_id
         assert resolved.result_snapshot == {"challengerValue": 3, "opponentValue": 1}
 
+    def test_active_sport_bet_exposes_live_snapshot_before_it_resolves(
+        self, two_friends, migrated_test_database
+    ):
+        challenger_id, opponent_id = two_friends
+        bet = bets_service.create_bet(challenger_id, opponent_id, "sport", "period", 7, None)
+        accepted = bets_service.accept_bet(opponent_id, bet.id)
+
+        start = accepted.start_at.date()
+        with _connect(migrated_test_database) as conn:
+            _set_calendar(conn, challenger_id, {_key_for(start): 4})
+            _set_calendar(conn, opponent_id, {})
+
+        live = bets_service.get_bet(challenger_id, bet.id)
+        assert live.status == "active"
+        assert live.live_snapshot == {"challengerValue": 1, "opponentValue": 0}
+        assert live.result_snapshot is None
+
+    def test_active_sobriety_bet_has_no_live_snapshot(self, two_friends):
+        challenger_id, opponent_id = two_friends
+        bet = bets_service.create_bet(challenger_id, opponent_id, "sobriety", "period", 30, None)
+        bets_service.accept_bet(opponent_id, bet.id)
+
+        live = bets_service.get_bet(challenger_id, bet.id)
+        assert live.status == "active"
+        assert live.live_snapshot is None
+
 
 class TestLazyResolutionSobriety:
     def test_sobriety_bet_resolves_early_on_first_break_before_end_at(

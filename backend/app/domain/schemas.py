@@ -381,6 +381,7 @@ class BetResponse(ApiModel):
     start_at: Optional[datetime] = None
     end_at: Optional[datetime] = None
     result_snapshot: Optional[dict] = None
+    live_snapshot: Optional[dict] = None
     created_at: datetime
     accepted_at: Optional[datetime] = None
     resolved_at: Optional[datetime] = None

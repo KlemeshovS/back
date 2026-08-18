@@ -7,7 +7,7 @@ from fastapi import status
 
 from app.core.errors import ApiError, ApiErrorCode
 from app.db.database import get_connection
-from app.domain.bet_resolution import resolve_bet
+from app.domain.bet_resolution import compute_score, count_sport_days, resolve_bet
 from app.domain.schemas import BetListResponse, BetParticipant, BetResponse
 from app.services.user_service import build_avatar_url
 
@@ -56,6 +56,7 @@ def _row_to_response(row: dict) -> BetResponse:
         start_at=row["start_at"],
         end_at=row["end_at"],
         result_snapshot=row["result_snapshot"],
+        live_snapshot=row.get("live_snapshot"),
         created_at=row["created_at"],
         accepted_at=row["accepted_at"],
         resolved_at=row["resolved_at"],
@@ -67,6 +68,34 @@ def _get_calendar_days(conn, user_id: int) -> dict[str, int]:
         cur.execute("SELECT calendar_data FROM users WHERE id = %s;", (user_id,))
         row = cur.fetchone()
     return (row["calendar_data"] if row else None) or {}
+
+
+def _compute_live_snapshot(conn, row: dict) -> dict | None:
+    """Текущие (ещё не финальные) очки/спортдни для активного пари — только для sport/score.
+
+    Для sobriety live-снапшот не нужен: пока пари активно, оба участника по определению
+    ещё не сорвались (иначе пари уже резолвнулось бы на "вылет"), так что "текущий счёт"
+    там не несёт информации.
+    """
+    if row["status"] != "active" or row["bet_type"] == "sobriety":
+        return None
+
+    start_date = row["start_at"].date()
+    last_date = min((row["end_at"] - timedelta(seconds=1)).date(), _now().date())
+    if last_date < start_date:
+        return None
+
+    challenger_days = _get_calendar_days(conn, row["challenger_id"])
+    opponent_days = _get_calendar_days(conn, row["opponent_id"])
+
+    if row["bet_type"] == "sport":
+        c = count_sport_days(challenger_days, start_date, last_date)
+        o = count_sport_days(opponent_days, start_date, last_date)
+    else:
+        c = compute_score(challenger_days, start_date, last_date)
+        o = compute_score(opponent_days, start_date, last_date)
+
+    return {"challengerValue": c, "opponentValue": o}
 
 
 def _resolve_row_if_due(conn, row: dict) -> dict:
@@ -231,7 +260,8 @@ def _fetch_and_resolve(conn, bet_id: int) -> dict | None:
         row = cur.fetchone()
     if row is None:
         return None
-    return _resolve_row_if_due(conn, row)
+    resolved = _resolve_row_if_due(conn, row)
+    return {**resolved, "live_snapshot": _compute_live_snapshot(conn, resolved)}
 
 
 def get_bet(user_id: int, bet_id: int) -> BetResponse:
@@ -263,6 +293,9 @@ def get_bets(user_id: int) -> BetListResponse:
             )
             rows = cur.fetchall()
         resolved_rows = [_resolve_row_if_due(conn, row) for row in rows]
+        resolved_rows = [
+            {**row, "live_snapshot": _compute_live_snapshot(conn, row)} for row in resolved_rows
+        ]
 
     items = [_row_to_response(row) for row in resolved_rows]
     return BetListResponse(items=items, total=len(items))
