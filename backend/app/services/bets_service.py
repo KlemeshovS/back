@@ -125,8 +125,8 @@ def _resolve_row_if_due(conn, row: dict) -> dict:
         winner_id = row["opponent_id"]
 
     snapshot = {
-        "challenger_value": outcome.challenger_value,
-        "opponent_value": outcome.opponent_value,
+        "challengerValue": outcome.challenger_value,
+        "opponentValue": outcome.opponent_value,
     }
 
     with conn.cursor() as cur:
